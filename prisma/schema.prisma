@@ -1,0 +1,94 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  email     String   @unique
+  firstName String?
+  lastName  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  financialReports FinancialReport[]
+  parsedData      ParsedFinancialData[]
+
+  @@map("users")
+}
+
+model FinancialReport {
+  id          String   @id @default(cuid())
+  userId      String
+  fileName    String
+  fileType    String   // CSV, PDF
+  reportType  ReportType
+  year        Int
+  month       Int
+  fileSize    Int      // in bytes
+  uploadDate  DateTime @default(now())
+  status      UploadStatus @default(PROCESSING)
+  errorMessage String?
+  
+  // Relations
+  user        User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parsedData  ParsedFinancialData[]
+
+  @@map("financial_reports")
+}
+
+model ParsedFinancialData {
+  id                String   @id @default(cuid())
+  reportId          String
+  userId            String
+  accountName       String
+  accountCategory   String?
+  amount            Decimal  @db.Decimal(15, 2)
+  dataType          DataType
+  period            String?  // e.g., "2024-06"
+  notes             String?
+  createdAt         DateTime @default(now())
+  
+  // Relations
+  report            FinancialReport    @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("parsed_financial_data")
+}
+
+enum ReportType {
+  PROFIT_LOSS
+  BALANCE_SHEET
+  CASH_FLOW
+  AR_AGING
+  AP_AGING
+  TRIAL_BALANCE
+}
+
+enum UploadStatus {
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum DataType {
+  REVENUE
+  EXPENSE
+  ASSET
+  LIABILITY
+  EQUITY
+  CASH_FLOW_IN
+  CASH_FLOW_OUT
+}

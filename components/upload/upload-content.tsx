@@ -1,220 +1,473 @@
 "use client"
 
-import type React from "react"
+import { useState, useRef, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Upload, FileText, CheckCircle, AlertCircle, Loader2, BarChart3, TrendingUp, DollarSign } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
+import { ReportType } from '@prisma/client'
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Upload, FileText, CheckCircle } from "lucide-react"
+interface ParsedFinancialData {
+  id: string
+  accountName: string
+  accountCategory?: string
+  amount: number
+  dataType: string
+  period?: string
+  notes?: string
+}
 
-const mockData = [
-  { id: 1, account: "Revenue - Software Sales", amount: 125430, type: "Income" },
-  { id: 2, account: "Expenses - Marketing", amount: -15200, type: "Expense" },
-  { id: 3, account: "Expenses - Salaries", amount: -45000, type: "Expense" },
-  { id: 4, account: "Revenue - Consulting", amount: 8500, type: "Income" },
-]
+interface FinancialReport {
+  id: string
+  fileName: string
+  fileType: string
+  reportType: ReportType
+  year: number
+  month: number
+  fileSize: number
+  uploadDate: string
+  status: string
+  parsedData: ParsedFinancialData[]
+}
 
-export function UploadContent() {
-  const [dragActive, setDragActive] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
-  const [showPreview, setShowPreview] = useState(false)
-  const [selectedYear, setSelectedYear] = useState("2024")
-  const [selectedMonth, setSelectedMonth] = useState("June")
-  const [selectedType, setSelectedType] = useState("P&L")
+export default function UploadContent() {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [reportType, setReportType] = useState<ReportType>(ReportType.PROFIT_LOSS)
+  const [year, setYear] = useState(new Date().getFullYear())
+  const [month, setMonth] = useState(new Date().getMonth() + 1)
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadedReport, setUploadedReport] = useState<FinancialReport | null>(null)
+  const [reports, setReports] = useState<FinancialReport[]>([])
+  const [isLoadingReports, setIsLoadingReports] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const { toast } = useToast()
 
-  const handleDrag = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true)
-    } else if (e.type === "dragleave") {
-      setDragActive(false)
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      const fileType = file.name.split('.').pop()?.toLowerCase()
+      if (fileType && ['csv', 'pdf', 'xlsx', 'xls'].includes(fileType)) {
+        setSelectedFile(file)
+      } else {
+        toast({
+          title: "Invalid file type",
+          description: "Please select a CSV, PDF, Excel (.xlsx, .xls) file.",
+          variant: "destructive",
+        })
+      }
     }
   }
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragActive(false)
-
-    // Simulate upload
-    setUploadProgress(0)
-    const interval = setInterval(() => {
-      setUploadProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval)
-          setShowPreview(true)
-          return 100
-        }
-        return prev + 10
+  const handleUpload = async () => {
+    if (!selectedFile) {
+      toast({
+        title: "No file selected",
+        description: "Please select a file to upload.",
+        variant: "destructive",
       })
-    }, 200)
+      return
+    }
+
+    setIsUploading(true)
+    const formData = new FormData()
+    formData.append('file', selectedFile)
+    formData.append('reportType', reportType)
+    formData.append('year', year.toString())
+    formData.append('month', month.toString())
+
+    try {
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        setUploadedReport(result.report)
+        toast({
+          title: "Upload successful",
+          description: "Your financial report has been uploaded and parsed successfully.",
+        })
+        // Reset form
+        setSelectedFile(null)
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ''
+        }
+        // Refresh reports list
+        loadReports()
+      } else {
+        toast({
+          title: "Upload failed",
+          description: result.error || "Failed to upload file.",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Upload failed",
+        description: "An error occurred during upload.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  const loadReports = async () => {
+    setIsLoadingReports(true)
+    try {
+      const response = await fetch('/api/upload', {
+        credentials: 'include'
+      })
+      if (response.ok) {
+        const result = await response.json()
+        setReports(result.reports || [])
+      }
+    } catch (error) {
+      console.error('Failed to load reports:', error)
+    } finally {
+      setIsLoadingReports(false)
+    }
+  }
+
+  // Load reports on component mount
+  useEffect(() => {
+    loadReports()
+  }, [])
+
+  const getMonthName = (month: number) => {
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ]
+    return months[month - 1]
+  }
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(amount)
+  }
+
+  const getDataTypeColor = (dataType: string) => {
+    const colors: Record<string, string> = {
+      REVENUE: 'text-green-600',
+      EXPENSE: 'text-red-600',
+      ASSET: 'text-blue-600',
+      LIABILITY: 'text-orange-600',
+      EQUITY: 'text-purple-600',
+      CASH_FLOW_IN: 'text-green-600',
+      CASH_FLOW_OUT: 'text-red-600',
+    }
+    return colors[dataType] || 'text-gray-600'
+  }
+
+  const getReportTypeIcon = (type: ReportType) => {
+    switch (type) {
+      case ReportType.PROFIT_LOSS:
+        return <TrendingUp className="h-4 w-4" />
+      case ReportType.BALANCE_SHEET:
+        return <BarChart3 className="h-4 w-4" />
+      case ReportType.CASH_FLOW:
+        return <DollarSign className="h-4 w-4" />
+      default:
+        return <FileText className="h-4 w-4" />
+    }
   }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-gray-900">Upload Financial Data</h1>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Upload Section */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>File Upload</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Selectors */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Year</label>
-                <select
-                  value={selectedYear}
-                  onChange={(e) => setSelectedYear(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="2024">2024</option>
-                  <option value="2023">2023</option>
-                  <option value="2022">2022</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Month</label>
-                <select
-                  value={selectedMonth}
-                  onChange={(e) => setSelectedMonth(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="June">June</option>
-                  <option value="May">May</option>
-                  <option value="April">April</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Report Type</label>
-                <select
-                  value={selectedType}
-                  onChange={(e) => setSelectedType(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="P&L">P&L Statement</option>
-                  <option value="Balance Sheet">Balance Sheet</option>
-                  <option value="Cash Flow">Cash Flow</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Drag and Drop Area */}
-            <div
-              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                dragActive ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:border-gray-400"
-              }`}
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
-            >
-              <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <p className="text-lg font-medium text-gray-900 mb-2">Drop your files here, or click to browse</p>
-              <p className="text-sm text-gray-500 mb-4">Supports CSV, PDF files up to 10MB</p>
-              <Button className="bg-blue-600 hover:bg-blue-700">Choose Files</Button>
-            </div>
-
-            {/* Upload Progress */}
-            {uploadProgress > 0 && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-700">Uploading...</span>
-                  <span className="text-sm text-gray-500">{uploadProgress}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${uploadProgress}%` }}
-                  />
-                </div>
-              </div>
-            )}
-
-            {uploadProgress === 100 && (
-              <div className="flex items-center text-green-600">
-                <CheckCircle className="mr-2 h-5 w-5" />
-                <span className="font-medium">Upload completed successfully!</span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Upload History */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Uploads</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {[
-                { name: "P&L_May_2024.csv", date: "2 hours ago", status: "Processed" },
-                { name: "Balance_Sheet_Apr.pdf", date: "1 day ago", status: "Processed" },
-                { name: "Cash_Flow_Mar.csv", date: "3 days ago", status: "Processed" },
-              ].map((file, index) => (
-                <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                  <FileText className="h-5 w-5 text-gray-400" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">{file.name}</p>
-                    <p className="text-xs text-gray-500">{file.date}</p>
-                  </div>
-                  <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">{file.status}</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+    <div className="max-w-6xl mx-auto space-y-8">
+      {/* Header */}
+      <div className="text-center space-y-2">
+        <div className="flex items-center justify-center space-x-3">
+          <div className="p-3 bg-blue-100 rounded-full">
+            <Upload className="h-8 w-8 text-blue-600" />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900">Upload Financial Reports</h1>
+        </div>
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          Upload your financial reports to get AI-powered insights, automated analysis, and intelligent recommendations for better financial decision-making.
+        </p>
       </div>
 
-      {/* Data Preview */}
-      {showPreview && (
-        <Card>
+      {/* Upload Form */}
+      <Card className="border-2 border-dashed border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50">
+        <CardHeader className="text-center pb-6">
+          <CardTitle className="text-2xl flex items-center justify-center space-x-2">
+            <Upload className="h-6 w-6 text-blue-600" />
+            <span>Upload New Report</span>
+          </CardTitle>
+          <CardDescription className="text-base">
+            Upload your financial reports (CSV or PDF) to get started with AI-powered insights.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="reportType" className="text-sm font-medium">Report Type</Label>
+              <Select value={reportType} onValueChange={(value) => setReportType(value as ReportType)}>
+                <SelectTrigger className="h-11">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ReportType.PROFIT_LOSS}>Profit & Loss</SelectItem>
+                  <SelectItem value={ReportType.BALANCE_SHEET}>Balance Sheet</SelectItem>
+                  <SelectItem value={ReportType.CASH_FLOW}>Cash Flow</SelectItem>
+                  <SelectItem value={ReportType.AR_AGING}>AR Aging</SelectItem>
+                  <SelectItem value={ReportType.AP_AGING}>AP Aging</SelectItem>
+                  <SelectItem value="TRIAL_BALANCE">Trial Balance</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="year" className="text-sm font-medium">Year</Label>
+              <Input
+                id="year"
+                type="number"
+                value={year}
+                onChange={(e) => setYear(parseInt(e.target.value))}
+                min={2000}
+                max={2030}
+                className="h-11"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="month" className="text-sm font-medium">Month</Label>
+              <Select value={month.toString()} onValueChange={(value) => setMonth(parseInt(value))}>
+                <SelectTrigger className="h-11">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                    <SelectItem key={m} value={m.toString()}>
+                      {getMonthName(m)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="file" className="text-sm font-medium">Select File</Label>
+            <div className="relative">
+              <Input
+                id="file"
+                type="file"
+                accept=".csv,.pdf,.xlsx,.xls"
+                onChange={handleFileSelect}
+                ref={fileInputRef}
+                className="h-11 cursor-pointer"
+              />
+              {selectedFile && (
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                </div>
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Supported formats: CSV, PDF, Excel (.xlsx, .xls) (max 10MB)
+            </p>
+          </div>
+
+          <Button 
+            onClick={handleUpload} 
+            disabled={!selectedFile || isUploading}
+            className="w-full h-12 text-lg font-medium bg-blue-600 hover:bg-blue-700"
+          >
+            {isUploading ? (
+              <>
+                <Loader2 className="mr-3 h-5 w-5 animate-spin" />
+                Processing Report...
+              </>
+            ) : (
+              <>
+                <Upload className="mr-3 h-5 w-5" />
+                Upload & Analyze Report
+              </>
+            )}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Recently Uploaded Report */}
+      {uploadedReport && (
+        <Card className="border-green-200 bg-green-50">
           <CardHeader>
-            <CardTitle>Data Preview</CardTitle>
+            <CardTitle className="flex items-center space-x-2 text-green-800">
+              <CheckCircle className="h-6 w-6 text-green-600" />
+              <span>Successfully Processed Report</span>
+            </CardTitle>
+            <CardDescription className="text-green-700">
+              {uploadedReport.fileName} - {getMonthName(uploadedReport.month)} {uploadedReport.year}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Account
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Amount
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Type
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {mockData.map((row) => (
-                    <tr key={row.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.account}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${row.amount.toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            row.type === "Income" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {row.type}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div className="text-center p-4 bg-white rounded-lg border border-green-200">
+                  <div className="text-2xl font-bold text-green-600">{uploadedReport.parsedData.length}</div>
+                  <div className="text-sm text-green-700">Records Parsed</div>
+                </div>
+                <div className="text-center p-4 bg-white rounded-lg border border-green-200">
+                  <div className="text-lg font-semibold text-gray-800">
+                    {uploadedReport.fileType === 'XLSX' ? 'Excel (.xlsx)' : 
+                     uploadedReport.fileType === 'XLS' ? 'Excel (.xls)' :
+                     uploadedReport.fileType === 'CSV' ? 'CSV' :
+                     uploadedReport.fileType === 'PDF' ? 'PDF' : uploadedReport.fileType}
+                  </div>
+                  <div className="text-sm text-gray-600">File Type</div>
+                </div>
+                <div className="text-center p-4 bg-white rounded-lg border border-green-200">
+                  <div className="text-lg font-semibold text-gray-800">{uploadedReport.reportType.replace('_', ' ')}</div>
+                  <div className="text-sm text-gray-600">Report Type</div>
+                </div>
+                <div className="text-center p-4 bg-white rounded-lg border border-green-200">
+                  <div className="text-lg font-semibold text-gray-800">{(uploadedReport.fileSize / 1024).toFixed(1)} KB</div>
+                  <div className="text-sm text-gray-600">File Size</div>
+                </div>
+              </div>
+
+              {uploadedReport.parsedData.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mb-4 text-green-800">Data Preview</h4>
+                  <div className="max-h-80 overflow-y-auto border border-green-200 rounded-lg bg-white">
+                    <table className="w-full text-sm">
+                      <thead className="bg-green-50">
+                        <tr className="border-b border-green-200">
+                          <th className="text-left p-3 font-medium text-green-800">Account</th>
+                          <th className="text-left p-3 font-medium text-green-800">Category</th>
+                          <th className="text-right p-3 font-medium text-green-800">Amount</th>
+                          <th className="text-left p-3 font-medium text-green-800">Type</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {uploadedReport.parsedData.slice(0, 15).map((record) => (
+                          <tr key={record.id} className="border-b border-green-100 hover:bg-green-50">
+                            <td className="p-3 font-medium">{record.accountName}</td>
+                            <td className="p-3 text-gray-600">{record.accountCategory || '-'}</td>
+                            <td className={`p-3 text-right font-semibold ${getDataTypeColor(record.dataType)}`}>
+                              {formatCurrency(record.amount)}
+                            </td>
+                            <td className="p-3 text-gray-600">{record.dataType.replace('_', ' ')}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {uploadedReport.parsedData.length > 15 && (
+                      <div className="p-3 text-center text-sm text-green-700 bg-green-50 border-t border-green-200">
+                        Showing first 15 of {uploadedReport.parsedData.length} records
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
       )}
+
+      {/* Uploaded Reports List */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2 text-xl">
+            <FileText className="h-6 w-6 text-blue-600" />
+            <span>Uploaded Reports History</span>
+          </CardTitle>
+          <CardDescription>
+            View and manage all your uploaded financial reports
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoadingReports ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+              <span className="ml-3 text-gray-600">Loading reports...</span>
+            </div>
+          ) : reports.length === 0 ? (
+            <div className="text-center py-16 text-gray-500">
+              <div className="p-4 bg-gray-100 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                <FileText className="h-10 w-10 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-700 mb-2">No reports uploaded yet</h3>
+              <p className="text-gray-500">Upload your first financial report to get started with AI-powered insights.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {reports.map((report) => (
+                <div key={report.id} className="border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow bg-white">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-start space-x-4">
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        {getReportTypeIcon(report.reportType)}
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-lg text-gray-900">{report.fileName}</h4>
+                        <p className="text-gray-600">
+                          {getMonthName(report.month)} {report.year} • {report.reportType.replace('_', ' ')}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Uploaded on {new Date(report.uploadDate).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm text-gray-500">{(report.fileSize / 1024).toFixed(1)} KB</div>
+                      <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                        report.status === 'COMPLETED' 
+                          ? 'bg-green-100 text-green-800' 
+                          : report.status === 'PROCESSING'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {report.status === 'COMPLETED' && <CheckCircle className="h-3 w-3 mr-1" />}
+                        {report.status === 'PROCESSING' && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+                        {report.status === 'FAILED' && <AlertCircle className="h-3 w-3 mr-1" />}
+                        {report.status}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                    <div className="flex items-center space-x-6 text-sm text-gray-600">
+                      <span className="flex items-center space-x-2">
+                        <BarChart3 className="h-4 w-4" />
+                        <span>{report.parsedData.length} records parsed</span>
+                      </span>
+                      <span className="flex items-center space-x-2">
+                        <FileText className="h-4 w-4" />
+                        <span>
+                          {report.fileType === 'XLSX' ? 'Excel (.xlsx)' : 
+                           report.fileType === 'XLS' ? 'Excel (.xls)' :
+                           report.fileType === 'CSV' ? 'CSV' :
+                           report.fileType === 'PDF' ? 'PDF' : report.fileType}
+                        </span>
+                      </span>
+                    </div>
+                    
+                    {report.parsedData.length > 0 && (
+                      <Button variant="outline" size="sm" className="text-blue-600 border-blue-200 hover:bg-blue-50">
+                        View Details
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }

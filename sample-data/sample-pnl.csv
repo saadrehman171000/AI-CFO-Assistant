@@ -1,0 +1,14 @@
+account_name,amount,category,period
+Revenue - Software Sales,125430,Revenue,2024-06
+Revenue - Consulting Services,8500,Revenue,2024-06
+Revenue - Training Programs,3200,Revenue,2024-06
+Total Revenue,136130,Revenue,2024-06
+Expenses - Salaries,-45000,Expense,2024-06
+Expenses - Marketing,-15200,Expense,2024-06
+Expenses - Office Rent,-8000,Expense,2024-06
+Expenses - Utilities,-1200,Expense,2024-06
+Expenses - Software Licenses,-3500,Expense,2024-06
+Expenses - Travel,-2800,Expense,2024-06
+Expenses - Insurance,-1800,Expense,2024-06
+Total Expenses,-77500,Expense,2024-06
+Net Income,58630,Income,2024-06

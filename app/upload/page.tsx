@@ -1,10 +1,12 @@
 import { MainLayout } from "@/components/layout/main-layout"
-import { UploadContent } from "@/components/upload/upload-content"
+import UploadContent from "@/components/upload/upload-content"
 
 export default function UploadPage() {
   return (
     <MainLayout>
-      <UploadContent />
+      <div className="p-6">
+        <UploadContent />
+      </div>
     </MainLayout>
   )
 }
