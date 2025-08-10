@@ -1,27 +1,37 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
-import { TopNavigation } from "./top-navigation"
+import { UserButton, useUser } from "@clerk/nextjs"
 import { Sidebar } from "./sidebar"
+import { TopNavigation } from "./top-navigation"
+import { usePathname } from "next/navigation"
+import { ProtectedRoute } from "@/components/auth/protected-route"
 
-interface MainLayoutProps {
-  children: React.ReactNode
-}
+export function MainLayout({ children }: { children: React.ReactNode }) {
+  const { user, isLoaded, isSignedIn } = useUser()
+  const pathname = usePathname()
 
-export function MainLayout({ children }: MainLayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  // If not signed in and on landing page, show landing page
+  if (!isSignedIn && pathname === "/") {
+    return <>{children}</>
+  }
 
+  // If not signed in and not on landing page, redirect to sign-in
+  if (!isSignedIn) {
+    return null
+  }
+
+  // If signed in, show main layout with sidebar and navigation
   return (
-    <div className="min-h-screen bg-gray-50">
-      <TopNavigation onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
-      <div className="flex">
-        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        <main className="flex-1 lg:ml-64 pt-16">
-          <div className="p-6">{children}</div>
-        </main>
+    <ProtectedRoute>
+      <div className="flex h-screen bg-gray-50">
+        <Sidebar />
+        <div className="flex-1 flex flex-col overflow-hidden lg:ml-64">
+          <TopNavigation user={user} />
+          <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </ProtectedRoute>
   )
 }
