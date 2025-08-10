@@ -6,13 +6,18 @@ export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname
 
   // Define public routes that don't require authentication
-  const publicRoutes = ['/', '/sign-in', '/sign-up', '/forgot-password', '/sign-in/sso-callback']
+  // Updated to handle catch-all routes
+  const publicRoutes = ['/', '/forgot-password']
   
   // Define API routes that should be accessible
   const apiRoutes = ['/api/webhook/clerk']
 
-  // Allow public routes and API routes
-  if (publicRoutes.includes(path) || path.startsWith('/api/')) {
+  // Check if the path starts with sign-in or sign-up (catch-all routes)
+  const isSignInRoute = path.startsWith('/sign-in')
+  const isSignUpRoute = path.startsWith('/sign-up')
+
+  // Allow public routes, API routes, and sign-in/sign-up routes
+  if (publicRoutes.includes(path) || path.startsWith('/api/') || isSignInRoute || isSignUpRoute) {
     return NextResponse.next()
   }
 

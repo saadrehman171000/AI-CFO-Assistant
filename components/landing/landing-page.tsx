@@ -4,6 +4,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { useUser } from "@clerk/nextjs"
 import { 
   TrendingUp, 
   BarChart3, 
@@ -17,6 +18,8 @@ import {
 } from "lucide-react"
 
 export function LandingPage() {
+  const { isSignedIn } = useUser()
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Navigation */}
@@ -30,14 +33,24 @@ export function LandingPage() {
               <span className="text-xl font-bold text-gray-900">AI CFO Assistant</span>
             </div>
             <div className="flex items-center space-x-4">
-              <Link href="/sign-in">
-                <Button variant="ghost">Sign In</Button>
-              </Link>
-              <Link href="/sign-up">
-                <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                  Get Started
-                </Button>
-              </Link>
+              {isSignedIn ? (
+                <Link href="/dashboard">
+                  <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                    Dashboard
+                  </Button>
+                </Link>
+              ) : (
+                <>
+                  <Link href="/sign-in">
+                    <Button variant="ghost">Sign In</Button>
+                  </Link>
+                  <Link href="/sign-up">
+                    <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                      Get Started
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -180,11 +193,13 @@ export function LandingPage() {
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
-            <Link href="/sign-in">
-              <Button size="lg" variant="outline" className="text-lg px-8 py-4 border-white text-white hover:bg-white hover:text-blue-600">
-                Sign In
-              </Button>
-            </Link>
+            {!isSignedIn && (
+              <Link href="/sign-in">
+                <Button size="lg" variant="outline" className="text-lg px-8 py-4 border-white text-white hover:bg-white hover:text-blue-600 bg-transparent">
+                  Sign In
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </section>

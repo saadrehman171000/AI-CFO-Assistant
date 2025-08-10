@@ -43,25 +43,20 @@ export async function POST(req: Request) {
   const { id } = evt.data;
   const eventType = evt.type;
 
-  console.log(`Webhook with and ID of ${id} and type of ${eventType}`)
-  console.log('Webhook body:', body)
-
   // Handle the webhook
   switch (eventType) {
     case 'user.created':
       // Handle user creation
-      console.log('User created:', evt.data);
       break;
     case 'user.updated':
       // Handle user updates
-      console.log('User updated:', evt.data);
       break;
     case 'user.deleted':
       // Handle user deletion
-      console.log('User deleted:', evt.data);
       break;
     default:
-      console.log('Unhandled event type:', eventType);
+      // Unhandled event type
+      break;
   }
 
   return new Response('Webhook processed successfully', { status: 200 })
