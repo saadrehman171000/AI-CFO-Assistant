@@ -17,7 +17,14 @@ export async function POST(request: NextRequest) {
   const headersList = await headers();
   const signature = headersList.get('stripe-signature');
 
+  console.log('🔄 WEBHOOK RECEIVED:', { 
+    hasBody: !!body, 
+    hasSignature: !!signature,
+    bodyLength: body.length 
+  });
+
   if (!signature) {
+    console.log('❌ Missing stripe signature');
     return NextResponse.json({ error: 'Missing stripe signature' }, { status: 400 });
   }
 
@@ -25,87 +32,115 @@ export async function POST(request: NextRequest) {
 
   try {
     event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET!);
+    console.log('✅ Webhook signature verified, event type:', event.type);
   } catch (err) {
-    console.error('Webhook signature verification failed:', err);
+    console.error('❌ Webhook signature verification failed:', err);
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
   }
 
   if (relevantEvents.has(event.type)) {
+    console.log('🎯 Processing relevant event:', event.type);
     try {
       switch (event.type) {
         case 'checkout.session.completed': {
+          console.log('💳 Processing checkout.session.completed');
           const session = event.data.object as any;
           await handleCheckoutSessionCompleted(session);
           break;
         }
         case 'customer.subscription.created':
         case 'customer.subscription.updated': {
+          console.log('📅 Processing subscription event:', event.type);
           const subscription = event.data.object as any;
           await handleSubscriptionUpdated(subscription);
           break;
         }
         case 'customer.subscription.deleted': {
+          console.log('🗑️ Processing subscription deleted');
           const subscription = event.data.object as any;
           await handleSubscriptionDeleted(subscription);
           break;
         }
         case 'invoice.payment_succeeded': {
+          console.log('💰 Processing payment succeeded');
           const invoice = event.data.object as any;
           await handleInvoicePaymentSucceeded(invoice);
           break;
         }
         case 'invoice.payment_failed': {
+          console.log('💸 Processing payment failed');
           const invoice = event.data.object as any;
           await handleInvoicePaymentFailed(invoice);
           break;
         }
         default:
-          console.log(`Unhandled relevant event: ${event.type}`);
+          console.log(`❓ Unhandled relevant event: ${event.type}`);
       }
     } catch (error) {
-      console.error('Error handling webhook event:', error);
+      console.error('❌ Error handling webhook event:', error);
       return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 });
     }
+  } else {
+    console.log('⏭️ Skipping irrelevant event:', event.type);
   }
 
+  console.log('✅ Webhook processed successfully');
   return NextResponse.json({ received: true });
 }
 
 async function handleCheckoutSessionCompleted(session: any) {
+  console.log('💳 Checkout session completed for customer:', session.customer);
+  console.log('💳 Session subscription ID:', session.subscription);
+  
   const subscription = await stripe.subscriptions.retrieve(session.subscription);
+  console.log('📅 Retrieved subscription:', subscription.id, 'status:', subscription.status);
+  
   await handleSubscriptionUpdated(subscription);
 }
 
 async function handleSubscriptionUpdated(subscription: any) {
+  console.log('📅 Processing subscription update for:', subscription.id);
+  console.log('📅 Customer ID:', subscription.customer);
+  console.log('📅 Status:', subscription.status);
+  
   const user = await prisma.user.findFirst({
     where: { stripeCustomerId: subscription.customer }
   });
 
   if (!user) {
-    console.error('User not found for subscription:', subscription.id);
+    console.error('❌ User not found for subscription:', subscription.id, 'customer:', subscription.customer);
     return;
   }
 
-  await prisma.subscription.upsert({
-    where: { stripeSubscriptionId: subscription.id },
-    update: {
-      status: subscription.status.toUpperCase(),
-      currentPeriodStart: new Date(subscription.current_period_start * 1000),
-      currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-      cancelAtPeriodEnd: subscription.cancel_at_period_end,
-      stripePriceId: subscription.items.data[0]?.price.id,
-    },
-    create: {
-      userId: user.id,
-      stripeCustomerId: subscription.customer,
-      stripeSubscriptionId: subscription.id,
-      stripePriceId: subscription.items.data[0]?.price.id,
-      status: subscription.status.toUpperCase(),
-      currentPeriodStart: new Date(subscription.current_period_start * 1000),
-      currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-      cancelAtPeriodEnd: subscription.cancel_at_period_end,
-    },
-  });
+  console.log('✅ Found user:', user.id, user.email);
+
+  try {
+    const result = await prisma.subscription.upsert({
+      where: { stripeSubscriptionId: subscription.id },
+      update: {
+        status: subscription.status.toUpperCase(),
+        currentPeriodStart: new Date(subscription.current_period_start * 1000),
+        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+        cancelAtPeriodEnd: subscription.cancel_at_period_end,
+        stripePriceId: subscription.items.data[0]?.price.id,
+      },
+      create: {
+        userId: user.id,
+        stripeCustomerId: subscription.customer,
+        stripeSubscriptionId: subscription.id,
+        stripePriceId: subscription.items.data[0]?.price.id,
+        status: subscription.status.toUpperCase(),
+        currentPeriodStart: new Date(subscription.current_period_start * 1000),
+        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+        cancelAtPeriodEnd: subscription.cancel_at_period_end,
+      },
+    });
+    
+    console.log('✅ Subscription upsert successful:', result.id, 'status:', result.status);
+  } catch (error) {
+    console.error('❌ Error upserting subscription:', error);
+    throw error;
+  }
 }
 
 async function handleSubscriptionDeleted(subscription: any) {
