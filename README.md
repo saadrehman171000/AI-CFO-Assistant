@@ -86,7 +86,7 @@ AI-CFO-Assistant/
    DATABASE_URL="postgresql://username:password@localhost:5432/ai_cfo_db"
    
    # OpenAI
-   OPENAI_API_KEY="your-openai-api-key"
+   OPENAI_API_KEY="your_openai_api_key"
    
    # Clerk Authentication
    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="your-clerk-publishable-key"
