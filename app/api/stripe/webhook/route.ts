@@ -102,6 +102,8 @@ async function handleSubscriptionUpdated(subscription: any) {
   console.log('📅 Processing subscription update for:', subscription.id);
   console.log('📅 Customer ID:', subscription.customer);
   console.log('📅 Status:', subscription.status);
+  console.log('📅 Period start timestamp:', subscription.current_period_start);
+  console.log('📅 Period end timestamp:', subscription.current_period_end);
   
   const user = await prisma.user.findFirst({
     where: { stripeCustomerId: subscription.customer }
@@ -114,25 +116,32 @@ async function handleSubscriptionUpdated(subscription: any) {
 
   console.log('✅ Found user:', user.id, user.email);
 
+  // Fix date conversion - ensure valid timestamps
+  const periodStart = subscription.current_period_start ? new Date(subscription.current_period_start * 1000) : new Date();
+  const periodEnd = subscription.current_period_end ? new Date(subscription.current_period_end * 1000) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+  
+  console.log('📅 Converted period start:', periodStart);
+  console.log('📅 Converted period end:', periodEnd);
+
   try {
     const result = await prisma.subscription.upsert({
       where: { stripeSubscriptionId: subscription.id },
       update: {
         status: subscription.status.toUpperCase(),
-        currentPeriodStart: new Date(subscription.current_period_start * 1000),
-        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-        cancelAtPeriodEnd: subscription.cancel_at_period_end,
-        stripePriceId: subscription.items.data[0]?.price.id,
+        currentPeriodStart: periodStart,
+        currentPeriodEnd: periodEnd,
+        cancelAtPeriodEnd: subscription.cancel_at_period_end || false,
+        stripePriceId: subscription.items?.data?.[0]?.price?.id || null,
       },
       create: {
         userId: user.id,
         stripeCustomerId: subscription.customer,
         stripeSubscriptionId: subscription.id,
-        stripePriceId: subscription.items.data[0]?.price.id,
+        stripePriceId: subscription.items?.data?.[0]?.price?.id || null,
         status: subscription.status.toUpperCase(),
-        currentPeriodStart: new Date(subscription.current_period_start * 1000),
-        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-        cancelAtPeriodEnd: subscription.cancel_at_period_end,
+        currentPeriodStart: periodStart,
+        currentPeriodEnd: periodEnd,
+        cancelAtPeriodEnd: subscription.cancel_at_period_end || false,
       },
     });
     
