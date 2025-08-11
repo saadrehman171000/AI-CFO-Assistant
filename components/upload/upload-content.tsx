@@ -43,6 +43,8 @@ export default function UploadContent() {
   const [uploadedReport, setUploadedReport] = useState<FinancialReport | null>(null)
   const [reports, setReports] = useState<FinancialReport[]>([])
   const [isLoadingReports, setIsLoadingReports] = useState(false)
+  const [selectedReport, setSelectedReport] = useState<FinancialReport | null>(null)
+  const [isDeleting, setIsDeleting] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
 
@@ -99,24 +101,75 @@ export default function UploadContent() {
         if (fileInputRef.current) {
           fileInputRef.current.value = ''
         }
-        // Refresh reports list
+        // Reload reports list
         loadReports()
       } else {
-        toast({
-          title: "Upload failed",
-          description: result.error || "Failed to upload file.",
-          variant: "destructive",
-        })
+        throw new Error(result.error || 'Upload failed')
       }
     } catch (error) {
+      console.error('Upload error:', error)
       toast({
         title: "Upload failed",
-        description: "An error occurred during upload.",
+        description: error instanceof Error ? error.message : "An error occurred during upload.",
         variant: "destructive",
       })
     } finally {
       setIsUploading(false)
     }
+  }
+
+  const deleteReport = async (reportId: string) => {
+    if (!confirm('Are you sure you want to delete this report? This action cannot be undone.')) {
+      return
+    }
+
+    setIsDeleting(reportId)
+    try {
+      const response = await fetch('/api/upload', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ reportId }),
+        credentials: 'include'
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        toast({
+          title: "Report deleted",
+          description: "The report has been successfully deleted.",
+        })
+        // Remove from local state
+        setReports(reports.filter(r => r.id !== reportId))
+        if (selectedReport?.id === reportId) {
+          setSelectedReport(null)
+        }
+        if (uploadedReport?.id === reportId) {
+          setUploadedReport(null)
+        }
+      } else {
+        throw new Error(result.error || 'Delete failed')
+      }
+    } catch (error) {
+      console.error('Delete error:', error)
+      toast({
+        title: "Delete failed",
+        description: error instanceof Error ? error.message : "An error occurred while deleting the report.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsDeleting(null)
+    }
+  }
+
+  const viewReportDetails = (report: FinancialReport) => {
+    setSelectedReport(report)
+  }
+
+  const closeReportDetails = () => {
+    setSelectedReport(null)
   }
 
   const loadReports = async () => {
@@ -457,9 +510,29 @@ export default function UploadContent() {
                     </div>
                     
                     {report.parsedData.length > 0 && (
-                      <Button variant="outline" size="sm" className="text-blue-600 border-blue-200 hover:bg-blue-50">
-                        View Details
-                      </Button>
+                      <div className="flex space-x-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                          onClick={() => viewReportDetails(report)}
+                        >
+                          View Details
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="text-red-600 border-red-200 hover:bg-red-50"
+                          onClick={() => deleteReport(report.id)}
+                          disabled={isDeleting === report.id}
+                        >
+                          {isDeleting === report.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            'Delete'
+                          )}
+                        </Button>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -468,6 +541,124 @@ export default function UploadContent() {
           )}
         </CardContent>
       </Card>
+
+      {/* Report Details Modal */}
+      {selectedReport && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    {getReportTypeIcon(selectedReport.reportType)}
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">{selectedReport.fileName}</h2>
+                    <p className="text-gray-600">
+                      {getMonthName(selectedReport.month)} {selectedReport.year} • {selectedReport.reportType.replace('_', ' ')}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={closeReportDetails}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </Button>
+              </div>
+
+              {/* Report Summary */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="text-center p-4 bg-gray-50 rounded-lg">
+                  <div className="text-2xl font-bold text-blue-600">{selectedReport.parsedData.length}</div>
+                  <div className="text-sm text-gray-600">Records Parsed</div>
+                </div>
+                <div className="text-center p-4 bg-gray-50 rounded-lg">
+                  <div className="text-lg font-semibold text-gray-800">
+                    {selectedReport.fileType === 'XLSX' ? 'Excel (.xlsx)' : 
+                     selectedReport.fileType === 'XLS' ? 'Excel (.xls)' :
+                     selectedReport.fileType === 'CSV' ? 'CSV' :
+                     selectedReport.fileType === 'PDF' ? 'PDF' : selectedReport.fileType}
+                  </div>
+                  <div className="text-sm text-gray-600">File Type</div>
+                </div>
+                <div className="text-center p-4 bg-gray-50 rounded-lg">
+                  <div className="text-lg font-semibold text-gray-800">{(selectedReport.fileSize / 1024).toFixed(1)} KB</div>
+                  <div className="text-sm text-gray-600">File Size</div>
+                </div>
+                <div className="text-center p-4 bg-gray-50 rounded-lg">
+                  <div className="text-lg font-semibold text-gray-800">
+                    {new Date(selectedReport.uploadDate).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric'
+                    })}
+                  </div>
+                  <div className="text-sm text-gray-600">Upload Date</div>
+                </div>
+              </div>
+
+              {/* Data Table */}
+              {selectedReport.parsedData.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-4 text-gray-800">Financial Data</h3>
+                  <div className="border border-gray-200 rounded-lg overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50">
+                        <tr className="border-b border-gray-200">
+                          <th className="text-left p-3 font-medium text-gray-800">Account</th>
+                          <th className="text-left p-3 font-medium text-gray-800">Category</th>
+                          <th className="text-right p-3 font-medium text-gray-800">Amount</th>
+                          <th className="text-left p-3 font-medium text-gray-800">Type</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {selectedReport.parsedData.map((record) => (
+                          <tr key={record.id} className="border-b border-gray-100 hover:bg-gray-50">
+                            <td className="p-3 font-medium">{record.accountName}</td>
+                            <td className="p-3 text-gray-600">{record.accountCategory || '-'}</td>
+                            <td className={`p-3 text-right font-semibold ${getDataTypeColor(record.dataType)}`}>
+                              {formatCurrency(record.amount)}
+                            </td>
+                            <td className="p-3 text-gray-600">{record.dataType.replace('_', ' ')}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex justify-end space-x-3 mt-6 pt-6 border-t border-gray-200">
+                <Button
+                  variant="outline"
+                  onClick={closeReportDetails}
+                >
+                  Close
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    deleteReport(selectedReport.id)
+                    closeReportDetails()
+                  }}
+                  disabled={isDeleting === selectedReport.id}
+                >
+                  {isDeleting === selectedReport.id ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    'Delete Report'
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
+

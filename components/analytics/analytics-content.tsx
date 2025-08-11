@@ -1,203 +1,648 @@
-"use client"
+'use client'
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Download, Filter, Calendar, TrendingUp, TrendingDown, DollarSign, Users, Building } from "lucide-react"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts"
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Skeleton } from '@/components/ui/skeleton'
+import { 
+  TrendingUp, 
+  TrendingDown, 
+  DollarSign, 
+  AlertTriangle, 
+  Lightbulb, 
+  RefreshCw,
+  BarChart3,
+  PieChart,
+  Activity,
+  Target,
+  Zap,
+  Eye,
+  FileText,
+  Calendar,
+  Users,
+  Filter,
+  Download,
+  Share2
+} from 'lucide-react'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart as RechartsPieChart, Pie, Cell, AreaChart, Area } from 'recharts'
 
-// Mock data
-const revenueData = [
-  { month: "Jan", revenue: 125000, expenses: 89000, profit: 36000 },
-  { month: "Feb", revenue: 138000, expenses: 92000, profit: 46000 },
-  { month: "Mar", revenue: 142000, expenses: 88000, profit: 54000 },
-  { month: "Apr", revenue: 156000, expenses: 95000, profit: 61000 },
-  { month: "May", revenue: 168000, expenses: 102000, profit: 66000 },
-  { month: "Jun", revenue: 175000, expenses: 115000, profit: 60000 },
-]
+interface FinancialMetrics {
+  totalRevenue: number
+  totalExpenses: number
+  netProfit: number
+  grossMargin: number
+  netMargin: number
+  totalAssets: number
+  totalLiabilities: number
+  totalEquity: number
+  cashFlowFromOperations: number
+  cashFlowFromInvesting: number
+  cashFlowFromFinancing: number
+  netCashFlow: number
+  arDays: number
+  apDays: number
+  ebitda: number
+  currentRatio: number
+  quickRatio: number
+  debtToEquityRatio: number
+}
 
-const categoryData = [
-  { name: "Marketing", value: 35, color: "#3b82f6" },
-  { name: "Operations", value: 25, color: "#10b981" },
-  { name: "Technology", value: 20, color: "#f59e0b" },
-  { name: "Administration", value: 15, color: "#ef4444" },
-  { name: "Other", value: 5, color: "#8b5cf6" },
-]
+interface AIInsight {
+  type: 'trend' | 'anomaly' | 'recommendation' | 'summary'
+  title: string
+  description: string
+  severity: 'low' | 'medium' | 'high'
+  impact: string
+  suggestion?: string
+}
 
-const performanceMetrics = [
-  { metric: "Revenue Growth", value: "+12.5%", trend: "up", change: "+2.3%" },
-  { metric: "Profit Margin", value: "34.3%", trend: "up", change: "+1.8%" },
-  { metric: "Customer Acquisition", value: "1,247", trend: "up", change: "+15.2%" },
-  { metric: "Churn Rate", value: "2.1%", trend: "down", change: "-0.5%" },
-]
+interface AnalyticsData {
+  metrics: FinancialMetrics
+  insights: AIInsight[]
+  trends: {
+    revenue: number[]
+    expenses: number[]
+    profit: number[]
+    months: string[]
+  }
+  topAccounts: {
+    revenue: Array<{
+      accountName: string
+      amount: number
+      dataType: string
+    }>
+    expenses: Array<{
+      accountName: string
+      amount: number
+      dataType: string
+    }>
+    assets: Array<{
+      accountName: string
+      amount: number
+      dataType: string
+    }>
+    liabilities: Array<{
+      accountName: string
+      amount: number
+      dataType: string
+    }>
+  }
+  reportInfo?: {
+    latestReport: {
+      id: string
+      fileName: string
+      reportType: string
+      year: number
+      month: number
+      uploadDate: string
+      totalRecords: number
+    }
+    totalReports: number
+    totalRecords: number
+  }
+}
 
-export function AnalyticsContent() {
-  return (
-    <div className="space-y-6 p-4 sm:p-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Analytics</h1>
-          <p className="text-gray-600 mt-1">Comprehensive financial insights and performance metrics</p>
+export default function AnalyticsContent() {
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [refreshing, setRefreshing] = useState(false)
+  const [selectedPeriod, setSelectedPeriod] = useState('current')
+  const [selectedReportType, setSelectedReportType] = useState('all')
+
+  const fetchAnalyticsData = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      const response = await fetch('/api/dashboard')
+      if (!response.ok) {
+        throw new Error('Failed to fetch analytics data')
+      }
+      
+      const result = await response.json()
+      if (result.success) {
+        setAnalyticsData(result.data)
+      } else {
+        throw new Error(result.error || 'Failed to load analytics')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const refreshAnalytics = async () => {
+    setRefreshing(true)
+    await fetchAnalyticsData()
+    setRefreshing(false)
+  }
+
+  useEffect(() => {
+    fetchAnalyticsData()
+  }, [])
+
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'high': return 'destructive'
+      case 'medium': return 'secondary'
+      case 'low': return 'default'
+      default: return 'default'
+    }
+  }
+
+  const getInsightIcon = (type: string) => {
+    switch (type) {
+      case 'trend': return <TrendingUp className="h-4 w-4" />
+      case 'anomaly': return <AlertTriangle className="h-4 w-4" />
+      case 'recommendation': return <Lightbulb className="h-4 w-4" />
+      case 'summary': return <Eye className="h-4 w-4" />
+      default: return <Zap className="h-4 w-4" />
+    }
+  }
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount)
+  }
+
+  const formatPercentage = (value: number) => {
+    return `${value.toFixed(1)}%`
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-10 w-32" />
         </div>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Button variant="outline" className="flex items-center gap-2">
-            <Filter className="h-4 w-4" />
-            <span className="hidden sm:inline">Filter</span>
-          </Button>
-          <Button variant="outline" className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            <span className="hidden sm:inline">Date Range</span>
-          </Button>
-          <Button className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2">
-            <Download className="h-4 w-4" />
-            <span className="hidden sm:inline">Export</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="pb-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-8 w-32" />
+              </CardHeader>
+            </Card>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-48" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-64 w-full" />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-48" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-64 w-full" />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertDescription>
+          {error}. Please try refreshing the page.
+        </AlertDescription>
+      </Alert>
+    )
+  }
+
+  if (!analyticsData) {
+    return (
+      <div className="text-center py-12">
+        <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+        <h3 className="text-lg font-semibold mb-2">No Analytics Data Available</h3>
+        <p className="text-muted-foreground mb-4">
+          Upload your first financial report to see detailed analytics and insights.
+        </p>
+        <Button asChild>
+          <a href="/upload">Upload Report</a>
+        </Button>
+      </div>
+    )
+  }
+
+  const { metrics, insights, trends, topAccounts, reportInfo } = analyticsData
+
+  // Prepare data for charts
+  const trendData = trends.months.map((month, index) => ({
+    month,
+    revenue: trends.revenue[index] || 0,
+    expenses: trends.expenses[index] || 0,
+    profit: trends.profit[index] || 0
+  }))
+
+  const pieChartData = [
+    { name: 'Revenue', value: metrics.totalRevenue || 0, color: '#10b981' },
+    { name: 'Expenses', value: metrics.totalExpenses || 0, color: '#ef4444' },
+    { name: 'Assets', value: metrics.totalAssets || 0, color: '#3b82f6' },
+    { name: 'Liabilities', value: metrics.totalLiabilities || 0, color: '#f59e0b' }
+  ].filter(item => item.value > 0)
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Financial Analytics</h1>
+          <p className="text-muted-foreground">
+            Deep dive into your financial performance with AI-powered insights
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="current">Current</SelectItem>
+              <SelectItem value="last3">Last 3 Months</SelectItem>
+              <SelectItem value="last6">Last 6 Months</SelectItem>
+              <SelectItem value="last12">Last 12 Months</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={selectedReportType} onValueChange={setSelectedReportType}>
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Reports</SelectItem>
+              <SelectItem value="profit_loss">Profit & Loss</SelectItem>
+              <SelectItem value="balance_sheet">Balance Sheet</SelectItem>
+              <SelectItem value="cash_flow">Cash Flow</SelectItem>
+              <SelectItem value="trial_balance">Trial Balance</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button onClick={refreshAnalytics} disabled={refreshing}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            Refresh
           </Button>
         </div>
       </div>
 
-      {/* Performance Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        {performanceMetrics.map((item) => (
-          <Card key={item.metric} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-4 sm:p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">{item.metric}</p>
-                  <p className="text-xl sm:text-2xl font-bold text-gray-900">{item.value}</p>
-                  <p className={`text-sm flex items-center ${item.trend === "up" ? "text-green-600" : "text-red-600"}`}>
-                    {item.trend === "up" ? (
-                      <TrendingUp className="mr-1 h-4 w-4" />
-                    ) : (
-                      <TrendingDown className="mr-1 h-4 w-4" />
-                    )}
-                    {item.change}
-                  </p>
-                </div>
-                <div className="p-2 sm:p-3 bg-blue-50 rounded-full">
-                  {item.metric.includes("Revenue") && <DollarSign className="h-5 w-5 text-blue-600" />}
-                  {item.metric.includes("Customer") && <Users className="h-5 w-5 text-blue-600" />}
-                  {item.metric.includes("Profit") && <TrendingUp className="h-5 w-5 text-blue-600" />}
-                  {item.metric.includes("Churn") && <TrendingDown className="h-5 w-5 text-blue-600" />}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      {/* Key Performance Indicators */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Revenue Growth</CardTitle>
+            <TrendingUp className="h-4 w-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">
+              {formatCurrency(metrics.totalRevenue || 0)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Gross Margin: {formatPercentage(metrics.grossMargin || 0)}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Expense Ratio</CardTitle>
+            <TrendingDown className="h-4 w-4 text-red-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">
+              {formatCurrency(metrics.totalExpenses || 0)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Net Margin: {formatPercentage(metrics.netMargin || 0)}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Profitability</CardTitle>
+            <Activity className="h-4 w-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className={`text-2xl font-bold ${(metrics.netProfit || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {formatCurrency(metrics.netProfit || 0)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {(metrics.netProfit || 0) >= 0 ? 'Positive' : 'Negative'} Net Income
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Financial Health</CardTitle>
+            <BarChart3 className="h-4 w-4 text-purple-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-purple-600">
+              {metrics.currentRatio?.toFixed(2) || 'N/A'}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Current Ratio
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Revenue vs Expenses Chart */}
+        {/* Trend Analysis */}
         <Card>
           <CardHeader>
-            <CardTitle>Revenue vs Expenses</CardTitle>
+            <CardTitle>Financial Trends Analysis</CardTitle>
+            <CardDescription>Revenue, expenses, and profit trends over time</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={revenueData}>
+              <AreaChart data={trendData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis />
-                <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, "Amount"]} />
-                <Bar dataKey="revenue" fill="#10b981" name="Revenue" />
-                <Bar dataKey="expenses" fill="#ef4444" name="Expenses" />
-              </BarChart>
+                <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                <Area type="monotone" dataKey="revenue" stackId="1" stroke="#10b981" fill="#10b981" fillOpacity={0.3} />
+                <Area type="monotone" dataKey="expenses" stackId="1" stroke="#ef4444" fill="#ef4444" fillOpacity={0.3} />
+                <Area type="monotone" dataKey="profit" stackId="1" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.3} />
+              </AreaChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        {/* Expense Categories Pie Chart */}
+        {/* Composition Analysis */}
         <Card>
           <CardHeader>
-            <CardTitle>Expense Distribution</CardTitle>
+            <CardTitle>Financial Composition</CardTitle>
+            <CardDescription>Breakdown of key financial components</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
+              <RechartsPieChart>
                 <Pie
-                  data={categoryData}
+                  data={pieChartData}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
                 >
-                  {categoryData.map((entry, index) => (
+                  {pieChartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => [`${value}%`, "Percentage"]} />
-              </PieChart>
+                <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+              </RechartsPieChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
 
-      {/* Profit Trend Chart */}
+      {/* Detailed Analysis */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Cash Flow Analysis */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Cash Flow Analysis</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Operating Cash Flow</span>
+              <Badge variant={metrics.cashFlowFromOperations >= 0 ? 'default' : 'destructive'}>
+                {formatCurrency(metrics.cashFlowFromOperations || 0)}
+              </Badge>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Investing Cash Flow</span>
+              <Badge variant={metrics.cashFlowFromInvesting >= 0 ? 'default' : 'destructive'}>
+                {formatCurrency(metrics.cashFlowFromInvesting || 0)}
+              </Badge>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Net Cash Flow</span>
+              <Badge variant={metrics.netCashFlow >= 0 ? 'default' : 'destructive'}>
+                {formatCurrency(metrics.netCashFlow || 0)}
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Financial Ratios */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Financial Ratios</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Current Ratio</span>
+              <Badge variant={metrics.currentRatio > 1 ? 'default' : 'destructive'}>
+                {metrics.currentRatio?.toFixed(2) || 'N/A'}
+              </Badge>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Debt/Equity</span>
+              <Badge variant={metrics.debtToEquityRatio < 1 ? 'default' : 'destructive'}>
+                {metrics.debtToEquityRatio?.toFixed(2) || 'N/A'}
+              </Badge>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Quick Ratio</span>
+              <Badge variant={metrics.quickRatio > 1 ? 'default' : 'destructive'}>
+                {metrics.quickRatio?.toFixed(2) || 'N/A'}
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Performance Metrics */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Performance Metrics</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm">EBITDA</span>
+              <Badge variant="default">
+                {formatCurrency(metrics.ebitda || 0)}
+              </Badge>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm">AR Days</span>
+              <Badge variant={metrics.arDays < 30 ? 'default' : 'destructive'}>
+                {metrics.arDays || 'N/A'}
+              </Badge>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm">AP Days</span>
+              <Badge variant={metrics.apDays < 45 ? 'default' : 'destructive'}>
+                {metrics.apDays || 'N/A'}
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* AI Insights */}
       <Card>
         <CardHeader>
-          <CardTitle>Profit Trend Analysis</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="h-5 w-5 text-yellow-500" />
+            AI-Powered Financial Insights
+          </CardTitle>
+          <CardDescription>
+            Intelligent analysis and recommendations based on your financial data
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={revenueData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, "Profit"]} />
-              <Line type="monotone" dataKey="profit" stroke="#10b981" strokeWidth={3} dot={{ fill: "#10b981", r: 6 }} />
-            </LineChart>
-          </ResponsiveContainer>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {insights.map((insight, index) => (
+              <div key={index} className="p-4 border rounded-lg hover:shadow-md transition-shadow">
+                <div className="flex items-start gap-3">
+                  <div className="mt-1">
+                    {getInsightIcon(insight.type)}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h4 className="font-semibold">{insight.title}</h4>
+                      <Badge variant={getSeverityColor(insight.severity)}>
+                        {insight.severity}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      {insight.description}
+                    </p>
+                    <p className="text-sm font-medium mb-2">
+                      <span className="text-blue-600">Impact:</span> {insight.impact}
+                    </p>
+                    {insight.suggestion && (
+                      <p className="text-sm">
+                        <span className="text-green-600 font-medium">Suggestion:</span> {insight.suggestion}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
 
-      {/* Key Insights */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <span className="mr-2">📊</span>
-              Key Insights
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="p-3 bg-green-50 rounded-lg border-l-4 border-green-400">
-                <p className="text-sm text-gray-700"><strong>Revenue Growth:</strong> Consistent month-over-month growth averaging 8.3%</p>
-              </div>
-              <div className="p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400">
-                <p className="text-sm text-gray-700"><strong>Cost Control:</strong> Operating expenses maintained at 65-70% of revenue</p>
-              </div>
-              <div className="p-3 bg-yellow-50 rounded-lg border-l-4 border-yellow-400">
-                <p className="text-sm text-gray-700"><strong>Seasonality:</strong> Q2 shows strongest performance with 15% growth</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Top Accounts Analysis */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Account Analysis</CardTitle>
+          <CardDescription>Top performing accounts by category</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="revenue" className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="revenue">Revenue</TabsTrigger>
+              <TabsTrigger value="expenses">Expenses</TabsTrigger>
+              <TabsTrigger value="assets">Assets</TabsTrigger>
+              <TabsTrigger value="liabilities">Liabilities</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="revenue" className="space-y-2">
+              {topAccounts.revenue.map((account, index) => (
+                <div key={index} className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                      <span className="text-green-600 font-semibold text-sm">{index + 1}</span>
+                    </div>
+                    <span className="font-medium">{account.accountName}</span>
+                  </div>
+                  <span className="text-green-600 font-semibold">
+                    {formatCurrency(Number(account.amount))}
+                  </span>
+                </div>
+              ))}
+            </TabsContent>
+            
+            <TabsContent value="expenses" className="space-y-2">
+              {topAccounts.expenses.map((account, index) => (
+                <div key={index} className="flex justify-between items-center p-3 bg-red-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                      <span className="text-red-600 font-semibold text-sm">{index + 1}</span>
+                    </div>
+                    <span className="font-medium">{account.accountName}</span>
+                  </div>
+                  <span className="text-red-600 font-semibold">
+                    {formatCurrency(Number(account.amount))}
+                  </span>
+                </div>
+              ))}
+            </TabsContent>
+            
+            <TabsContent value="assets" className="space-y-2">
+              {topAccounts.assets.map((account, index) => (
+                <div key={index} className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-blue-600 font-semibold text-sm">{index + 1}</span>
+                    </div>
+                    <span className="font-medium">{account.accountName}</span>
+                  </div>
+                  <span className="text-blue-600 font-semibold">
+                    {formatCurrency(Number(account.amount))}
+                  </span>
+                </div>
+              ))}
+            </TabsContent>
+            
+            <TabsContent value="liabilities" className="space-y-2">
+              {topAccounts.liabilities.map((account, index) => (
+                <div key={index} className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                      <span className="text-orange-600 font-semibold text-sm">{index + 1}</span>
+                    </div>
+                    <span className="font-medium">{account.accountName}</span>
+                  </div>
+                  <span className="text-orange-600 font-semibold">
+                    {formatCurrency(Number(account.amount))}
+                  </span>
+                </div>
+              ))}
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <span className="mr-2">🎯</span>
-              Recommendations
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="p-3 bg-purple-50 rounded-lg border-l-4 border-purple-400">
-                <p className="text-sm text-gray-700"><strong>Marketing:</strong> Increase Q3 budget allocation by 20%</p>
-              </div>
-              <div className="p-3 bg-indigo-50 rounded-lg border-l-4 border-indigo-400">
-                <p className="text-sm text-gray-700"><strong>Operations:</strong> Optimize cost structure in Q4</p>
-              </div>
-              <div className="p-3 bg-teal-50 rounded-lg border-l-4 border-teal-400">
-                <p className="text-sm text-gray-700"><strong>Growth:</strong> Focus on customer retention strategies</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Action Buttons */}
+      <div className="flex justify-center gap-4">
+        <Button variant="outline" size="lg">
+          <Download className="h-4 w-4 mr-2" />
+          Export Report
+        </Button>
+        <Button variant="outline" size="lg">
+          <Share2 className="h-4 w-4 mr-2" />
+          Share Analysis
+        </Button>
+        <Button size="lg">
+          <Target className="h-4 w-4 mr-2" />
+          Set Goals
+        </Button>
       </div>
     </div>
   )

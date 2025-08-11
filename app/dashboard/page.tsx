@@ -1,10 +1,12 @@
 import { MainLayout } from "@/components/layout/main-layout"
-import { DashboardContent } from "@/components/dashboard/dashboard-content"
+import DashboardContent from '@/components/dashboard/dashboard-content'
 
 export default function DashboardPage() {
   return (
     <MainLayout>
-      <DashboardContent />
+      <div className="p-6">
+        <DashboardContent />
+      </div>
     </MainLayout>
   )
 }

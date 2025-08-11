@@ -6,7 +6,6 @@ import { cn } from "@/lib/utils"
 import {
   BarChart3,
   FileText,
-  Home,
   TrendingUp,
   Upload,
   CreditCard,
@@ -18,13 +17,13 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 
 const navigation = [
-  { name: "Dashboard", href: "/dashboard", icon: Home },
-  { name: "Upload", href: "/upload", icon: Upload },
-  { name: "Reports", href: "/reports", icon: FileText },
-  { name: "Forecasting", href: "/forecasting", icon: TrendingUp },
-  { name: "Analytics", href: "/analytics", icon: BarChart3 },
-  { name: "Subscription", href: "/subscription", icon: CreditCard },
-  { name: "Profile", href: "/profile", icon: User },
+  { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
+  { name: 'Upload', href: '/upload', icon: Upload },
+  { name: 'Reports', href: '/reports', icon: FileText },
+  { name: 'Analytics', href: '/analytics', icon: TrendingUp },
+  { name: 'Forecasting', href: '/forecasting', icon: TrendingUp },
+  { name: 'Profile', href: '/profile', icon: User },
+  { name: 'Subscription', href: '/subscription', icon: CreditCard }
 ]
 
 export function Sidebar() {

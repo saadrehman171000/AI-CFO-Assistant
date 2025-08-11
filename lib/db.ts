@@ -1,5 +1,14 @@
 import { PrismaClient } from '@prisma/client'
 
+interface ClerkUser {
+  id: string
+  emailAddresses?: Array<{
+    emailAddress: string
+  }>
+  firstName?: string | null
+  lastName?: string | null
+}
+
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
@@ -37,8 +46,18 @@ export async function createUser(clerkId: string, email: string, firstName?: str
   }
 }
 
-export async function getOrCreateUser(clerkId: string, email: string, firstName?: string, lastName?: string) {
+export async function getOrCreateUser(clerkUser: ClerkUser) {
   try {
+    // Extract the Clerk user ID from the user object
+    const clerkId = clerkUser.id
+    const email = clerkUser.emailAddresses?.[0]?.emailAddress || ''
+    const firstName = clerkUser.firstName || ''
+    const lastName = clerkUser.lastName || ''
+
+    if (!clerkId) {
+      throw new Error('Invalid Clerk user: missing ID')
+    }
+
     let user = await getUserByClerkId(clerkId)
 
     if (!user) {

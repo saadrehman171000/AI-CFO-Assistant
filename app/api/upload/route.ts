@@ -2,7 +2,45 @@ import { NextRequest, NextResponse } from 'next/server'
 import { currentUser } from '@clerk/nextjs/server'
 import { prisma, getOrCreateUser } from '@/lib/db'
 import { parseFinancialReport } from '@/lib/parsers'
-import { ReportType } from '@prisma/client'
+import { UniversalFinancialParser } from '@/lib/universal-financial-parser'
+import { AIFinancialAnalyzer } from '@/lib/ai-financial-analyzer'
+import { ReportType, ParsedFinancialData } from '@prisma/client'
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const clerkUser = await currentUser()
+    if (!clerkUser) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const user = await getOrCreateUser(clerkUser)
+
+    const { reportId } = await request.json()
+    if (!reportId) {
+      return NextResponse.json({ error: 'Report ID is required' }, { status: 400 })
+    }
+
+    // Delete the report and all associated parsed data
+    await prisma.financialReport.delete({
+      where: {
+        id: reportId,
+        userId: user.id // Ensure user can only delete their own reports
+      }
+    })
+
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Report deleted successfully' 
+    })
+
+  } catch (error) {
+    console.error('Error deleting report:', error)
+    return NextResponse.json({ 
+      error: 'Failed to delete report',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -40,12 +78,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get or create user in our database
-    const dbUser = await getOrCreateUser(
-      clerkUser.id,
-      clerkUser.emailAddresses[0]?.emailAddress || '',
-      clerkUser.firstName || undefined,
-      clerkUser.lastName || undefined
-    )
+    const user = await getOrCreateUser(clerkUser)
 
     // Read file content based on file type
     let fileContent: string | Buffer
@@ -73,7 +106,7 @@ export async function POST(request: NextRequest) {
     // Create financial report record
     const financialReport = await prisma.financialReport.create({
       data: {
-        userId: dbUser.id,
+        userId: user.id,
         fileName: file.name,
         fileType: fileType.toUpperCase(),
         reportType: reportType as ReportType,
@@ -85,10 +118,23 @@ export async function POST(request: NextRequest) {
     })
 
     // Store parsed data
-    if (parsingResult.data && parsingResult.data.length > 0) {
-      const parsedDataRecords = parsingResult.data.map(record => ({
+    let recordsToStore: ParsedFinancialData[] = []
+    
+    if (parsingResult.data) {
+      // Handle new structured format
+      if ('records' in parsingResult.data && Array.isArray(parsingResult.data.records)) {
+        recordsToStore = parsingResult.data.records
+      }
+      // Handle old array format
+      else if (Array.isArray(parsingResult.data)) {
+        recordsToStore = parsingResult.data
+      }
+    }
+    
+    if (recordsToStore.length > 0) {
+      const parsedDataRecords = recordsToStore.map(record => ({
         reportId: financialReport.id,
-        userId: dbUser.id,
+        userId: user.id,
         accountName: record.accountName,
         accountCategory: record.accountCategory,
         amount: record.amount,
@@ -113,7 +159,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ 
       success: true,
       report: createdReport,
-      message: `Successfully processed ${file.name}. Found ${parsingResult.data?.length || 0} financial records.`
+      message: `Successfully processed ${file.name}. Found ${recordsToStore.length} financial records.`
     })
 
   } catch (error) {
@@ -138,12 +184,12 @@ export async function GET(request: NextRequest) {
 
     if (reportId) {
       // Get specific report
-      const dbUser = await prisma.user.findUnique({ where: { clerkId: clerkUser.id } })
+      const user = await prisma.user.findUnique({ where: { clerkId: clerkUser.id } })
       
       const report = await prisma.financialReport.findFirst({
         where: { 
           id: reportId,
-          userId: dbUser?.id
+          userId: user?.id
         },
         include: {
           parsedData: true
@@ -157,16 +203,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ report })
     } else {
       // Get all reports for user
-      let dbUser = await prisma.user.findUnique({ where: { clerkId: clerkUser.id } })
+      let user = await prisma.user.findUnique({ where: { clerkId: clerkUser.id } })
       
-      if (!dbUser) {
+      if (!user) {
         try {
-          dbUser = await getOrCreateUser(
-            clerkUser.id,
-            clerkUser.emailAddresses[0]?.emailAddress || '',
-            clerkUser.firstName || undefined,
-            clerkUser.lastName || undefined
-          )
+          user = await getOrCreateUser(clerkUser)
         } catch (createError) {
           console.error('Failed to create user:', createError)
           return NextResponse.json({ error: 'Failed to create user' }, { status: 500 })
@@ -174,7 +215,7 @@ export async function GET(request: NextRequest) {
       }
 
       const reports = await prisma.financialReport.findMany({
-        where: { userId: dbUser.id },
+        where: { userId: user.id },
         include: {
           parsedData: true
         },

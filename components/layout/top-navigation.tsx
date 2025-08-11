@@ -6,7 +6,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
 interface TopNavigationProps {
-  user: any
+  user: {
+    firstName?: string
+    emailAddresses?: Array<{
+      emailAddress: string
+    }>
+  }
 }
 
 export function TopNavigation({ user }: TopNavigationProps) {
