@@ -4,6 +4,7 @@ import { stripe } from '@/lib/stripe';
 import { getOrCreateUser } from '@/lib/db';
 import { prisma } from '@/lib/db';
 
+// Force deployment update - using dynamic pricing instead of hardcoded price IDs
 export async function POST(request: NextRequest) {
   try {
     const clerkUser = await currentUser();
