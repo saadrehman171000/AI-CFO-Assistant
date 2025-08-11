@@ -1,7 +1,6 @@
 import { ReportType, DataType } from '@prisma/client'
 import * as XLSX from 'xlsx'
 import { AIFinancialAnalyzer } from './ai-financial-analyzer'
-import { UniversalFinancialParser, ParsedFinancialReport } from './universal-financial-parser'
 
 export interface ParsedFinancialRecord {
   accountName: string

@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { currentUser } from '@clerk/nextjs/server'
 import { prisma, getOrCreateUser } from '@/lib/db'
 import { parseFinancialReport } from '@/lib/parsers'
-import { UniversalFinancialParser } from '@/lib/universal-financial-parser'
 import { AIFinancialAnalyzer } from '@/lib/ai-financial-analyzer'
 import { ReportType, ParsedFinancialData } from '@prisma/client'
 

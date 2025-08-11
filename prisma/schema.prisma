@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,58 +8,71 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  clerkId   String   @unique
-  email     String   @unique
-  firstName String?
-  lastName  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
+  id               String                @id @default(cuid())
+  clerkId          String                @unique
+  email            String                @unique
+  firstName        String?
+  lastName         String?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  stripeCustomerId String?
   financialReports FinancialReport[]
-  parsedData      ParsedFinancialData[]
+  parsedData       ParsedFinancialData[]
+  subscriptions    Subscription[]
 
   @@map("users")
 }
 
 model FinancialReport {
-  id          String   @id @default(cuid())
-  userId      String
-  fileName    String
-  fileType    String   // CSV, PDF
-  reportType  ReportType
-  year        Int
-  month       Int
-  fileSize    Int      // in bytes
-  uploadDate  DateTime @default(now())
-  status      UploadStatus @default(PROCESSING)
+  id           String                @id @default(cuid())
+  userId       String
+  fileName     String
+  fileType     String
+  reportType   ReportType
+  year         Int
+  month        Int
+  fileSize     Int
+  uploadDate   DateTime              @default(now())
+  status       UploadStatus          @default(PROCESSING)
   errorMessage String?
-  
-  // Relations
-  user        User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  parsedData  ParsedFinancialData[]
+  user         User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parsedData   ParsedFinancialData[]
 
   @@map("financial_reports")
 }
 
 model ParsedFinancialData {
-  id                String   @id @default(cuid())
-  reportId          String
-  userId            String
-  accountName       String
-  accountCategory   String?
-  amount            Decimal  @db.Decimal(15, 2)
-  dataType          DataType
-  period            String?  // e.g., "2024-06"
-  notes             String?
-  createdAt         DateTime @default(now())
-  
-  // Relations
-  report            FinancialReport    @relation(fields: [reportId], references: [id], onDelete: Cascade)
-  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id              String          @id @default(cuid())
+  reportId        String
+  userId          String
+  accountName     String
+  accountCategory String?
+  amount          Decimal         @db.Decimal(15, 2)
+  dataType        DataType
+  period          String?
+  notes           String?
+  createdAt       DateTime        @default(now())
+  report          FinancialReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("parsed_financial_data")
+}
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  stripePriceId        String?
+  status               SubscriptionStatus
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
 }
 
 enum ReportType {
@@ -91,4 +98,14 @@ enum DataType {
   EQUITY
   CASH_FLOW_IN
   CASH_FLOW_OUT
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  INCOMPLETE
+  INCOMPLETE_EXPIRED
+  PAST_DUE
+  TRIALING
+  UNPAID
 }

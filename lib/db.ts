@@ -58,10 +58,29 @@ export async function getOrCreateUser(clerkUser: ClerkUser) {
       throw new Error('Invalid Clerk user: missing ID')
     }
 
+    // First try to find user by Clerk ID
     let user = await getUserByClerkId(clerkId)
 
     if (!user) {
-      user = await createUser(clerkId, email, firstName, lastName)
+      // If no user found by Clerk ID, check if email exists
+      const existingUserByEmail = await prisma.user.findFirst({
+        where: { email }
+      })
+
+      if (existingUserByEmail) {
+        // Update existing user with new Clerk ID
+        user = await prisma.user.update({
+          where: { id: existingUserByEmail.id },
+          data: { 
+            clerkId,
+            firstName: firstName || existingUserByEmail.firstName,
+            lastName: lastName || existingUserByEmail.lastName
+          }
+        })
+      } else {
+        // Create new user
+        user = await createUser(clerkId, email, firstName, lastName)
+      }
     }
 
     return user
