@@ -6,6 +6,8 @@ import { prisma } from '@/lib/db';
 
 // COMPLETELY REWRITTEN - Using dynamic pricing instead of hardcoded price IDs
 export async function POST(request: NextRequest) {
+  console.log('🔄 CHECKOUT SESSION API CALLED - VERSION: DYNAMIC PRICING');
+  
   try {
     const clerkUser = await currentUser();
     if (!clerkUser) {
@@ -52,6 +54,8 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    console.log('✅ Creating checkout session with DYNAMIC PRICING');
+    
     // Create Stripe checkout session with DYNAMIC PRICING
     const session = await stripe.checkout.sessions.create({
       customer: stripeCustomerId,
@@ -80,9 +84,10 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    console.log('✅ Checkout session created successfully with dynamic pricing');
     return NextResponse.json({ sessionId: session.id, url: session.url });
   } catch (error) {
-    console.error('Error creating checkout session:', error);
+    console.error('❌ Error creating checkout session:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
