@@ -4,7 +4,7 @@ import { stripe } from '@/lib/stripe';
 import { getOrCreateUser } from '@/lib/db';
 import { prisma } from '@/lib/db';
 
-// Force deployment update - using dynamic pricing instead of hardcoded price IDs
+// COMPLETELY REWRITTEN - Using dynamic pricing instead of hardcoded price IDs
 export async function POST(request: NextRequest) {
   try {
     const clerkUser = await currentUser();
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Create Stripe checkout session
+    // Create Stripe checkout session with DYNAMIC PRICING
     const session = await stripe.checkout.sessions.create({
       customer: stripeCustomerId,
       payment_method_types: ['card'],
@@ -73,8 +73,8 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: 'subscription',
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard?success=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/subscription?canceled=true`,
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://ai-cfo-assistant.vercel.app'}/dashboard?success=true`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://ai-cfo-assistant.vercel.app'}/subscription?canceled=true`,
       metadata: {
         userId: user.id,
       },
