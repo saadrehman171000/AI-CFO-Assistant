@@ -293,7 +293,7 @@ export default function ComprehensiveFinancialDashboard({
             </div>
             <div
               className={`text-center px-6 py-4 rounded-xl ${getHealthScoreColor(
-                analysis.executive_summary.business_health_score
+                analysis.executive_summary?.business_health_score || 0
               )}`}
             >
               <div className="text-3xl font-bold">
@@ -579,15 +579,15 @@ export default function ComprehensiveFinancialDashboard({
                     </p>
                     <p
                       className={`text-2xl font-bold ${
-                        analysis.cash_flow_analysis.operating_activities
-                          .net_cash_from_operations >= 0
+                        analysis.cash_flow_analysis?.operating_activities
+                          ?.net_cash_from_operations >= 0
                           ? "text-green-600"
                           : "text-red-600"
                       }`}
                     >
                       {formatCurrency(
-                        analysis.cash_flow_analysis.operating_activities
-                          .net_cash_from_operations
+                        analysis.cash_flow_analysis?.operating_activities
+                          ?.net_cash_from_operations || 0
                       )}
                     </p>
                   </div>
@@ -769,8 +769,8 @@ export default function ComprehensiveFinancialDashboard({
                     <span>Current Assets:</span>
                     <span className="font-semibold">
                       {formatCurrency(
-                        analysis.balance_sheet.assets.current_assets
-                          .total_current
+                        analysis.balance_sheet?.assets?.current_assets
+                          ?.total_current || 0
                       )}
                     </span>
                   </div>
@@ -778,8 +778,8 @@ export default function ComprehensiveFinancialDashboard({
                     <span>Non-Current Assets:</span>
                     <span className="font-semibold">
                       {formatCurrency(
-                        analysis.balance_sheet.assets.non_current_assets
-                          .total_non_current
+                        analysis.balance_sheet?.assets?.non_current_assets
+                          ?.total_non_current || 0
                       )}
                     </span>
                   </div>
@@ -787,7 +787,7 @@ export default function ComprehensiveFinancialDashboard({
                     <span>Total Assets:</span>
                     <span>
                       {formatCurrency(
-                        analysis.balance_sheet.assets.total_assets
+                        analysis.balance_sheet?.assets?.total_assets || 0
                       )}
                     </span>
                   </div>
@@ -803,8 +803,8 @@ export default function ComprehensiveFinancialDashboard({
                     <span>Current Liabilities:</span>
                     <span className="font-semibold">
                       {formatCurrency(
-                        analysis.balance_sheet.liabilities.current_liabilities
-                          .total_current
+                        analysis.balance_sheet?.liabilities?.current_liabilities
+                          ?.total_current || 0
                       )}
                     </span>
                   </div>
@@ -812,8 +812,8 @@ export default function ComprehensiveFinancialDashboard({
                     <span>Long-term Liabilities:</span>
                     <span className="font-semibold">
                       {formatCurrency(
-                        analysis.balance_sheet.liabilities.long_term_liabilities
-                          .total_long_term
+                        analysis.balance_sheet?.liabilities
+                          ?.long_term_liabilities?.total_long_term || 0
                       )}
                     </span>
                   </div>
@@ -821,7 +821,8 @@ export default function ComprehensiveFinancialDashboard({
                     <span>Total Liabilities:</span>
                     <span>
                       {formatCurrency(
-                        analysis.balance_sheet.liabilities.total_liabilities
+                        analysis.balance_sheet?.liabilities
+                          ?.total_liabilities || 0
                       )}
                     </span>
                   </div>
@@ -837,7 +838,7 @@ export default function ComprehensiveFinancialDashboard({
                     <span>Owner Equity:</span>
                     <span className="font-semibold">
                       {formatCurrency(
-                        analysis.balance_sheet.equity.owner_equity
+                        analysis.balance_sheet?.equity?.owner_equity || 0
                       )}
                     </span>
                   </div>
@@ -845,7 +846,7 @@ export default function ComprehensiveFinancialDashboard({
                     <span>Retained Earnings:</span>
                     <span className="font-semibold">
                       {formatCurrency(
-                        analysis.balance_sheet.equity.retained_earnings
+                        analysis.balance_sheet?.equity?.retained_earnings || 0
                       )}
                     </span>
                   </div>
@@ -853,7 +854,7 @@ export default function ComprehensiveFinancialDashboard({
                     <span>Total Equity:</span>
                     <span>
                       {formatCurrency(
-                        analysis.balance_sheet.equity.total_equity
+                        analysis.balance_sheet?.equity?.total_equity || 0
                       )}
                     </span>
                   </div>
@@ -889,15 +890,15 @@ export default function ComprehensiveFinancialDashboard({
                   <span>Net Cash from Operations:</span>
                   <span
                     className={`font-semibold ${
-                      analysis.cash_flow_analysis.operating_activities
-                        .net_cash_from_operations >= 0
+                      analysis.cash_flow_analysis?.operating_activities
+                        ?.net_cash_from_operations >= 0
                         ? "text-green-600"
                         : "text-red-600"
                     }`}
                   >
                     {formatCurrency(
-                      analysis.cash_flow_analysis.operating_activities
-                        .net_cash_from_operations
+                      analysis.cash_flow_analysis?.operating_activities
+                        ?.net_cash_from_operations || 0
                     )}
                   </span>
                 </div>
@@ -905,8 +906,8 @@ export default function ComprehensiveFinancialDashboard({
                   <span>Cash Conversion Efficiency:</span>
                   <span className="font-semibold">
                     {formatPercentage(
-                      analysis.cash_flow_analysis.operating_activities
-                        .cash_conversion_efficiency
+                      analysis.cash_flow_analysis?.operating_activities
+                        ?.cash_conversion_efficiency || 0
                     )}
                   </span>
                 </div>
@@ -914,8 +915,8 @@ export default function ComprehensiveFinancialDashboard({
                   <span>Operating Cash Margin:</span>
                   <span className="font-semibold">
                     {formatPercentage(
-                      analysis.cash_flow_analysis.operating_activities
-                        .operating_cash_margin
+                      analysis.cash_flow_analysis?.operating_activities
+                        ?.operating_cash_margin || 0
                     )}
                   </span>
                 </div>
@@ -931,8 +932,8 @@ export default function ComprehensiveFinancialDashboard({
                   <span>Capital Expenditures:</span>
                   <span className="font-semibold">
                     {formatCurrency(
-                      analysis.cash_flow_analysis.investing_activities
-                        .capital_expenditures
+                      analysis.cash_flow_analysis?.investing_activities
+                        ?.capital_expenditures || 0
                     )}
                   </span>
                 </div>
@@ -940,8 +941,8 @@ export default function ComprehensiveFinancialDashboard({
                   <span>Asset Disposals:</span>
                   <span className="font-semibold">
                     {formatCurrency(
-                      analysis.cash_flow_analysis.investing_activities
-                        .asset_disposals
+                      analysis.cash_flow_analysis?.investing_activities
+                        ?.asset_disposals || 0
                     )}
                   </span>
                 </div>
@@ -949,15 +950,15 @@ export default function ComprehensiveFinancialDashboard({
                   <span>Net Investing Cash Flow:</span>
                   <span
                     className={`${
-                      analysis.cash_flow_analysis.investing_activities
-                        .net_investing_cash_flow >= 0
+                      analysis.cash_flow_analysis?.investing_activities
+                        ?.net_investing_cash_flow >= 0
                         ? "text-green-600"
                         : "text-red-600"
                     }`}
                   >
                     {formatCurrency(
-                      analysis.cash_flow_analysis.investing_activities
-                        .net_investing_cash_flow
+                      analysis.cash_flow_analysis?.investing_activities
+                        ?.net_investing_cash_flow || 0
                     )}
                   </span>
                 </div>
@@ -973,7 +974,8 @@ export default function ComprehensiveFinancialDashboard({
                   <span>Beginning Cash:</span>
                   <span className="font-semibold">
                     {formatCurrency(
-                      analysis.cash_flow_analysis.cash_position.beginning_cash
+                      analysis.cash_flow_analysis?.cash_position
+                        ?.beginning_cash || 0
                     )}
                   </span>
                 </div>
@@ -981,7 +983,8 @@ export default function ComprehensiveFinancialDashboard({
                   <span>Ending Cash:</span>
                   <span className="font-semibold">
                     {formatCurrency(
-                      analysis.cash_flow_analysis.cash_position.ending_cash
+                      analysis.cash_flow_analysis?.cash_position?.ending_cash ||
+                        0
                     )}
                   </span>
                 </div>
@@ -989,14 +992,15 @@ export default function ComprehensiveFinancialDashboard({
                   <span>Free Cash Flow:</span>
                   <span
                     className={`${
-                      analysis.cash_flow_analysis.cash_position
-                        .free_cash_flow >= 0
+                      analysis.cash_flow_analysis?.cash_position
+                        ?.free_cash_flow >= 0
                         ? "text-green-600"
                         : "text-red-600"
                     }`}
                   >
                     {formatCurrency(
-                      analysis.cash_flow_analysis.cash_position.free_cash_flow
+                      analysis.cash_flow_analysis?.cash_position
+                        ?.free_cash_flow || 0
                     )}
                   </span>
                 </div>
