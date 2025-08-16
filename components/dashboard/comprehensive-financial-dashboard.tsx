@@ -326,7 +326,8 @@ export default function ComprehensiveFinancialDashboard({
             <div className="text-center p-4 bg-white rounded-lg border">
               <div
                 className={`text-2xl font-bold ${
-                  analysis.profit_and_loss.profitability_metrics.net_income >= 0
+                  analysis.profit_and_loss?.profitability_metrics?.net_income >=
+                  0
                     ? "text-green-600"
                     : "text-red-600"
                 }`}
@@ -516,7 +517,8 @@ export default function ComprehensiveFinancialDashboard({
                     </p>
                     <p className="text-2xl font-bold">
                       {formatCurrency(
-                        analysis.profit_and_loss.profitability_metrics.ebitda
+                        analysis.profit_and_loss?.profitability_metrics
+                          ?.ebitda || 0
                       )}
                     </p>
                   </div>
@@ -534,8 +536,8 @@ export default function ComprehensiveFinancialDashboard({
                     </p>
                     <p className="text-2xl font-bold">
                       {formatPercentage(
-                        analysis.profit_and_loss.profitability_metrics.margins
-                          .gross_margin
+                        analysis.profit_and_loss?.profitability_metrics?.margins
+                          ?.gross_margin || 0
                       )}
                     </p>
                   </div>
@@ -553,15 +555,15 @@ export default function ComprehensiveFinancialDashboard({
                     </p>
                     <p
                       className={`text-2xl font-bold ${
-                        analysis.profit_and_loss.profitability_metrics.margins
-                          .operating_margin >= 0
+                        analysis.profit_and_loss?.profitability_metrics?.margins
+                          ?.operating_margin >= 0
                           ? "text-green-600"
                           : "text-red-600"
                       }`}
                     >
                       {formatPercentage(
-                        analysis.profit_and_loss.profitability_metrics.margins
-                          .operating_margin
+                        analysis.profit_and_loss?.profitability_metrics?.margins
+                          ?.operating_margin || 0
                       )}
                     </p>
                   </div>
@@ -610,8 +612,8 @@ export default function ComprehensiveFinancialDashboard({
                   <span>Gross Profit:</span>
                   <span className="font-bold text-green-600">
                     {formatCurrency(
-                      analysis.profit_and_loss.profitability_metrics
-                        .gross_profit
+                      analysis.profit_and_loss?.profitability_metrics
+                        ?.gross_profit || 0
                     )}
                   </span>
                 </div>
@@ -619,15 +621,15 @@ export default function ComprehensiveFinancialDashboard({
                   <span>Operating Profit:</span>
                   <span
                     className={`font-bold ${
-                      analysis.profit_and_loss.profitability_metrics
-                        .operating_profit >= 0
+                      analysis.profit_and_loss?.profitability_metrics
+                        ?.operating_profit >= 0
                         ? "text-green-600"
                         : "text-red-600"
                     }`}
                   >
                     {formatCurrency(
-                      analysis.profit_and_loss.profitability_metrics
-                        .operating_profit
+                      analysis.profit_and_loss?.profitability_metrics
+                        ?.operating_profit || 0
                     )}
                   </span>
                 </div>
@@ -635,13 +637,15 @@ export default function ComprehensiveFinancialDashboard({
                   <span>EBITDA:</span>
                   <span
                     className={`font-bold ${
-                      analysis.profit_and_loss.profitability_metrics.ebitda >= 0
+                      analysis.profit_and_loss?.profitability_metrics?.ebitda >=
+                      0
                         ? "text-green-600"
                         : "text-red-600"
                     }`}
                   >
                     {formatCurrency(
-                      analysis.profit_and_loss.profitability_metrics.ebitda
+                      analysis.profit_and_loss?.profitability_metrics?.ebitda ||
+                        0
                     )}
                   </span>
                 </div>
@@ -649,14 +653,15 @@ export default function ComprehensiveFinancialDashboard({
                   <span>Net Income:</span>
                   <span
                     className={`font-bold ${
-                      analysis.profit_and_loss.profitability_metrics
-                        .net_income >= 0
+                      analysis.profit_and_loss?.profitability_metrics
+                        ?.net_income >= 0
                         ? "text-green-600"
                         : "text-red-600"
                     }`}
                   >
                     {formatCurrency(
-                      analysis.profit_and_loss.profitability_metrics.net_income
+                      analysis.profit_and_loss?.profitability_metrics
+                        ?.net_income || 0
                     )}
                   </span>
                 </div>
@@ -674,16 +679,16 @@ export default function ComprehensiveFinancialDashboard({
                       <span>Gross Margin</span>
                       <span>
                         {formatPercentage(
-                          analysis.profit_and_loss.profitability_metrics.margins
-                            .gross_margin
+                          analysis.profit_and_loss?.profitability_metrics
+                            ?.margins?.gross_margin || 0
                         )}
                       </span>
                     </div>
                     <Progress
                       value={Math.max(
                         0,
-                        analysis.profit_and_loss.profitability_metrics.margins
-                          .gross_margin * 100
+                        analysis.profit_and_loss?.profitability_metrics?.margins
+                          ?.gross_margin || 0 * 100
                       )}
                       className="h-2"
                     />
@@ -694,16 +699,16 @@ export default function ComprehensiveFinancialDashboard({
                       <span>Operating Margin</span>
                       <span>
                         {formatPercentage(
-                          analysis.profit_and_loss.profitability_metrics.margins
-                            .operating_margin
+                          analysis.profit_and_loss?.profitability_metrics
+                            ?.margins?.operating_margin || 0
                         )}
                       </span>
                     </div>
                     <Progress
                       value={Math.max(
                         0,
-                        analysis.profit_and_loss.profitability_metrics.margins
-                          .operating_margin * 100
+                        analysis.profit_and_loss?.profitability_metrics?.margins
+                          ?.operating_margin || 0 * 100
                       )}
                       className="h-2"
                     />
@@ -714,16 +719,16 @@ export default function ComprehensiveFinancialDashboard({
                       <span>EBITDA Margin</span>
                       <span>
                         {formatPercentage(
-                          analysis.profit_and_loss.profitability_metrics.margins
-                            .ebitda_margin
+                          analysis.profit_and_loss?.profitability_metrics
+                            ?.margins?.ebitda_margin || 0
                         )}
                       </span>
                     </div>
                     <Progress
                       value={Math.max(
                         0,
-                        analysis.profit_and_loss.profitability_metrics.margins
-                          .ebitda_margin * 100
+                        analysis.profit_and_loss?.profitability_metrics?.margins
+                          ?.ebitda_margin || 0 * 100
                       )}
                       className="h-2"
                     />
@@ -734,16 +739,16 @@ export default function ComprehensiveFinancialDashboard({
                       <span>Net Margin</span>
                       <span>
                         {formatPercentage(
-                          analysis.profit_and_loss.profitability_metrics.margins
-                            .net_margin
+                          analysis.profit_and_loss?.profitability_metrics
+                            ?.margins?.net_margin || 0
                         )}
                       </span>
                     </div>
                     <Progress
                       value={Math.max(
                         0,
-                        analysis.profit_and_loss.profitability_metrics.margins
-                          .net_margin * 100
+                        analysis.profit_and_loss?.profitability_metrics?.margins
+                          ?.net_margin || 0 * 100
                       )}
                       className="h-2"
                     />
@@ -1144,22 +1149,22 @@ export default function ComprehensiveFinancialDashboard({
                     <div>
                       Revenue:{" "}
                       {formatCurrency(
-                        analysis.what_if_scenarios.revenue_impact_analysis
-                          .baseline_scenario.revenue
+                        analysis.what_if_scenarios?.revenue_impact_analysis
+                          ?.baseline_scenario?.revenue || 0
                       )}
                     </div>
                     <div>
                       Net Income:{" "}
                       {formatCurrency(
-                        analysis.what_if_scenarios.revenue_impact_analysis
-                          .baseline_scenario.net_income
+                        analysis.what_if_scenarios?.revenue_impact_analysis
+                          ?.baseline_scenario?.net_income || 0
                       )}
                     </div>
                     <div>
                       Cash Flow:{" "}
                       {formatCurrency(
-                        analysis.what_if_scenarios.revenue_impact_analysis
-                          .baseline_scenario.cash_flow
+                        analysis.what_if_scenarios?.revenue_impact_analysis
+                          ?.baseline_scenario?.cash_flow || 0
                       )}
                     </div>
                   </div>
@@ -1171,24 +1176,23 @@ export default function ComprehensiveFinancialDashboard({
                     <div>
                       Revenue:{" "}
                       {formatCurrency(
-                        analysis.what_if_scenarios.revenue_impact_analysis
-                          .revenue_decrease_20_percent.revenue
+                        analysis.what_if_scenarios?.revenue_impact_analysis
+                          ?.revenue_decrease_20_percent?.revenue || 0
                       )}
                     </div>
                     <div>
                       Net Income:{" "}
                       {formatCurrency(
-                        analysis.what_if_scenarios.revenue_impact_analysis
-                          .revenue_decrease_20_percent.net_income
+                        analysis.what_if_scenarios?.revenue_impact_analysis
+                          ?.revenue_decrease_20_percent?.net_income || 0
                       )}
                     </div>
                     <div>
                       Impact:{" "}
                       <span className="text-red-600 font-semibold">
-                        {
-                          analysis.what_if_scenarios.revenue_impact_analysis
-                            .revenue_decrease_20_percent.impact_assessment
-                        }
+                        {analysis.what_if_scenarios?.revenue_impact_analysis
+                          ?.revenue_decrease_20_percent?.impact_assessment ||
+                          ""}
                       </span>
                     </div>
                   </div>
@@ -1200,22 +1204,22 @@ export default function ComprehensiveFinancialDashboard({
                     <div>
                       Revenue:{" "}
                       {formatCurrency(
-                        analysis.what_if_scenarios.revenue_impact_analysis
-                          .revenue_increase_20_percent.revenue
+                        analysis.what_if_scenarios?.revenue_impact_analysis
+                          ?.revenue_increase_20_percent?.revenue || 0
                       )}
                     </div>
                     <div>
                       Net Income:{" "}
                       {formatCurrency(
-                        analysis.what_if_scenarios.revenue_impact_analysis
-                          .revenue_increase_20_percent.net_income
+                        analysis.what_if_scenarios?.revenue_impact_analysis
+                          ?.revenue_increase_20_percent?.net_income || 0
                       )}
                     </div>
                     <div>
                       Cash Flow:{" "}
                       {formatCurrency(
-                        analysis.what_if_scenarios.revenue_impact_analysis
-                          .revenue_increase_20_percent.cash_flow
+                        analysis.what_if_scenarios?.revenue_impact_analysis
+                          ?.revenue_increase_20_percent?.cash_flow || 0
                       )}
                     </div>
                   </div>
@@ -1237,24 +1241,23 @@ export default function ComprehensiveFinancialDashboard({
                     <div>
                       Cost Savings:{" "}
                       {formatCurrency(
-                        analysis.what_if_scenarios.cost_optimization_scenarios
-                          .fixed_cost_reduction_15_percent.cost_savings
+                        analysis.what_if_scenarios?.cost_optimization_scenarios
+                          ?.fixed_cost_reduction_15_percent?.cost_savings || 0
                       )}
                     </div>
                     <div>
                       Net Income Impact:{" "}
                       {formatCurrency(
-                        analysis.what_if_scenarios.cost_optimization_scenarios
-                          .fixed_cost_reduction_15_percent.net_income_impact
+                        analysis.what_if_scenarios?.cost_optimization_scenarios
+                          ?.fixed_cost_reduction_15_percent
+                          ?.net_income_impact || 0
                       )}
                     </div>
                     <div>
                       Feasibility:{" "}
                       <span className="text-green-600 font-semibold">
-                        {
-                          analysis.what_if_scenarios.cost_optimization_scenarios
-                            .fixed_cost_reduction_15_percent.feasibility
-                        }
+                        {analysis.what_if_scenarios?.cost_optimization_scenarios
+                          ?.fixed_cost_reduction_15_percent?.feasibility || ""}
                       </span>
                     </div>
                   </div>
@@ -1268,26 +1271,25 @@ export default function ComprehensiveFinancialDashboard({
                     <div>
                       Cost Savings:{" "}
                       {formatCurrency(
-                        analysis.what_if_scenarios.cost_optimization_scenarios
-                          .variable_cost_optimization_10_percent.cost_savings
+                        analysis.what_if_scenarios?.cost_optimization_scenarios
+                          ?.variable_cost_optimization_10_percent
+                          ?.cost_savings || 0
                       )}
                     </div>
                     <div>
                       Margin Improvement:{" "}
                       {formatCurrency(
-                        analysis.what_if_scenarios.cost_optimization_scenarios
-                          .variable_cost_optimization_10_percent
-                          .margin_improvement
+                        analysis.what_if_scenarios?.cost_optimization_scenarios
+                          ?.variable_cost_optimization_10_percent
+                          ?.margin_improvement || 0
                       )}
                     </div>
                     <div>
                       Implementation:{" "}
                       <span className="text-blue-600 font-semibold">
-                        {
-                          analysis.what_if_scenarios.cost_optimization_scenarios
-                            .variable_cost_optimization_10_percent
-                            .implementation_difficulty
-                        }
+                        {analysis.what_if_scenarios?.cost_optimization_scenarios
+                          ?.variable_cost_optimization_10_percent
+                          ?.implementation_difficulty || ""}
                       </span>
                     </div>
                   </div>
@@ -1299,22 +1301,22 @@ export default function ComprehensiveFinancialDashboard({
                     <div>
                       Break-even Revenue:{" "}
                       {formatCurrency(
-                        analysis.what_if_scenarios.cash_flow_stress_testing
-                          .break_even_analysis.break_even_revenue
+                        analysis.what_if_scenarios?.cash_flow_stress_testing
+                          ?.break_even_analysis?.break_even_revenue || 0
                       )}
                     </div>
                     <div>
                       Margin of Safety:{" "}
                       {formatCurrency(
-                        analysis.what_if_scenarios.cash_flow_stress_testing
-                          .break_even_analysis.margin_of_safety
+                        analysis.what_if_scenarios?.cash_flow_stress_testing
+                          ?.break_even_analysis?.margin_of_safety || 0
                       )}
                     </div>
                     <div>
                       Operating Leverage:{" "}
-                      {analysis.what_if_scenarios.cash_flow_stress_testing.break_even_analysis.operating_leverage.toFixed(
+                      {analysis.what_if_scenarios?.cash_flow_stress_testing?.break_even_analysis?.operating_leverage?.toFixed(
                         2
-                      )}
+                      ) || 0}
                     </div>
                   </div>
                 </div>
