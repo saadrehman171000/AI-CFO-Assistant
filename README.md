@@ -61,7 +61,7 @@ A comprehensive financial analysis and management platform built with Next.js, d
 
 ```
 AI-CFO-Assistant/
-├── app/                    # Next.js app router
+├── app/                    # Nextjs app router
 │   ├── api/               # API endpoints
 │   ├── dashboard/         # Main dashboard page
 │   ├── upload/            # File upload interface
