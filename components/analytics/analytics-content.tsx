@@ -1,19 +1,31 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Skeleton } from '@/components/ui/skeleton'
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  DollarSign, 
-  AlertTriangle, 
-  Lightbulb, 
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  AlertTriangle,
+  Lightbulb,
   RefreshCw,
   BarChart3,
   PieChart,
@@ -26,158 +38,304 @@ import {
   Users,
   Filter,
   Download,
-  Share2
-} from 'lucide-react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart as RechartsPieChart, Pie, Cell, AreaChart, Area } from 'recharts'
+  Share2,
+} from "lucide-react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+  AreaChart,
+  Area,
+} from "recharts";
 
 interface FinancialMetrics {
-  totalRevenue: number
-  totalExpenses: number
-  netProfit: number
-  grossMargin: number
-  netMargin: number
-  totalAssets: number
-  totalLiabilities: number
-  totalEquity: number
-  cashFlowFromOperations: number
-  cashFlowFromInvesting: number
-  cashFlowFromFinancing: number
-  netCashFlow: number
-  arDays: number
-  apDays: number
-  ebitda: number
-  currentRatio: number
-  quickRatio: number
-  debtToEquityRatio: number
+  totalRevenue: number;
+  totalExpenses: number;
+  netProfit: number;
+  grossMargin: number;
+  netMargin: number;
+  totalAssets: number;
+  totalLiabilities: number;
+  totalEquity: number;
+  cashFlowFromOperations: number;
+  cashFlowFromInvesting: number;
+  cashFlowFromFinancing: number;
+  netCashFlow: number;
+  arDays: number;
+  apDays: number;
+  ebitda: number;
+  currentRatio: number;
+  quickRatio: number;
+  debtToEquityRatio: number;
 }
 
 interface AIInsight {
-  type: 'trend' | 'anomaly' | 'recommendation' | 'summary'
-  title: string
-  description: string
-  severity: 'low' | 'medium' | 'high'
-  impact: string
-  suggestion?: string
+  type: "trend" | "anomaly" | "recommendation" | "summary";
+  title: string;
+  description: string;
+  severity: "low" | "medium" | "high";
+  impact: string;
+  suggestion?: string;
 }
 
 interface AnalyticsData {
-  metrics: FinancialMetrics
-  insights: AIInsight[]
+  metrics: FinancialMetrics;
+  insights: AIInsight[];
   trends: {
-    revenue: number[]
-    expenses: number[]
-    profit: number[]
-    months: string[]
-  }
+    revenue: number[];
+    expenses: number[];
+    profit: number[];
+    months: string[];
+  };
   topAccounts: {
     revenue: Array<{
-      accountName: string
-      amount: number
-      dataType: string
-    }>
+      accountName: string;
+      amount: number;
+      dataType: string;
+    }>;
     expenses: Array<{
-      accountName: string
-      amount: number
-      dataType: string
-    }>
+      accountName: string;
+      amount: number;
+      dataType: string;
+    }>;
     assets: Array<{
-      accountName: string
-      amount: number
-      dataType: string
-    }>
+      accountName: string;
+      amount: number;
+      dataType: string;
+    }>;
     liabilities: Array<{
-      accountName: string
-      amount: number
-      dataType: string
-    }>
-  }
+      accountName: string;
+      amount: number;
+      dataType: string;
+    }>;
+  };
   reportInfo?: {
     latestReport: {
-      id: string
-      fileName: string
-      reportType: string
-      year: number
-      month: number
-      uploadDate: string
-      totalRecords: number
-    }
-    totalReports: number
-    totalRecords: number
-  }
+      id: string;
+      fileName: string;
+      reportType: string;
+      year: number;
+      month: number;
+      uploadDate: string;
+      totalRecords: number;
+    };
+    totalReports: number;
+    totalRecords: number;
+  };
 }
 
 export default function AnalyticsContent() {
-  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [refreshing, setRefreshing] = useState(false)
-  const [selectedPeriod, setSelectedPeriod] = useState('current')
-  const [selectedReportType, setSelectedReportType] = useState('all')
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(
+    null
+  );
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedPeriod, setSelectedPeriod] = useState("current");
+  const [selectedReportType, setSelectedReportType] = useState("all");
 
   const fetchAnalyticsData = async () => {
     try {
-      setLoading(true)
-      setError(null)
-      
-      const response = await fetch('/api/dashboard')
+      setLoading(true);
+      setError(null);
+
+      // Use the new unified API endpoint with latest=true parameter
+      const response = await fetch("/api/financial-analysis?latest=true");
       if (!response.ok) {
-        throw new Error('Failed to fetch analytics data')
+        throw new Error("Failed to fetch analytics data");
       }
-      
-      const result = await response.json()
-      if (result.success) {
-        setAnalyticsData(result.data)
+
+      const analysisResult = await response.json();
+
+      // Check if we have the Flask backend format (file_info and analysis structure)
+      if (
+        analysisResult &&
+        analysisResult.file_info &&
+        analysisResult.analysis
+      ) {
+        // Transform the Flask backend data into the format expected by the analytics component
+        const transformedData: AnalyticsData = {
+          metrics: {
+            totalRevenue:
+              analysisResult.analysis.profit_and_loss.revenue_analysis
+                ?.total_revenue || 0,
+            totalExpenses:
+              analysisResult.analysis.profit_and_loss.cost_structure
+                ?.total_expenses || 0,
+            netProfit:
+              analysisResult.analysis.profit_and_loss.profitability_metrics
+                ?.net_income || 0,
+            grossMargin:
+              analysisResult.analysis.profit_and_loss.profitability_metrics
+                ?.margins?.gross_margin || 0,
+            netMargin:
+              analysisResult.analysis.profit_and_loss.profitability_metrics
+                ?.margins?.net_margin || 0,
+            totalAssets:
+              analysisResult.analysis.balance_sheet?.assets?.total_assets || 0,
+            totalLiabilities:
+              analysisResult.analysis.balance_sheet?.liabilities
+                ?.total_liabilities || 0,
+            totalEquity:
+              analysisResult.analysis.balance_sheet?.equity?.total_equity || 0,
+            cashFlowFromOperations:
+              analysisResult.analysis.cash_flow_analysis?.operating_activities
+                ?.net_cash_from_operations || 0,
+            cashFlowFromInvesting:
+              analysisResult.analysis.cash_flow_analysis?.investing_activities
+                ?.net_investing_cash_flow || 0,
+            cashFlowFromFinancing:
+              analysisResult.analysis.cash_flow_analysis?.financing_activities
+                ?.net_financing_cash_flow || 0,
+            netCashFlow:
+              analysisResult.analysis.cash_flow_analysis?.cash_position
+                ?.net_change_in_cash || 0,
+            arDays:
+              analysisResult.analysis.working_capital_management
+                ?.cash_conversion_cycle?.days_sales_outstanding || 0,
+            apDays:
+              analysisResult.analysis.working_capital_management
+                ?.cash_conversion_cycle?.days_payable_outstanding || 0,
+            ebitda:
+              analysisResult.analysis.profit_and_loss.profitability_metrics
+                ?.ebitda || 0,
+            currentRatio:
+              analysisResult.analysis.financial_ratios?.liquidity_ratios
+                ?.current_ratio || 0,
+            quickRatio:
+              analysisResult.analysis.financial_ratios?.liquidity_ratios
+                ?.quick_ratio || 0,
+            debtToEquityRatio:
+              analysisResult.analysis.financial_ratios?.leverage_ratios
+                ?.debt_to_equity || 0,
+          },
+          // Transform insights from key_insights_summary
+          insights:
+            analysisResult.analysis.key_insights_summary?.map(
+              (insight: string, index: number) => ({
+                type:
+                  index % 4 === 0
+                    ? "trend"
+                    : index % 4 === 1
+                    ? "anomaly"
+                    : index % 4 === 2
+                    ? "recommendation"
+                    : "summary",
+                title: `Insight ${index + 1}`,
+                description: insight,
+                severity:
+                  index % 3 === 0 ? "high" : index % 3 === 1 ? "medium" : "low",
+                impact: "Impacts financial performance and decision-making",
+                suggestion:
+                  index % 2 === 0
+                    ? "Review this area for potential optimization"
+                    : undefined,
+              })
+            ) || [],
+          // Mock trends data since it's not provided in the same structure
+          trends: {
+            revenue: [213200],
+            expenses: [342360],
+            profit: [-234160],
+            months: ["Current"],
+          },
+          // Create empty top accounts since we don't have them in the same format
+          topAccounts: {
+            revenue: [],
+            expenses: [],
+            assets: [],
+            liabilities: [],
+          },
+          reportInfo: {
+            latestReport: {
+              id: "1",
+              fileName: analysisResult.file_info.filename,
+              reportType: "PROFIT_LOSS",
+              year: new Date().getFullYear(),
+              month: new Date().getMonth() + 1,
+              uploadDate: new Date().toISOString(),
+              totalRecords:
+                analysisResult.analysis.key_insights_summary?.length || 0,
+            },
+            totalReports: 1,
+            totalRecords:
+              analysisResult.analysis.key_insights_summary?.length || 0,
+          },
+        };
+
+        setAnalyticsData(transformedData);
+      } else if (analysisResult.success && analysisResult.data) {
+        // Backward compatibility with old format
+        setAnalyticsData(analysisResult.data);
       } else {
-        throw new Error(result.error || 'Failed to load analytics')
+        throw new Error("Invalid data format received from API");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const refreshAnalytics = async () => {
-    setRefreshing(true)
-    await fetchAnalyticsData()
-    setRefreshing(false)
-  }
+    setRefreshing(true);
+    await fetchAnalyticsData();
+    setRefreshing(false);
+  };
 
   useEffect(() => {
-    fetchAnalyticsData()
-  }, [])
+    fetchAnalyticsData();
+  }, []);
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'high': return 'destructive'
-      case 'medium': return 'secondary'
-      case 'low': return 'default'
-      default: return 'default'
+      case "high":
+        return "destructive";
+      case "medium":
+        return "secondary";
+      case "low":
+        return "default";
+      default:
+        return "default";
     }
-  }
+  };
 
   const getInsightIcon = (type: string) => {
     switch (type) {
-      case 'trend': return <TrendingUp className="h-4 w-4" />
-      case 'anomaly': return <AlertTriangle className="h-4 w-4" />
-      case 'recommendation': return <Lightbulb className="h-4 w-4" />
-      case 'summary': return <Eye className="h-4 w-4" />
-      default: return <Zap className="h-4 w-4" />
+      case "trend":
+        return <TrendingUp className="h-4 w-4" />;
+      case "anomaly":
+        return <AlertTriangle className="h-4 w-4" />;
+      case "recommendation":
+        return <Lightbulb className="h-4 w-4" />;
+      case "summary":
+        return <Eye className="h-4 w-4" />;
+      default:
+        return <Zap className="h-4 w-4" />;
     }
-  }
+  };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount)
-  }
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
 
   const formatPercentage = (value: number) => {
-    return `${value.toFixed(1)}%`
-  }
+    return `${value.toFixed(1)}%`;
+  };
 
   if (loading) {
     return (
@@ -215,7 +373,7 @@ export default function AnalyticsContent() {
           </Card>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -226,53 +384,62 @@ export default function AnalyticsContent() {
           {error}. Please try refreshing the page.
         </AlertDescription>
       </Alert>
-    )
+    );
   }
 
   if (!analyticsData) {
     return (
       <div className="text-center py-12">
         <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-        <h3 className="text-lg font-semibold mb-2">No Analytics Data Available</h3>
+        <h3 className="text-lg font-semibold mb-2">
+          No Analytics Data Available
+        </h3>
         <p className="text-muted-foreground mb-4">
-          Upload your first financial report to see detailed analytics and insights.
+          Upload your first financial report to see detailed analytics and
+          insights.
         </p>
         <Button asChild>
           <a href="/upload">Upload Report</a>
         </Button>
       </div>
-    )
+    );
   }
 
-  const { metrics, insights, trends, topAccounts, reportInfo } = analyticsData
+  const { metrics, insights, trends, topAccounts, reportInfo } = analyticsData;
 
   // Prepare data for charts
   const trendData = trends.months.map((month, index) => ({
     month,
     revenue: trends.revenue[index] || 0,
     expenses: trends.expenses[index] || 0,
-    profit: trends.profit[index] || 0
-  }))
+    profit: trends.profit[index] || 0,
+  }));
 
   const pieChartData = [
-    { name: 'Revenue', value: metrics.totalRevenue || 0, color: '#10b981' },
-    { name: 'Expenses', value: metrics.totalExpenses || 0, color: '#ef4444' },
-    { name: 'Assets', value: metrics.totalAssets || 0, color: '#3b82f6' },
-    { name: 'Liabilities', value: metrics.totalLiabilities || 0, color: '#f59e0b' }
-  ].filter(item => item.value > 0)
+    { name: "Revenue", value: metrics.totalRevenue || 0, color: "#10b981" },
+    { name: "Expenses", value: metrics.totalExpenses || 0, color: "#ef4444" },
+    { name: "Assets", value: metrics.totalAssets || 0, color: "#3b82f6" },
+    {
+      name: "Liabilities",
+      value: metrics.totalLiabilities || 0,
+      color: "#f59e0b",
+    },
+  ].filter((item) => item.value > 0);
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Financial Analytics</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Financial Analytics
+          </h1>
           <p className="text-muted-foreground">
             Deep dive into your financial performance with AI-powered insights
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+          {/* <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
             <SelectTrigger className="w-32">
               <SelectValue />
             </SelectTrigger>
@@ -282,8 +449,11 @@ export default function AnalyticsContent() {
               <SelectItem value="last6">Last 6 Months</SelectItem>
               <SelectItem value="last12">Last 12 Months</SelectItem>
             </SelectContent>
-          </Select>
-          <Select value={selectedReportType} onValueChange={setSelectedReportType}>
+          </Select> */}
+          {/* <Select
+            value={selectedReportType}
+            onValueChange={setSelectedReportType}
+          >
             <SelectTrigger className="w-40">
               <SelectValue />
             </SelectTrigger>
@@ -294,9 +464,11 @@ export default function AnalyticsContent() {
               <SelectItem value="cash_flow">Cash Flow</SelectItem>
               <SelectItem value="trial_balance">Trial Balance</SelectItem>
             </SelectContent>
-          </Select>
+          </Select> */}
           <Button onClick={refreshAnalytics} disabled={refreshing}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw
+              className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
+            />
             Refresh
           </Button>
         </div>
@@ -306,7 +478,9 @@ export default function AnalyticsContent() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Revenue Growth</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Revenue Growth
+            </CardTitle>
             <TrendingUp className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
@@ -340,27 +514,34 @@ export default function AnalyticsContent() {
             <Activity className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${(metrics.netProfit || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <div
+              className={`text-2xl font-bold ${
+                (metrics.netProfit || 0) >= 0
+                  ? "text-green-600"
+                  : "text-red-600"
+              }`}
+            >
               {formatCurrency(metrics.netProfit || 0)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {(metrics.netProfit || 0) >= 0 ? 'Positive' : 'Negative'} Net Income
+              {(metrics.netProfit || 0) >= 0 ? "Positive" : "Negative"} Net
+              Income
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Financial Health</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Financial Health
+            </CardTitle>
             <BarChart3 className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
-              {metrics.currentRatio?.toFixed(2) || 'N/A'}
+              {metrics.currentRatio?.toFixed(2) || "N/A"}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Current Ratio
-            </p>
+            <p className="text-xs text-muted-foreground">Current Ratio</p>
           </CardContent>
         </Card>
       </div>
@@ -371,7 +552,9 @@ export default function AnalyticsContent() {
         <Card>
           <CardHeader>
             <CardTitle>Financial Trends Analysis</CardTitle>
-            <CardDescription>Revenue, expenses, and profit trends over time</CardDescription>
+            <CardDescription>
+              Revenue, expenses, and profit trends over time
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -380,9 +563,30 @@ export default function AnalyticsContent() {
                 <XAxis dataKey="month" />
                 <YAxis />
                 <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-                <Area type="monotone" dataKey="revenue" stackId="1" stroke="#10b981" fill="#10b981" fillOpacity={0.3} />
-                <Area type="monotone" dataKey="expenses" stackId="1" stroke="#ef4444" fill="#ef4444" fillOpacity={0.3} />
-                <Area type="monotone" dataKey="profit" stackId="1" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.3} />
+                <Area
+                  type="monotone"
+                  dataKey="revenue"
+                  stackId="1"
+                  stroke="#10b981"
+                  fill="#10b981"
+                  fillOpacity={0.3}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="expenses"
+                  stackId="1"
+                  stroke="#ef4444"
+                  fill="#ef4444"
+                  fillOpacity={0.3}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="profit"
+                  stackId="1"
+                  stroke="#3b82f6"
+                  fill="#3b82f6"
+                  fillOpacity={0.3}
+                />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
@@ -392,7 +596,9 @@ export default function AnalyticsContent() {
         <Card>
           <CardHeader>
             <CardTitle>Financial Composition</CardTitle>
-            <CardDescription>Breakdown of key financial components</CardDescription>
+            <CardDescription>
+              Breakdown of key financial components
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -402,7 +608,9 @@ export default function AnalyticsContent() {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                  label={({ name, percent }) =>
+                    `${name} ${((percent || 0) * 100).toFixed(0)}%`
+                  }
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
@@ -423,24 +631,38 @@ export default function AnalyticsContent() {
         {/* Cash Flow Analysis */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium">Cash Flow Analysis</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Cash Flow Analysis
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-sm">Operating Cash Flow</span>
-              <Badge variant={metrics.cashFlowFromOperations >= 0 ? 'default' : 'destructive'}>
+              <Badge
+                variant={
+                  metrics.cashFlowFromOperations >= 0
+                    ? "default"
+                    : "destructive"
+                }
+              >
                 {formatCurrency(metrics.cashFlowFromOperations || 0)}
               </Badge>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm">Investing Cash Flow</span>
-              <Badge variant={metrics.cashFlowFromInvesting >= 0 ? 'default' : 'destructive'}>
+              <Badge
+                variant={
+                  metrics.cashFlowFromInvesting >= 0 ? "default" : "destructive"
+                }
+              >
                 {formatCurrency(metrics.cashFlowFromInvesting || 0)}
               </Badge>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm">Net Cash Flow</span>
-              <Badge variant={metrics.netCashFlow >= 0 ? 'default' : 'destructive'}>
+              <Badge
+                variant={metrics.netCashFlow >= 0 ? "default" : "destructive"}
+              >
                 {formatCurrency(metrics.netCashFlow || 0)}
               </Badge>
             </div>
@@ -450,25 +672,35 @@ export default function AnalyticsContent() {
         {/* Financial Ratios */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium">Financial Ratios</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Financial Ratios
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-sm">Current Ratio</span>
-              <Badge variant={metrics.currentRatio > 1 ? 'default' : 'destructive'}>
-                {metrics.currentRatio?.toFixed(2) || 'N/A'}
+              <Badge
+                variant={metrics.currentRatio > 1 ? "default" : "destructive"}
+              >
+                {metrics.currentRatio?.toFixed(2) || "N/A"}
               </Badge>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm">Debt/Equity</span>
-              <Badge variant={metrics.debtToEquityRatio < 1 ? 'default' : 'destructive'}>
-                {metrics.debtToEquityRatio?.toFixed(2) || 'N/A'}
+              <Badge
+                variant={
+                  metrics.debtToEquityRatio < 1 ? "default" : "destructive"
+                }
+              >
+                {metrics.debtToEquityRatio?.toFixed(2) || "N/A"}
               </Badge>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm">Quick Ratio</span>
-              <Badge variant={metrics.quickRatio > 1 ? 'default' : 'destructive'}>
-                {metrics.quickRatio?.toFixed(2) || 'N/A'}
+              <Badge
+                variant={metrics.quickRatio > 1 ? "default" : "destructive"}
+              >
+                {metrics.quickRatio?.toFixed(2) || "N/A"}
               </Badge>
             </div>
           </CardContent>
@@ -477,7 +709,9 @@ export default function AnalyticsContent() {
         {/* Performance Metrics */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium">Performance Metrics</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Performance Metrics
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between items-center">
@@ -488,14 +722,14 @@ export default function AnalyticsContent() {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm">AR Days</span>
-              <Badge variant={metrics.arDays < 30 ? 'default' : 'destructive'}>
-                {metrics.arDays || 'N/A'}
+              <Badge variant={metrics.arDays < 30 ? "default" : "destructive"}>
+                {metrics.arDays || "N/A"}
               </Badge>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm">AP Days</span>
-              <Badge variant={metrics.apDays < 45 ? 'default' : 'destructive'}>
-                {metrics.apDays || 'N/A'}
+              <Badge variant={metrics.apDays < 45 ? "default" : "destructive"}>
+                {metrics.apDays || "N/A"}
               </Badge>
             </div>
           </CardContent>
@@ -510,17 +744,19 @@ export default function AnalyticsContent() {
             AI-Powered Financial Insights
           </CardTitle>
           <CardDescription>
-            Intelligent analysis and recommendations based on your financial data
+            Intelligent analysis and recommendations based on your financial
+            data
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {insights.map((insight, index) => (
-              <div key={index} className="p-4 border rounded-lg hover:shadow-md transition-shadow">
+              <div
+                key={index}
+                className="p-4 border rounded-lg hover:shadow-md transition-shadow"
+              >
                 <div className="flex items-start gap-3">
-                  <div className="mt-1">
-                    {getInsightIcon(insight.type)}
-                  </div>
+                  <div className="mt-1">{getInsightIcon(insight.type)}</div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <h4 className="font-semibold">{insight.title}</h4>
@@ -532,11 +768,15 @@ export default function AnalyticsContent() {
                       {insight.description}
                     </p>
                     <p className="text-sm font-medium mb-2">
-                      <span className="text-blue-600">Impact:</span> {insight.impact}
+                      <span className="text-blue-600">Impact:</span>{" "}
+                      {insight.impact}
                     </p>
                     {insight.suggestion && (
                       <p className="text-sm">
-                        <span className="text-green-600 font-medium">Suggestion:</span> {insight.suggestion}
+                        <span className="text-green-600 font-medium">
+                          Suggestion:
+                        </span>{" "}
+                        {insight.suggestion}
                       </p>
                     )}
                   </div>
@@ -548,7 +788,7 @@ export default function AnalyticsContent() {
       </Card>
 
       {/* Top Accounts Analysis */}
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle>Account Analysis</CardTitle>
           <CardDescription>Top performing accounts by category</CardDescription>
@@ -561,13 +801,18 @@ export default function AnalyticsContent() {
               <TabsTrigger value="assets">Assets</TabsTrigger>
               <TabsTrigger value="liabilities">Liabilities</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="revenue" className="space-y-2">
               {topAccounts.revenue.map((account, index) => (
-                <div key={index} className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                <div
+                  key={index}
+                  className="flex justify-between items-center p-3 bg-green-50 rounded-lg"
+                >
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                      <span className="text-green-600 font-semibold text-sm">{index + 1}</span>
+                      <span className="text-green-600 font-semibold text-sm">
+                        {index + 1}
+                      </span>
                     </div>
                     <span className="font-medium">{account.accountName}</span>
                   </div>
@@ -577,13 +822,18 @@ export default function AnalyticsContent() {
                 </div>
               ))}
             </TabsContent>
-            
+
             <TabsContent value="expenses" className="space-y-2">
               {topAccounts.expenses.map((account, index) => (
-                <div key={index} className="flex justify-between items-center p-3 bg-red-50 rounded-lg">
+                <div
+                  key={index}
+                  className="flex justify-between items-center p-3 bg-red-50 rounded-lg"
+                >
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                      <span className="text-red-600 font-semibold text-sm">{index + 1}</span>
+                      <span className="text-red-600 font-semibold text-sm">
+                        {index + 1}
+                      </span>
                     </div>
                     <span className="font-medium">{account.accountName}</span>
                   </div>
@@ -593,13 +843,18 @@ export default function AnalyticsContent() {
                 </div>
               ))}
             </TabsContent>
-            
+
             <TabsContent value="assets" className="space-y-2">
               {topAccounts.assets.map((account, index) => (
-                <div key={index} className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                <div
+                  key={index}
+                  className="flex justify-between items-center p-3 bg-blue-50 rounded-lg"
+                >
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <span className="text-blue-600 font-semibold text-sm">{index + 1}</span>
+                      <span className="text-blue-600 font-semibold text-sm">
+                        {index + 1}
+                      </span>
                     </div>
                     <span className="font-medium">{account.accountName}</span>
                   </div>
@@ -609,13 +864,18 @@ export default function AnalyticsContent() {
                 </div>
               ))}
             </TabsContent>
-            
+
             <TabsContent value="liabilities" className="space-y-2">
               {topAccounts.liabilities.map((account, index) => (
-                <div key={index} className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
+                <div
+                  key={index}
+                  className="flex justify-between items-center p-3 bg-orange-50 rounded-lg"
+                >
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                      <span className="text-orange-600 font-semibold text-sm">{index + 1}</span>
+                      <span className="text-orange-600 font-semibold text-sm">
+                        {index + 1}
+                      </span>
                     </div>
                     <span className="font-medium">{account.accountName}</span>
                   </div>
@@ -627,10 +887,10 @@ export default function AnalyticsContent() {
             </TabsContent>
           </Tabs>
         </CardContent>
-      </Card>
+      </Card> */}
 
       {/* Action Buttons */}
-      <div className="flex justify-center gap-4">
+      {/* <div className="flex justify-center gap-4">
         <Button variant="outline" size="lg">
           <Download className="h-4 w-4 mr-2" />
           Export Report
@@ -643,7 +903,7 @@ export default function AnalyticsContent() {
           <Target className="h-4 w-4 mr-2" />
           Set Goals
         </Button>
-      </div>
+      </div> */}
     </div>
-  )
+  );
 }

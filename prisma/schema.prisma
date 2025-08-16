@@ -8,17 +8,18 @@ datasource db {
 }
 
 model User {
-  id               String                @id @default(cuid())
-  clerkId          String                @unique
-  email            String                @unique
-  firstName        String?
-  lastName         String?
-  createdAt        DateTime              @default(now())
-  updatedAt        DateTime              @updatedAt
-  stripeCustomerId String?
-  financialReports FinancialReport[]
-  parsedData       ParsedFinancialData[]
-  subscriptions    Subscription[]
+  id                  String                @id @default(cuid())
+  clerkId             String                @unique
+  email               String                @unique
+  firstName           String?
+  lastName            String?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  stripeCustomerId    String?
+  financialReports    FinancialReport[]
+  parsedData          ParsedFinancialData[]
+  subscriptions       Subscription[]
+  financialAnalyses   FinancialAnalysis[]
 
   @@map("users")
 }
@@ -108,4 +109,19 @@ enum SubscriptionStatus {
   PAST_DUE
   TRIALING
   UNPAID
+}
+
+model FinancialAnalysis {
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fileName        String
+  fileType        String
+  fileSizeMb      Float
+  uploadDate      DateTime  @default(now())
+  analysisData    Json      // Store the complete analysis JSON response
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("financial_analyses")
 }

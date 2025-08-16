@@ -1,6 +1,6 @@
-import { MainLayout } from "@/components/layout/main-layout"
-import AnalyticsContent from "@/components/analytics/analytics-content"
-import SubscriptionGuard from "@/components/auth/subscription-guard"
+import { MainLayout } from "@/components/layout/main-layout";
+import AnalyticsContent from "@/components/analytics/analytics-content";
+import SubscriptionGuard from "@/components/auth/subscription-guard";
 
 export default function AnalyticsPage() {
   return (
@@ -9,5 +9,5 @@ export default function AnalyticsPage() {
         <AnalyticsContent />
       </SubscriptionGuard>
     </MainLayout>
-  )
+  );
 }
