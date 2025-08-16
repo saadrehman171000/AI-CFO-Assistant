@@ -174,7 +174,7 @@ AI-CFO-Assistant/
 
 ### AI Analysis Settings
 
-- **Model Selection**: GPT-4 or GPT-3.5-turbo
+- **Model Selection**: GPT-4, GPT-3.5-turbo
 - **Analysis Depth**: Configurable insight generation
 - **Custom Prompts**: Tailored financial analysis instructions
 
