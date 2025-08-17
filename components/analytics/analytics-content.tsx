@@ -39,6 +39,7 @@ import {
   Filter,
   Download,
   Share2,
+  Sparkles,
 } from "lucide-react";
 import {
   LineChart,
@@ -339,7 +340,7 @@ export default function AnalyticsContent() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 p-10">
         <div className="flex items-center justify-between">
           <Skeleton className="h-8 w-64" />
           <Skeleton className="h-10 w-32" />
@@ -378,29 +379,48 @@ export default function AnalyticsContent() {
 
   if (error) {
     return (
-      <Alert variant="destructive">
-        <AlertTriangle className="h-4 w-4" />
-        <AlertDescription>
-          {error}. Please try refreshing the page.
-        </AlertDescription>
-      </Alert>
+      <div className="p-10">
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-pink-600 opacity-10 rounded-2xl"></div>
+          <div className="relative bg-red-50/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-red-200">
+            <Alert variant="destructive" className="bg-transparent border-0 p-0">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                {error}. Please try refreshing the page.
+              </AlertDescription>
+            </Alert>
+          </div>
+        </div>
+      </div>
     );
   }
 
   if (!analyticsData) {
     return (
-      <div className="text-center py-12">
-        <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-        <h3 className="text-lg font-semibold mb-2">
-          No Analytics Data Available
-        </h3>
-        <p className="text-muted-foreground mb-4">
-          Upload your first financial report to see detailed analytics and
-          insights.
-        </p>
-        <Button asChild>
-          <a href="/upload">Upload Report</a>
-        </Button>
+      <div className="p-10 text-center">
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-10 rounded-2xl"></div>
+          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl p-12 shadow-xl border border-blue-200">
+            <div className="relative z-10">
+              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl animate-pulse">
+                <FileText className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold mb-3 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                No Analytics Data Available
+              </h3>
+              <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                Upload your first financial report to see detailed analytics and insights.
+              </p>
+              <Button 
+                size="lg"
+                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300"
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Upload Report
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -428,94 +448,94 @@ export default function AnalyticsContent() {
 
   return (
     <div className="space-y-6 p-10">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Financial Analytics
-          </h1>
-          <p className="text-muted-foreground">
-            Deep dive into your financial performance with AI-powered insights
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          {/* <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="current">Current</SelectItem>
-              <SelectItem value="last3">Last 3 Months</SelectItem>
-              <SelectItem value="last6">Last 6 Months</SelectItem>
-              <SelectItem value="last12">Last 12 Months</SelectItem>
-            </SelectContent>
-          </Select> */}
-          {/* <Select
-            value={selectedReportType}
-            onValueChange={setSelectedReportType}
-          >
-            <SelectTrigger className="w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Reports</SelectItem>
-              <SelectItem value="profit_loss">Profit & Loss</SelectItem>
-              <SelectItem value="balance_sheet">Balance Sheet</SelectItem>
-              <SelectItem value="cash_flow">Cash Flow</SelectItem>
-              <SelectItem value="trial_balance">Trial Balance</SelectItem>
-            </SelectContent>
-          </Select> */}
-          <Button onClick={refreshAnalytics} disabled={refreshing}>
-            <RefreshCw
-              className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
-            />
-            Refresh
-          </Button>
+      {/* Enhanced Header */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-10 rounded-2xl"></div>
+        <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-blue-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                <BarChart3 className="h-6 w-6 text-white" />
+              </div>
+              <div className="relative">
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg animate-pulse">
+                  <Sparkles className="h-3 w-3 text-white" />
+                </div>
+                <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  Financial Analytics
+                </h1>
+                <p className="text-gray-600">
+                  Deep dive into your financial performance with AI-powered insights
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button 
+                onClick={refreshAnalytics} 
+                disabled={refreshing}
+                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300"
+              >
+                <RefreshCw
+                  className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
+                />
+                Refresh
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Key Performance Indicators */}
+      {/* Enhanced Key Performance Indicators */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Revenue Growth
-            </CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-600 opacity-10 rounded-2xl"></div>
+          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-green-200 hover:shadow-2xl transition-all duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
+                <TrendingUp className="h-5 w-5 text-white" />
+              </div>
+              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+            </div>
+            <div className="text-2xl font-bold text-green-600 mb-2">
               {formatCurrency(metrics.totalRevenue || 0)}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm text-gray-600 mb-1">Revenue Growth</p>
+            <p className="text-xs text-green-600 font-medium">
               Gross Margin: {formatPercentage(metrics.grossMargin || 0)}
             </p>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Expense Ratio</CardTitle>
-            <TrendingDown className="h-4 w-4 text-red-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-pink-600 opacity-10 rounded-2xl"></div>
+          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-red-200 hover:shadow-2xl transition-all duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-10 h-10 bg-gradient-to-r from-red-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
+                <TrendingDown className="h-5 w-5 text-white" />
+              </div>
+              <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+            </div>
+            <div className="text-2xl font-bold text-red-600 mb-2">
               {formatCurrency(metrics.totalExpenses || 0)}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm text-gray-600 mb-1">Expense Ratio</p>
+            <p className="text-xs text-red-600 font-medium">
               Net Margin: {formatPercentage(metrics.netMargin || 0)}
             </p>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Profitability</CardTitle>
-            <Activity className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-600 opacity-10 rounded-2xl"></div>
+          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-blue-200 hover:shadow-2xl transition-all duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center shadow-lg">
+                <Activity className="h-5 w-5 text-white" />
+              </div>
+              <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+            </div>
             <div
-              className={`text-2xl font-bold ${
+              className={`text-2xl font-bold mb-2 ${
                 (metrics.netProfit || 0) >= 0
                   ? "text-green-600"
                   : "text-red-600"
@@ -523,269 +543,329 @@ export default function AnalyticsContent() {
             >
               {formatCurrency(metrics.netProfit || 0)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {(metrics.netProfit || 0) >= 0 ? "Positive" : "Negative"} Net
-              Income
+            <p className="text-sm text-gray-600 mb-1">Profitability</p>
+            <p className="text-xs text-blue-600 font-medium">
+              {(metrics.netProfit || 0) >= 0 ? "Positive" : "Negative"} Net Income
             </p>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Financial Health
-            </CardTitle>
-            <BarChart3 className="h-4 w-4 text-purple-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-600">
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-violet-600 opacity-10 rounded-2xl"></div>
+          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-purple-200 hover:shadow-2xl transition-all duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-violet-600 rounded-xl flex items-center justify-center shadow-lg">
+                <BarChart3 className="h-5 w-5 text-white" />
+              </div>
+              <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
+            </div>
+            <div className="text-2xl font-bold text-purple-600 mb-2">
               {metrics.currentRatio?.toFixed(2) || "N/A"}
             </div>
-            <p className="text-xs text-muted-foreground">Current Ratio</p>
-          </CardContent>
-        </Card>
+            <p className="text-sm text-gray-600 mb-1">Financial Health</p>
+            <p className="text-xs text-purple-600 font-medium">Current Ratio</p>
+          </div>
+        </div>
       </div>
 
-      {/* Charts Section */}
+      {/* Enhanced Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Trend Analysis */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Financial Trends Analysis</CardTitle>
-            <CardDescription>
-              Revenue, expenses, and profit trends over time
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={trendData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-                <Area
-                  type="monotone"
-                  dataKey="revenue"
-                  stackId="1"
-                  stroke="#10b981"
-                  fill="#10b981"
-                  fillOpacity={0.3}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="expenses"
-                  stackId="1"
-                  stroke="#ef4444"
-                  fill="#ef4444"
-                  fillOpacity={0.3}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="profit"
-                  stackId="1"
-                  stroke="#3b82f6"
-                  fill="#3b82f6"
-                  fillOpacity={0.3}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Composition Analysis */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Financial Composition</CardTitle>
-            <CardDescription>
-              Breakdown of key financial components
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <RechartsPieChart>
-                <Pie
-                  data={pieChartData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) =>
-                    `${name} ${((percent || 0) * 100).toFixed(0)}%`
-                  }
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {pieChartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-              </RechartsPieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Detailed Analysis */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Cash Flow Analysis */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium">
-              Cash Flow Analysis
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm">Operating Cash Flow</span>
-              <Badge
-                variant={
-                  metrics.cashFlowFromOperations >= 0
-                    ? "default"
-                    : "destructive"
-                }
-              >
-                {formatCurrency(metrics.cashFlowFromOperations || 0)}
-              </Badge>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm">Investing Cash Flow</span>
-              <Badge
-                variant={
-                  metrics.cashFlowFromInvesting >= 0 ? "default" : "destructive"
-                }
-              >
-                {formatCurrency(metrics.cashFlowFromInvesting || 0)}
-              </Badge>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm">Net Cash Flow</span>
-              <Badge
-                variant={metrics.netCashFlow >= 0 ? "default" : "destructive"}
-              >
-                {formatCurrency(metrics.netCashFlow || 0)}
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Financial Ratios */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium">
-              Financial Ratios
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm">Current Ratio</span>
-              <Badge
-                variant={metrics.currentRatio > 1 ? "default" : "destructive"}
-              >
-                {metrics.currentRatio?.toFixed(2) || "N/A"}
-              </Badge>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm">Debt/Equity</span>
-              <Badge
-                variant={
-                  metrics.debtToEquityRatio < 1 ? "default" : "destructive"
-                }
-              >
-                {metrics.debtToEquityRatio?.toFixed(2) || "N/A"}
-              </Badge>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm">Quick Ratio</span>
-              <Badge
-                variant={metrics.quickRatio > 1 ? "default" : "destructive"}
-              >
-                {metrics.quickRatio?.toFixed(2) || "N/A"}
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Performance Metrics */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium">
-              Performance Metrics
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm">EBITDA</span>
-              <Badge variant="default">
-                {formatCurrency(metrics.ebitda || 0)}
-              </Badge>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm">AR Days</span>
-              <Badge variant={metrics.arDays < 30 ? "default" : "destructive"}>
-                {metrics.arDays || "N/A"}
-              </Badge>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm">AP Days</span>
-              <Badge variant={metrics.apDays < 45 ? "default" : "destructive"}>
-                {metrics.apDays || "N/A"}
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* AI Insights */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Zap className="h-5 w-5 text-yellow-500" />
-            AI-Powered Financial Insights
-          </CardTitle>
-          <CardDescription>
-            Intelligent analysis and recommendations based on your financial
-            data
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {insights.map((insight, index) => (
-              <div
-                key={index}
-                className="p-4 border rounded-lg hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="mt-1">{getInsightIcon(insight.type)}</div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h4 className="font-semibold">{insight.title}</h4>
-                      <Badge variant={getSeverityColor(insight.severity)}>
-                        {insight.severity}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      {insight.description}
-                    </p>
-                    <p className="text-sm font-medium mb-2">
-                      <span className="text-blue-600">Impact:</span>{" "}
-                      {insight.impact}
-                    </p>
-                    {insight.suggestion && (
-                      <p className="text-sm">
-                        <span className="text-green-600 font-medium">
-                          Suggestion:
-                        </span>{" "}
-                        {insight.suggestion}
-                      </p>
-                    )}
-                  </div>
+        {/* Enhanced Trend Analysis */}
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-blue-600 opacity-10 rounded-2xl"></div>
+          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-green-200 hover:shadow-2xl transition-all duration-300">
+            <div className="p-6 border-b border-green-100">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <TrendingUp className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Financial Trends Analysis</h3>
+                  <p className="text-sm text-gray-600">Revenue, expenses, and profit trends over time</p>
                 </div>
               </div>
-            ))}
+            </div>
+            <div className="p-6">
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={trendData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                  <Area
+                    type="monotone"
+                    dataKey="revenue"
+                    stackId="1"
+                    stroke="#10b981"
+                    fill="#10b981"
+                    fillOpacity={0.3}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="expenses"
+                    stackId="1"
+                    stroke="#ef4444"
+                    fill="#ef4444"
+                    fillOpacity={0.3}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="profit"
+                    stackId="1"
+                    stroke="#3b82f6"
+                    fill="#3b82f6"
+                    fillOpacity={0.3}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Enhanced Composition Analysis */}
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-600 opacity-10 rounded-2xl"></div>
+          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-purple-200 hover:shadow-2xl transition-all duration-300">
+            <div className="p-6 border-b border-purple-100">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <PieChart className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Financial Composition</h3>
+                  <p className="text-sm text-gray-600">Breakdown of key financial components</p>
+                </div>
+              </div>
+            </div>
+            <div className="p-6">
+              <ResponsiveContainer width="100%" height={300}>
+                <RechartsPieChart>
+                  <Pie
+                    data={pieChartData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) =>
+                      `${name} ${((percent || 0) * 100).toFixed(0)}%`
+                    }
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {pieChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                </RechartsPieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Enhanced Detailed Analysis */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Enhanced Cash Flow Analysis */}
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-600 opacity-10 rounded-2xl"></div>
+          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-blue-200 hover:shadow-2xl transition-all duration-300">
+            <div className="p-6 border-b border-blue-100">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <Activity className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Cash Flow Analysis</h3>
+                </div>
+              </div>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="flex justify-between items-center p-3 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg">
+                <span className="text-sm font-medium text-gray-700">Operating Cash Flow</span>
+                <Badge
+                  variant={
+                    metrics.cashFlowFromOperations >= 0
+                      ? "default"
+                      : "destructive"
+                  }
+                  className="bg-white border border-blue-200 text-blue-700"
+                >
+                  {formatCurrency(metrics.cashFlowFromOperations || 0)}
+                </Badge>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg">
+                <span className="text-sm font-medium text-gray-700">Investing Cash Flow</span>
+                <Badge
+                  variant={
+                    metrics.cashFlowFromInvesting >= 0 ? "default" : "destructive"
+                  }
+                  className="bg-white border border-blue-200 text-blue-700"
+                >
+                  {formatCurrency(metrics.cashFlowFromInvesting || 0)}
+                </Badge>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg">
+                <span className="text-sm font-medium text-gray-700">Net Cash Flow</span>
+                <Badge
+                  variant={metrics.netCashFlow >= 0 ? "default" : "destructive"}
+                  className="bg-white border border-blue-200 text-blue-700"
+                >
+                  {formatCurrency(metrics.netCashFlow || 0)}
+                </Badge>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Enhanced Financial Ratios */}
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-600 opacity-10 rounded-2xl"></div>
+          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-green-200 hover:shadow-2xl transition-all duration-300">
+            <div className="p-6 border-b border-green-100">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <BarChart3 className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Financial Ratios</h3>
+                </div>
+              </div>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="flex justify-between items-center p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg">
+                <span className="text-sm font-medium text-gray-700">Current Ratio</span>
+                <Badge
+                  variant={metrics.currentRatio > 1 ? "default" : "destructive"}
+                  className="bg-white border border-green-200 text-green-700"
+                >
+                  {metrics.currentRatio?.toFixed(2) || "N/A"}
+                </Badge>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg">
+                <span className="text-sm font-medium text-gray-700">Debt/Equity</span>
+                <Badge
+                  variant={
+                    metrics.debtToEquityRatio < 1 ? "default" : "destructive"
+                  }
+                  className="bg-white border border-green-200 text-green-700"
+                >
+                  {metrics.debtToEquityRatio?.toFixed(2) || "N/A"}
+                </Badge>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg">
+                <span className="text-sm font-medium text-gray-700">Quick Ratio</span>
+                <Badge
+                  variant={metrics.quickRatio > 1 ? "default" : "destructive"}
+                  className="bg-white border border-green-200 text-green-700"
+                >
+                  {metrics.quickRatio?.toFixed(2) || "N/A"}
+                </Badge>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Enhanced Performance Metrics */}
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-yellow-600 opacity-10 rounded-2xl"></div>
+          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-orange-200 hover:shadow-2xl transition-all duration-300">
+            <div className="p-6 border-b border-orange-100">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-yellow-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <Target className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Performance Metrics</h3>
+                </div>
+              </div>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="flex justify-between items-center p-3 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg">
+                <span className="text-sm font-medium text-gray-700">EBITDA</span>
+                <Badge variant="default" className="bg-white border border-orange-200 text-orange-700">
+                  {formatCurrency(metrics.ebitda || 0)}
+                </Badge>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg">
+                <span className="text-sm font-medium text-gray-700">AR Days</span>
+                <Badge variant={metrics.arDays < 30 ? "default" : "destructive"} className="bg-white border border-orange-200 text-orange-700">
+                  {metrics.arDays || "N/A"}
+                </Badge>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg">
+                <span className="text-sm font-medium text-gray-700">AP Days</span>
+                <Badge variant={metrics.apDays < 45 ? "default" : "destructive"} className="bg-white border border-orange-200 text-orange-700">
+                  {metrics.apDays || "N/A"}
+                </Badge>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Enhanced AI Insights */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-yellow-500 to-orange-600 opacity-10 rounded-2xl"></div>
+        <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-yellow-200 hover:shadow-2xl transition-all duration-300">
+          <div className="p-6 border-b border-yellow-100">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
+                <Zap className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">AI-Powered Financial Insights</h3>
+                <p className="text-sm text-gray-600">Intelligent analysis and recommendations based on your financial data</p>
+              </div>
+            </div>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {insights.map((insight, index) => (
+                <div
+                  key={index}
+                  className="relative overflow-hidden rounded-xl border border-yellow-100 hover:shadow-lg transition-all duration-300 hover:scale-105"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-yellow-50 to-orange-50 opacity-50"></div>
+                  <div className="relative p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="mt-1 w-8 h-8 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-lg flex items-center justify-center shadow-md">
+                        {getInsightIcon(insight.type)}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h4 className="font-semibold text-gray-900">{insight.title}</h4>
+                          <Badge 
+                            variant={getSeverityColor(insight.severity)}
+                            className="bg-white border border-yellow-200 text-yellow-700"
+                          >
+                            {insight.severity}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-gray-700 mb-2">
+                          {insight.description}
+                        </p>
+                        <p className="text-sm font-medium mb-2">
+                          <span className="text-blue-600">Impact:</span>{" "}
+                          {insight.impact}
+                        </p>
+                        {insight.suggestion && (
+                          <p className="text-sm">
+                            <span className="text-green-600 font-medium">
+                              Suggestion:
+                            </span>{" "}
+                            {insight.suggestion}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Top Accounts Analysis */}
       {/* <Card>

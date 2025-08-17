@@ -41,6 +41,7 @@ import {
   Share2,
   Plus,
   Minus,
+  Sparkles,
 } from "lucide-react";
 import {
   LineChart,
@@ -527,28 +528,37 @@ export default function ForecastingContent() {
 
   if (error) {
     return (
-      <Alert variant="destructive">
-        <AlertDescription>
-          {error}. Please try refreshing the page.
-        </AlertDescription>
-      </Alert>
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-pink-600 opacity-10 rounded-2xl"></div>
+        <div className="relative bg-red-50/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-red-200">
+          <Alert variant="destructive" className="bg-transparent border-0 p-0">
+            <AlertDescription className="text-red-800">
+              {error}. Please try refreshing the page.
+            </AlertDescription>
+          </Alert>
+        </div>
+      </div>
     );
   }
 
   if (!forecastData) {
     return (
-      <div className="text-center py-12">
-        <Calculator className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-        <h3 className="text-lg font-semibold mb-2">
-          No Forecast Data Available
-        </h3>
-        <p className="text-muted-foreground mb-4">
-          Upload financial reports to generate cash flow forecasts and scenario
-          analysis.
-        </p>
-        <Button asChild>
-          <a href="/upload">Upload Report</a>
-        </Button>
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-10 rounded-3xl"></div>
+        <div className="relative bg-white/80 backdrop-blur-xl rounded-3xl p-12 shadow-2xl border border-white/20 text-center">
+          <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl mx-auto mb-6 transform rotate-3 hover:rotate-0 transition-all duration-300">
+            <Calculator className="h-10 w-10 text-white" />
+          </div>
+          <h3 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent mb-4">
+            No Forecast Data Available
+          </h3>
+          <p className="text-gray-600 mb-6 max-w-md mx-auto">
+            Upload financial reports to generate cash flow forecasts and scenario analysis.
+          </p>
+          <Button asChild className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300">
+            <a href="/upload">Upload Report</a>
+          </Button>
+        </div>
       </div>
     );
   }
@@ -571,185 +581,152 @@ export default function ForecastingContent() {
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto px-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Financial Forecasting
-          </h1>
-          <p className="text-muted-foreground">
-            Project future cash flows and analyze different business scenarios
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="30">30 Days</SelectItem>
-              <SelectItem value="60">60 Days</SelectItem>
-              <SelectItem value="90">90 Days</SelectItem>
-              <SelectItem value="180">180 Days</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button onClick={generateForecast} disabled={loading}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
+      {/* Enhanced Header */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 opacity-10 rounded-3xl"></div>
+        <div className="relative bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/20">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl transform rotate-3 hover:rotate-0 transition-all duration-300">
+                  <Calculator className="h-8 w-8 text-white" />
+                </div>
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-pink-500 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
+                  <Sparkles className="h-3 w-3 text-white" />
+                </div>
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
+                  Financial Forecasting
+                </h1>
+                <p className="text-gray-600 mt-1">Project future cash flows and analyze different business scenarios</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+                <SelectTrigger className="w-32 bg-white/90 backdrop-blur-sm border-blue-200 hover:border-blue-300 shadow-lg hover:shadow-xl transition-all duration-300">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="30">30 Days</SelectItem>
+                  <SelectItem value="60">60 Days</SelectItem>
+                  <SelectItem value="90">90 Days</SelectItem>
+                  <SelectItem value="180">180 Days</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button 
+                onClick={generateForecast} 
+                disabled={loading}
+                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Key Forecast Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Break-Even Point
-            </CardTitle>
-            <Target className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
+      {/* Enhanced Key Forecast Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-600 opacity-10 rounded-2xl"></div>
+          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-blue-200 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                <Target className="h-5 w-5 text-white" />
+              </div>
+              <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+            </div>
             <div className="text-2xl font-bold text-blue-600">
               {formatPercentage(metrics.breakEvenPoint)}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-sm text-gray-600">Break-Even Point</div>
+            <p className="text-xs text-blue-600 mt-1 font-medium">
               Revenue needed to cover costs
             </p>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Cash Runway</CardTitle>
-            <Calendar className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-600 opacity-10 rounded-2xl"></div>
+          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-green-200 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
+                <Calendar className="h-5 w-5 text-white" />
+              </div>
+              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+            </div>
             <div className="text-2xl font-bold text-green-600">
               {Math.round(metrics.cashRunway)} days
             </div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-sm text-gray-600">Cash Runway</div>
+            <p className="text-xs text-green-600 mt-1 font-medium">
               Time until cash runs out
             </p>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Monthly Burn Rate
-            </CardTitle>
-            <TrendingDown className="h-4 w-4 text-red-600" />
-          </CardHeader>
-          <CardContent>
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-pink-600 opacity-10 rounded-2xl"></div>
+          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-red-200 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-red-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
+                <TrendingDown className="h-5 w-5 text-white" />
+              </div>
+              <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+            </div>
             <div className="text-2xl font-bold text-red-600">
               {formatCurrency(metrics.burnRate)}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-sm text-gray-600">Monthly Burn Rate</div>
+            <p className="text-xs text-red-600 mt-1 font-medium">
               Daily cash consumption
             </p>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Growth Rate</CardTitle>
-            <TrendingUp className="h-4 w-4 text-purple-600" />
-          </CardHeader>
-          <CardContent>
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-600 opacity-10 rounded-2xl"></div>
+          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-purple-200 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
+                <TrendingUp className="h-5 w-5 text-white" />
+              </div>
+              <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
+            </div>
             <div className="text-2xl font-bold text-purple-600">
               {formatPercentage(metrics.growthRate * 100)}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-sm text-gray-600">Growth Rate</div>
+            <p className="text-xs text-purple-600 mt-1 font-medium">
               Monthly growth projection
             </p>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
-      {/* Cash Flow Projection Chart */}
-      <Card className="shadow-sm hover:shadow transition-shadow duration-200">
-        <CardHeader>
-          <CardTitle>Cash Flow Projection</CardTitle>
-          <CardDescription>
-            Projected cash flow over the next {selectedPeriod} days
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="pt-4">
-          <ResponsiveContainer width="100%" height={400}>
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-              <XAxis
-                dataKey="date"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: "#64748b", fontSize: 12 }}
-              />
-              <YAxis
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: "#64748b", fontSize: 12 }}
-                tickFormatter={(value) =>
-                  formatCurrency(Number(value)).replace(/\.00$/, "")
-                }
-              />
-              <Tooltip
-                formatter={(value) => formatCurrency(Number(value))}
-                contentStyle={{
-                  backgroundColor: "#ffffff",
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "6px",
-                  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                }}
-              />
-              <Line
-                type="monotone"
-                dataKey="projected"
-                stroke="#3b82f6"
-                strokeWidth={3}
-                name="Projected"
-                dot={{ r: 4, strokeWidth: 2 }}
-                activeDot={{ r: 6, strokeWidth: 2 }}
-              />
-              <Line
-                type="monotone"
-                dataKey="optimistic"
-                stroke="#10b981"
-                strokeWidth={2}
-                strokeDasharray="5 5"
-                name="Optimistic"
-                dot={{ r: 4, strokeWidth: 2 }}
-              />
-              <Line
-                type="monotone"
-                dataKey="pessimistic"
-                stroke="#ef4444"
-                strokeWidth={2}
-                strokeDasharray="5 5"
-                name="Pessimistic"
-                dot={{ r: 4, strokeWidth: 2 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      {/* Scenario Analysis */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Scenario Comparison */}
-        <Card className="shadow-sm hover:shadow transition-shadow duration-200">
-          <CardHeader>
-            <CardTitle>Scenario Analysis</CardTitle>
-            <CardDescription>
-              Compare different business scenarios and their impact
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={scenarioChartData}>
+      {/* Enhanced Cash Flow Projection Chart */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-10 rounded-2xl"></div>
+        <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-blue-200 hover:shadow-2xl transition-all duration-300">
+          <div className="p-6 border-b border-blue-100">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                <BarChart3 className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Cash Flow Projection</h3>
+                <p className="text-sm text-gray-600">Projected cash flow over the next {selectedPeriod} days</p>
+              </div>
+            </div>
+          </div>
+          <div className="p-6 pt-4">
+            <ResponsiveContainer width="100%" height={400}>
+              <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                 <XAxis
-                  dataKey="name"
+                  dataKey="date"
                   axisLine={false}
                   tickLine={false}
                   tick={{ fill: "#64748b", fontSize: 12 }}
@@ -771,264 +748,354 @@ export default function ForecastingContent() {
                     boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
                   }}
                 />
-                <Bar
-                  dataKey="profit"
-                  fill="#10b981"
-                  name="Profit"
-                  radius={[4, 4, 0, 0]}
+                <Line
+                  type="monotone"
+                  dataKey="projected"
+                  stroke="#3b82f6"
+                  strokeWidth={3}
+                  name="Projected"
+                  dot={{ r: 4, strokeWidth: 2 }}
+                  activeDot={{ r: 6, strokeWidth: 2 }}
                 />
-                <Bar
-                  dataKey="cashFlow"
-                  fill="#3b82f6"
-                  name="Cash Flow"
-                  radius={[4, 4, 0, 0]}
+                <Line
+                  type="monotone"
+                  dataKey="optimistic"
+                  stroke="#10b981"
+                  strokeWidth={2}
+                  strokeDasharray="5 5"
+                  name="Optimistic"
+                  dot={{ r: 4, strokeWidth: 2 }}
                 />
-              </BarChart>
+                <Line
+                  type="monotone"
+                  dataKey="pessimistic"
+                  stroke="#ef4444"
+                  strokeWidth={2}
+                  strokeDasharray="5 5"
+                  name="Pessimistic"
+                  dot={{ r: 4, strokeWidth: 2 }}
+                />
+              </LineChart>
             </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Custom Scenario Builder */}
-        <Card className="shadow-sm hover:shadow transition-shadow duration-200">
-          <CardHeader>
-            <CardTitle>Custom Scenario Builder</CardTitle>
-            <CardDescription>
-              Create and analyze custom business scenarios
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4 pt-2">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="revenue-change" className="text-sm font-medium">
-                  Revenue Change (%)
-                </Label>
-                <div className="flex items-center gap-2 mt-1">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      setScenarioInputs((prev) => ({
-                        ...prev,
-                        revenueChange: prev.revenueChange - 5,
-                      }))
-                    }
-                  >
-                    <Minus className="h-3 w-3" />
-                  </Button>
-                  <Input
-                    id="revenue-change"
-                    type="number"
-                    value={scenarioInputs.revenueChange}
-                    onChange={(e) =>
-                      setScenarioInputs((prev) => ({
-                        ...prev,
-                        revenueChange: Number(e.target.value),
-                      }))
-                    }
-                    className="text-center"
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      setScenarioInputs((prev) => ({
-                        ...prev,
-                        revenueChange: prev.revenueChange + 5,
-                      }))
-                    }
-                  >
-                    <Plus className="h-3 w-3" />
-                  </Button>
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="expense-change">Expense Change (%)</Label>
-                <div className="flex items-center gap-2 mt-1">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      setScenarioInputs((prev) => ({
-                        ...prev,
-                        expenseChange: prev.expenseChange - 5,
-                      }))
-                    }
-                  >
-                    <Minus className="h-3 w-3" />
-                  </Button>
-                  <Input
-                    id="expense-change"
-                    type="number"
-                    value={scenarioInputs.expenseChange}
-                    onChange={(e) =>
-                      setScenarioInputs((prev) => ({
-                        ...prev,
-                        expenseChange: Number(e.target.value),
-                      }))
-                    }
-                    className="text-center"
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      setScenarioInputs((prev) => ({
-                        ...prev,
-                        expenseChange: prev.expenseChange + 5,
-                      }))
-                    }
-                  >
-                    <Plus className="h-3 w-3" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="cashflow-change">Cash Flow Change (%)</Label>
-              <div className="flex items-center gap-2 mt-1">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    setScenarioInputs((prev) => ({
-                      ...prev,
-                      cashFlowChange: prev.cashFlowChange - 5,
-                    }))
-                  }
-                >
-                  <Minus className="h-3 w-3" />
-                </Button>
-                <Input
-                  id="cashflow-change"
-                  type="number"
-                  value={scenarioInputs.cashFlowChange}
-                  onChange={(e) =>
-                    setScenarioInputs((prev) => ({
-                      ...prev,
-                      cashFlowChange: Number(e.target.value),
-                    }))
-                  }
-                  className="text-center"
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    setScenarioInputs((prev) => ({
-                      ...prev,
-                      cashFlowChange: prev.cashFlowChange + 5,
-                    }))
-                  }
-                >
-                  <Plus className="h-3 w-3" />
-                </Button>
-              </div>
-            </div>
-
-            <Button onClick={createCustomScenario} className="w-full">
-              <Calculator className="h-4 w-4 mr-2" />
-              Create Custom Scenario
-            </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
-      {/* Detailed Scenario Table */}
-      <Card className="shadow-sm hover:shadow transition-shadow duration-200">
-        <CardHeader>
-          <CardTitle>Scenario Details</CardTitle>
-          <CardDescription>
-            Comprehensive breakdown of all scenarios with probabilities
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left p-3 font-medium text-gray-700">
-                    Scenario
-                  </th>
-                  <th className="text-left p-3 font-medium text-gray-700">
-                    Revenue
-                  </th>
-                  <th className="text-left p-3 font-medium text-gray-700">
-                    Expenses
-                  </th>
-                  <th className="text-left p-3 font-medium text-gray-700">
-                    Profit
-                  </th>
-                  <th className="text-left p-3 font-medium text-gray-700">
-                    Cash Flow
-                  </th>
-                  <th className="text-left p-3 font-medium text-gray-700">
-                    Probability
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {scenarios
-                  .filter(
-                    (scenario) =>
-                      scenario.revenue !== 0 || scenario.expenses !== 0
-                  )
-                  .map((scenario, index) => (
-                    <tr key={index} className="border-b hover:bg-muted/50">
-                      <td className="p-3 font-medium">{scenario.name}</td>
-                      <td className="p-3 text-green-600">
-                        {formatCurrency(scenario.revenue)}
-                      </td>
-                      <td className="p-3 text-red-600">
-                        {formatCurrency(scenario.expenses)}
-                      </td>
-                      <td
-                        className={`p-3 font-semibold ${
-                          scenario.profit >= 0
-                            ? "text-green-600"
-                            : "text-red-600"
-                        }`}
-                      >
-                        {formatCurrency(scenario.profit)}
-                      </td>
-                      <td
-                        className={`p-3 font-semibold ${
-                          scenario.cashFlow >= 0
-                            ? "text-green-600"
-                            : "text-red-600"
-                        }`}
-                      >
-                        {formatCurrency(scenario.cashFlow)}
-                      </td>
-                      <td className="p-3">
-                        <Badge variant="secondary" className="font-medium">
-                          {formatPercentage(scenario.probability * 100)}
-                        </Badge>
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
+      {/* Enhanced Scenario Analysis */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Enhanced Scenario Comparison */}
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-600 opacity-10 rounded-2xl"></div>
+          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-green-200 hover:shadow-2xl transition-all duration-300">
+            <div className="p-6 border-b border-green-100">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <PieChart className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Scenario Analysis</h3>
+                  <p className="text-sm text-gray-600">Compare different business scenarios and their impact</p>
+                </div>
+              </div>
+            </div>
+            <div className="p-6 pt-4">
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={scenarioChartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                  <XAxis
+                    dataKey="name"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: "#64748b", fontSize: 12 }}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: "#64748b", fontSize: 12 }}
+                    tickFormatter={(value) =>
+                      formatCurrency(Number(value)).replace(/\.00$/, "")
+                    }
+                  />
+                  <Tooltip
+                    formatter={(value) => formatCurrency(Number(value))}
+                    contentStyle={{
+                      backgroundColor: "#ffffff",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: "6px",
+                      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                    }}
+                  />
+                  <Bar
+                    dataKey="profit"
+                    fill="#10b981"
+                    name="Profit"
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar
+                    dataKey="cashFlow"
+                    fill="#3b82f6"
+                    name="Cash Flow"
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Action Buttons */}
-      {/* <div className="flex justify-center gap-4">
-        <Button variant="outline" size="lg">
-          <Download className="h-4 w-4 mr-2" />
-          Export Forecast
-        </Button>
-        <Button variant="outline" size="lg">
-          <Share2 className="h-4 w-4 mr-2" />
-          Share Analysis
-        </Button>
-        <Button size="lg">
-          <Target className="h-4 w-4 mr-2" />
-          Set Targets
-        </Button>
-      </div> */}
+        {/* Enhanced Custom Scenario Builder */}
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-600 opacity-10 rounded-2xl"></div>
+          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-purple-200 hover:shadow-2xl transition-all duration-300">
+            <div className="p-6 border-b border-purple-100">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <Calculator className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Custom Scenario Builder</h3>
+                  <p className="text-sm text-gray-600">Create and analyze custom business scenarios</p>
+                </div>
+              </div>
+            </div>
+            <div className="p-6 space-y-4 pt-2">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="revenue-change" className="text-sm font-medium text-gray-700">
+                    Revenue Change (%)
+                  </Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        setScenarioInputs((prev) => ({
+                          ...prev,
+                          revenueChange: prev.revenueChange - 5,
+                        }))
+                      }
+                      className="border-purple-200 hover:border-purple-300 hover:bg-purple-50"
+                    >
+                      <Minus className="h-3 w-3" />
+                    </Button>
+                    <Input
+                      id="revenue-change"
+                      type="number"
+                      value={scenarioInputs.revenueChange}
+                      onChange={(e) =>
+                        setScenarioInputs((prev) => ({
+                          ...prev,
+                          revenueChange: Number(e.target.value),
+                        }))
+                      }
+                      className="text-center border-purple-200 focus:border-purple-400 focus:ring-purple-400"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        setScenarioInputs((prev) => ({
+                          ...prev,
+                          revenueChange: prev.revenueChange + 5,
+                        }))
+                      }
+                      className="border-purple-200 hover:border-purple-300 hover:bg-purple-50"
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="expense-change" className="text-sm font-medium text-gray-700">Expense Change (%)</Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        setScenarioInputs((prev) => ({
+                          ...prev,
+                          expenseChange: prev.expenseChange - 5,
+                        }))
+                      }
+                      className="border-purple-200 hover:border-purple-300 hover:bg-purple-50"
+                    >
+                      <Minus className="h-3 w-3" />
+                    </Button>
+                    <Input
+                      id="expense-change"
+                      type="number"
+                      value={scenarioInputs.expenseChange}
+                      onChange={(e) =>
+                        setScenarioInputs((prev) => ({
+                          ...prev,
+                          expenseChange: Number(e.target.value),
+                        }))
+                      }
+                      className="text-center border-purple-200 focus:border-purple-400 focus:ring-purple-400"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        setScenarioInputs((prev) => ({
+                          ...prev,
+                          expenseChange: prev.expenseChange + 5,
+                        }))
+                      }
+                      className="border-purple-200 hover:border-purple-300 hover:bg-purple-50"
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="cashflow-change" className="text-sm font-medium text-gray-700">Cash Flow Change (%)</Label>
+                <div className="flex items-center gap-2 mt-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setScenarioInputs((prev) => ({
+                        ...prev,
+                        cashFlowChange: prev.cashFlowChange - 5,
+                      }))
+                    }
+                    className="border-purple-200 hover:border-purple-300 hover:bg-purple-50"
+                  >
+                    <Minus className="h-3 w-3" />
+                  </Button>
+                  <Input
+                    id="cashflow-change"
+                    type="number"
+                    value={scenarioInputs.cashFlowChange}
+                    onChange={(e) =>
+                      setScenarioInputs((prev) => ({
+                        ...prev,
+                        cashFlowChange: Number(e.target.value),
+                      }))
+                    }
+                    className="text-center border-purple-200 focus:border-purple-400 focus:ring-purple-400"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setScenarioInputs((prev) => ({
+                        ...prev,
+                        cashFlowChange: prev.cashFlowChange + 5,
+                      }))
+                    }
+                    className="border-purple-200 hover:border-purple-300 hover:bg-purple-50"
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+
+              <Button 
+                onClick={createCustomScenario} 
+                className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300"
+              >
+                <Calculator className="h-4 w-4 mr-2" />
+                Create Custom Scenario
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Enhanced Detailed Scenario Table */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-yellow-600 opacity-10 rounded-2xl"></div>
+        <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-orange-200 hover:shadow-2xl transition-all duration-300">
+          <div className="p-6 border-b border-orange-100">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-yellow-600 rounded-xl flex items-center justify-center shadow-lg">
+                <Eye className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Scenario Details</h3>
+                <p className="text-sm text-gray-600">Comprehensive breakdown of all scenarios with probabilities</p>
+              </div>
+            </div>
+          </div>
+          <div className="p-6">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-orange-100">
+                    <th className="text-left p-3 font-medium text-gray-700 bg-orange-50 rounded-l-lg">
+                      Scenario
+                    </th>
+                    <th className="text-left p-3 font-medium text-gray-700 bg-orange-50">
+                      Revenue
+                    </th>
+                    <th className="text-left p-3 font-medium text-gray-700 bg-orange-50">
+                      Expenses
+                    </th>
+                    <th className="text-left p-3 font-medium text-gray-700 bg-orange-50">
+                      Profit
+                    </th>
+                    <th className="text-left p-3 font-medium text-gray-700 bg-orange-50">
+                      Cash Flow
+                    </th>
+                    <th className="text-left p-3 font-medium text-gray-700 bg-orange-50 rounded-r-lg">
+                      Probability
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {scenarios
+                    .filter(
+                      (scenario) =>
+                        scenario.revenue !== 0 || scenario.expenses !== 0
+                    )
+                    .map((scenario, index) => (
+                      <tr key={index} className="border-b border-orange-50 hover:bg-orange-50/30 transition-colors duration-200">
+                        <td className="p-3 font-medium text-gray-800">{scenario.name}</td>
+                        <td className="p-3 text-green-600 font-semibold">
+                          {formatCurrency(scenario.revenue)}
+                        </td>
+                        <td className="p-3 text-red-600 font-semibold">
+                          {formatCurrency(scenario.expenses)}
+                        </td>
+                        <td
+                          className={`p-3 font-semibold ${
+                            scenario.profit >= 0
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }`}
+                        >
+                          {formatCurrency(scenario.profit)}
+                        </td>
+                        <td
+                          className={`p-3 font-semibold ${
+                            scenario.cashFlow >= 0
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }`}
+                        >
+                          {formatCurrency(scenario.cashFlow)}
+                        </td>
+                        <td className="p-3">
+                          <Badge 
+                            variant="secondary" 
+                            className="font-medium bg-gradient-to-r from-orange-100 to-yellow-100 text-orange-800 border-orange-200 hover:from-orange-200 hover:to-yellow-200"
+                          >
+                            {formatPercentage(scenario.probability * 100)}
+                          </Badge>
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
