@@ -282,121 +282,125 @@ export default function ComprehensiveFinancialDashboard({
     <div className="space-y-6">
       {/* Enhanced Header with Executive Summary */}
       <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 opacity-10 rounded-3xl"></div>
-        <div className="relative bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/20">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 opacity-10 rounded-xl sm:rounded-2xl lg:rounded-3xl"></div>
+        <div className="relative bg-white/80 backdrop-blur-xl rounded-xl sm:rounded-2xl lg:rounded-3xl p-4 sm:p-6 lg:p-8 shadow-xl sm:shadow-2xl border border-white/20">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
+            <div className="flex items-center space-x-3 sm:space-x-4">
               <div className="relative">
-                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl transform rotate-3 hover:rotate-0 transition-all duration-300">
-                  <BarChart3 className="h-8 w-8 text-white" />
+                <div className="w-10 h-10 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-xl sm:shadow-2xl transform rotate-3 hover:rotate-0 transition-all duration-300">
+                  <BarChart3 className="h-5 w-5 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-white" />
                 </div>
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-pink-500 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
-                  <Sparkles className="h-3 w-3 text-white" />
+                <div className="absolute -top-1 sm:-top-2 -right-1 sm:-right-2 w-3 h-3 sm:w-5 sm:h-5 lg:w-6 lg:h-6 bg-gradient-to-r from-pink-500 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
+                  <Sparkles className="h-1.5 w-1.5 sm:h-2.5 sm:w-2.5 lg:h-3 lg:w-3 text-white" />
                 </div>
               </div>
               <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
+                <h1 className="text-lg sm:text-2xl lg:text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
                   Financial Analysis Dashboard
                 </h1>
-                <p className="text-gray-600 mt-1">AI-Powered Financial Analysis & Insights</p>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-xs sm:text-sm lg:text-base text-gray-600 mt-0.5 sm:mt-1">
+                  AI-Powered Financial Analysis & Insights
+                </p>
+                <p className="text-xs lg:text-sm text-gray-500 mt-0.5 sm:mt-1 truncate max-w-[200px] sm:max-w-sm lg:max-w-md">
                   Comprehensive analysis of {analysisData.file_info.filename}
                 </p>
               </div>
             </div>
-            <div className="text-center px-6 py-4 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-2xl transform hover:scale-105 transition-all duration-300">
-              <div className="text-3xl font-bold">
+            <div className="text-center px-4 sm:px-5 lg:px-6 py-3 sm:py-4 rounded-lg sm:rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg sm:shadow-2xl transform hover:scale-105 transition-all duration-300 self-center sm:self-auto w-full sm:w-auto">
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold">
                 {analysis.executive_summary?.business_health_score || 0}
               </div>
-              <div className="text-sm font-medium">Health Score</div>
-              <div className="w-2 h-2 bg-white rounded-full mx-auto mt-2 animate-pulse"></div>
+              <div className="text-xs sm:text-sm font-medium">Health Score</div>
+              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full mx-auto mt-1 sm:mt-2 animate-pulse"></div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Enhanced Key Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-600 opacity-10 rounded-2xl"></div>
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-green-200 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
-                <DollarSign className="h-5 w-5 text-white" />
+          <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-600 opacity-10 rounded-lg sm:rounded-xl lg:rounded-2xl"></div>
+          <div className="relative bg-white/90 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-md sm:shadow-xl border border-green-200 hover:shadow-lg sm:hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md sm:shadow-lg">
+                <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
               </div>
-              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+              <div className="w-2 h-2 sm:w-3 sm:h-3 bg-green-500 rounded-full animate-pulse"></div>
             </div>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-base sm:text-xl lg:text-2xl font-bold text-green-600 truncate">
               {formatCurrency(
                 analysis.profit_and_loss.revenue_analysis?.total_revenue || 0
               )}
             </div>
-            <div className="text-sm text-gray-600">Total Revenue</div>
+            <div className="text-xs sm:text-sm text-gray-600">
+              Total Revenue
+            </div>
           </div>
         </div>
 
         <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-pink-600 opacity-10 rounded-2xl"></div>
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-red-200 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-red-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
-                <TrendingDown className="h-5 w-5 text-white" />
+          <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-pink-600 opacity-10 rounded-lg sm:rounded-xl lg:rounded-2xl"></div>
+          <div className="relative bg-white/90 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-md sm:shadow-xl border border-red-200 hover:shadow-lg sm:hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-red-500 to-pink-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md sm:shadow-lg">
+                <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
               </div>
-              <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+              <div className="w-2 h-2 sm:w-3 sm:h-3 bg-red-500 rounded-full animate-pulse"></div>
             </div>
-            <div className="text-2xl font-bold text-red-600">
+            <div className="text-base sm:text-xl lg:text-2xl font-bold text-red-600 truncate">
               {formatCurrency(
                 Math.abs(
                   analysis.profit_and_loss.cost_structure?.total_expenses || 0
                 )
               )}
             </div>
-            <div className="text-sm text-gray-600">Total Expenses</div>
+            <div className="text-xs sm:text-sm text-gray-600">
+              Total Expenses
+            </div>
           </div>
         </div>
 
         <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-600 opacity-10 rounded-2xl"></div>
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-blue-200 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                <Activity className="h-5 w-5 text-white" />
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-600 opacity-10 rounded-lg sm:rounded-xl lg:rounded-2xl"></div>
+          <div className="relative bg-white/90 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-md sm:shadow-xl border border-blue-200 hover:shadow-lg sm:hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md sm:shadow-lg">
+                <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
               </div>
-              <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+              <div className="w-2 h-2 sm:w-3 sm:h-3 bg-blue-500 rounded-full animate-pulse"></div>
             </div>
             <div
-              className={`text-2xl font-bold ${
-                analysis.profit_and_loss?.profitability_metrics?.net_income >=
-                0
+              className={`text-base sm:text-xl lg:text-2xl font-bold truncate ${
+                analysis.profit_and_loss?.profitability_metrics?.net_income >= 0
                   ? "text-green-600"
                   : "text-red-600"
               }`}
             >
               {formatCurrency(
-                analysis.profit_and_loss.profitability_metrics?.net_income ||
-                  0
+                analysis.profit_and_loss.profitability_metrics?.net_income || 0
               )}
             </div>
-            <div className="text-sm text-gray-600">Net Income</div>
+            <div className="text-xs sm:text-sm text-gray-600">Net Income</div>
           </div>
         </div>
 
         <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-600 opacity-10 rounded-2xl"></div>
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-purple-200 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
-                <Target className="h-5 w-5 text-white" />
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-600 opacity-10 rounded-lg sm:rounded-xl lg:rounded-2xl"></div>
+          <div className="relative bg-white/90 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-md sm:shadow-xl border border-purple-200 hover:shadow-lg sm:hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md sm:shadow-lg">
+                <Target className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
               </div>
-              <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
+              <div className="w-2 h-2 sm:w-3 sm:h-3 bg-purple-500 rounded-full animate-pulse"></div>
             </div>
-            <div className="text-2xl font-bold text-purple-600">
+            <div className="text-base sm:text-xl lg:text-2xl font-bold text-purple-600">
               {formatPercentage(
                 analysis.profit_and_loss.profitability_metrics?.margins
                   ?.net_margin || 0
               )}
             </div>
-            <div className="text-sm text-gray-600">Net Margin</div>
+            <div className="text-xs sm:text-sm text-gray-600">Net Margin</div>
           </div>
         </div>
       </div>
@@ -404,20 +408,20 @@ export default function ComprehensiveFinancialDashboard({
       {/* Enhanced Critical Alerts */}
       {analysis.executive_summary?.critical_alerts?.length > 0 && (
         <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-pink-600 opacity-10 rounded-2xl"></div>
-          <div className="relative bg-red-50/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-red-200">
-            <div className="flex items-start gap-3">
+          <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-pink-600 opacity-10 rounded-lg sm:rounded-xl lg:rounded-2xl"></div>
+          <div className="relative bg-red-50/90 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-lg sm:shadow-xl border border-red-200">
+            <div className="flex items-start gap-2 sm:gap-3">
               <div className="flex-shrink-0 mt-1">
-                <AlertTriangle className="h-5 w-5 text-red-600" />
+                <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
               </div>
               <div className="flex-1">
-                <div className="font-semibold mb-2 text-lg text-red-800">
+                <div className="font-semibold mb-1 sm:mb-2 text-sm sm:text-base lg:text-lg text-red-800">
                   Critical Alerts Requiring Immediate Attention:
                 </div>
-                <ul className="list-disc list-inside space-y-1 text-red-800">
+                <ul className="list-disc list-inside space-y-0.5 sm:space-y-1 text-red-800">
                   {analysis.executive_summary?.critical_alerts?.map(
                     (alert, index) => (
-                      <li key={index} className="text-sm">
+                      <li key={index} className="text-xs sm:text-sm">
                         {alert}
                       </li>
                     )
@@ -431,88 +435,134 @@ export default function ComprehensiveFinancialDashboard({
 
       {/* Enhanced Main Content Tabs */}
       <div className="relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 rounded-2xl opacity-60"></div>
-        <div className="relative bg-white/70 backdrop-blur-sm rounded-2xl p-2 shadow-xl border border-white/30">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 rounded-lg sm:rounded-xl lg:rounded-2xl opacity-60"></div>
+        <div className="relative bg-white/70 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-1 sm:p-2 shadow-lg sm:shadow-xl border border-white/30">
           <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-            <TabsList className="grid w-full grid-cols-7 bg-transparent border-0 p-0 h-auto">
-              {[
-                { value: "overview", label: "Overview" },
-                { value: "profitability", label: "P&L" },
-                { value: "balance-sheet", label: "Balance Sheet" },
-                { value: "cash-flow", label: "Cash Flow", disabled: !analysis.cash_flow_analysis },
-                { value: "insights", label: "AI Insights", disabled: !analysis.ai_powered_insights },
-                { value: "scenarios", label: "Scenarios", disabled: !analysis.what_if_scenarios },
-                { value: "recommendations", label: "Actions", disabled: !analysis.strategic_recommendations }
-              ].map((tab, index) => (
-                <button
-                  key={tab.value}
-                  onClick={() => !tab.disabled && setSelectedTab(tab.value)}
-                  disabled={tab.disabled}
-                  className={`relative flex-1 py-4 px-6 rounded-xl font-semibold text-sm transition-all duration-300 transform hover:scale-105 ${
-                    selectedTab === tab.value
-                      ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-2xl scale-105"
-                      : tab.disabled
-                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      : "bg-white/80 text-gray-600 hover:bg-white hover:text-gray-800 shadow-lg hover:shadow-xl"
-                  }`}
-                >
-                  <div className="flex items-center justify-center space-x-2">
+            <div className="overflow-x-auto pb-2">
+              <TabsList className="flex sm:grid w-full sm:grid-cols-4 md:grid-cols-7 bg-transparent border-0 p-0 h-auto min-w-[600px] sm:min-w-0">
+                {[
+                  { value: "overview", label: "Overview" },
+                  { value: "profitability", label: "P&L" },
+                  {
+                    value: "balance-sheet",
+                    label: "Balance",
+                    short: "Balance",
+                  },
+                  {
+                    value: "cash-flow",
+                    label: "Cash Flow",
+                    short: "Cash",
+                    disabled: !analysis.cash_flow_analysis,
+                  },
+                  {
+                    value: "insights",
+                    label: "AI Insights",
+                    short: "AI",
+                    disabled: !analysis.ai_powered_insights,
+                  },
+                  {
+                    value: "scenarios",
+                    label: "Scenarios",
+                    short: "Scenarios",
+                    disabled: !analysis.what_if_scenarios,
+                  },
+                  {
+                    value: "recommendations",
+                    label: "Actions",
+                    short: "Actions",
+                    disabled: !analysis.strategic_recommendations,
+                  },
+                ].map((tab, index) => (
+                  <button
+                    key={tab.value}
+                    onClick={() => !tab.disabled && setSelectedTab(tab.value)}
+                    disabled={tab.disabled}
+                    className={`relative flex-1 py-2 sm:py-3 md:py-4 px-2 sm:px-3 md:px-6 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 transform hover:scale-[1.02] ${
+                      selectedTab === tab.value
+                        ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg sm:shadow-2xl scale-[1.02] sm:scale-105"
+                        : tab.disabled
+                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                        : "bg-white/80 text-gray-600 hover:bg-white hover:text-gray-800 shadow-sm sm:shadow-lg hover:shadow-md sm:hover:shadow-xl"
+                    }`}
+                  >
+                    <div className="flex items-center justify-center space-x-1 sm:space-x-2 whitespace-nowrap">
+                      {selectedTab === tab.value && (
+                        <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full animate-pulse"></div>
+                      )}
+                      <span className="hidden md:inline">{tab.label}</span>
+                      <span className="inline md:hidden">
+                        {tab.short || tab.label}
+                      </span>
+                    </div>
                     {selectedTab === tab.value && (
-                      <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                      <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 sm:w-3 sm:h-3 bg-gradient-to-r from-blue-500 to-purple-600 rotate-45 hidden sm:block"></div>
                     )}
-                    <span>{tab.label}</span>
-                  </div>
-                  {selectedTab === tab.value && (
-                    <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-gradient-to-r from-blue-500 to-purple-600 rotate-45"></div>
-                  )}
-                </button>
-              ))}
-            </TabsList>
+                  </button>
+                ))}
+              </TabsList>
+            </div>
 
             {/* Overview Tab */}
-            <TabsContent value="overview" className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <TabsContent
+              value="overview"
+              className="space-y-4 sm:space-y-6 pt-2 sm:pt-4"
+            >
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 {/* Revenue Breakdown */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Revenue Streams</CardTitle>
-                    <CardDescription>Breakdown of revenue sources</CardDescription>
+                <Card className="overflow-hidden">
+                  <CardHeader className="py-3 sm:py-4 px-3 sm:px-6">
+                    <CardTitle className="text-base sm:text-lg">
+                      Revenue Streams
+                    </CardTitle>
+                    <CardDescription className="text-xs sm:text-sm">
+                      Breakdown of revenue sources
+                    </CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="px-2 sm:px-6 pb-4">
                     {revenueData.length > 0 ? (
-                      <ResponsiveContainer width="100%" height={250}>
-                        <RechartsPieChart>
-                          <Pie
-                            data={revenueData}
-                            cx="50%"
-                            cy="50%"
-                            labelLine={false}
-                            label={({ name, percent }) =>
-                              `${name} (${((percent || 0) * 100).toFixed(0)}%)`
-                            }
-                            outerRadius={80}
-                            fill="#8884d8"
-                            dataKey="value"
-                          >
-                            {revenueData.map((entry, index) => (
-                              <Cell
-                                key={`cell-${index}`}
-                                fill={COLORS[index % COLORS.length]}
-                              />
-                            ))}
-                          </Pie>
-                          <Tooltip
-                            formatter={(value) => formatCurrency(Number(value))}
-                          />
-                        </RechartsPieChart>
-                      </ResponsiveContainer>
+                      <div className="h-[200px] sm:h-[250px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <RechartsPieChart>
+                            <Pie
+                              data={revenueData}
+                              cx="50%"
+                              cy="50%"
+                              labelLine={false}
+                              label={({ name, percent }) => {
+                                // On small screens, only show percentage
+                                const isMobile = window.innerWidth < 640;
+                                return isMobile
+                                  ? `${((percent || 0) * 100).toFixed(0)}%`
+                                  : `${name} (${((percent || 0) * 100).toFixed(
+                                      0
+                                    )}%)`;
+                              }}
+                              outerRadius={window.innerWidth < 640 ? 60 : 80}
+                              fill="#8884d8"
+                              dataKey="value"
+                            >
+                              {revenueData.map((entry, index) => (
+                                <Cell
+                                  key={`cell-${index}`}
+                                  fill={COLORS[index % COLORS.length]}
+                                />
+                              ))}
+                            </Pie>
+                            <Tooltip
+                              formatter={(value) =>
+                                formatCurrency(Number(value))
+                              }
+                            />
+                          </RechartsPieChart>
+                        </ResponsiveContainer>
+                      </div>
                     ) : (
-                      <div className="flex flex-col items-center justify-center h-[250px] text-center p-4">
-                        <DollarSign className="h-10 w-10 text-gray-300 mb-3" />
-                        <h3 className="text-lg font-medium text-gray-500">
+                      <div className="flex flex-col items-center justify-center h-[180px] sm:h-[250px] text-center p-2 sm:p-4">
+                        <DollarSign className="h-8 w-8 sm:h-10 sm:w-10 text-gray-300 mb-2 sm:mb-3" />
+                        <h3 className="text-base sm:text-lg font-medium text-gray-500">
                           No revenue data available
                         </h3>
-                        <p className="text-sm text-gray-400">
+                        <p className="text-xs sm:text-sm text-gray-400">
                           Revenue breakdown information is not present in the
                           uploaded file
                         </p>
@@ -522,50 +572,62 @@ export default function ComprehensiveFinancialDashboard({
                 </Card>
 
                 {/* Expense Breakdown */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Cost Structure</CardTitle>
-                    <CardDescription>
+                <Card className="overflow-hidden">
+                  <CardHeader className="py-3 sm:py-4 px-3 sm:px-6">
+                    <CardTitle className="text-base sm:text-lg">
+                      Cost Structure
+                    </CardTitle>
+                    <CardDescription className="text-xs sm:text-sm">
                       Breakdown of expense categories
                     </CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="px-2 sm:px-6 pb-4">
                     {expenseData.length > 0 ? (
-                      <ResponsiveContainer width="100%" height={250}>
-                        <RechartsPieChart>
-                          <Pie
-                            data={expenseData}
-                            cx="50%"
-                            cy="50%"
-                            labelLine={false}
-                            label={({ name, percent }) =>
-                              `${name} (${((percent || 0) * 100).toFixed(0)}%)`
-                            }
-                            outerRadius={80}
-                            fill="#8884d8"
-                            dataKey="value"
-                          >
-                            {expenseData.map((entry, index) => (
-                              <Cell
-                                key={`cell-${index}`}
-                                fill={COLORS[index % COLORS.length]}
-                              />
-                            ))}
-                          </Pie>
-                          <Tooltip
-                            formatter={(value) => formatCurrency(Number(value))}
-                          />
-                        </RechartsPieChart>
-                      </ResponsiveContainer>
+                      <div className="h-[200px] sm:h-[250px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <RechartsPieChart>
+                            <Pie
+                              data={expenseData}
+                              cx="50%"
+                              cy="50%"
+                              labelLine={false}
+                              label={({ name, percent }) => {
+                                // On small screens, only show percentage
+                                const isMobile = window.innerWidth < 640;
+                                return isMobile
+                                  ? `${((percent || 0) * 100).toFixed(0)}%`
+                                  : `${name} (${((percent || 0) * 100).toFixed(
+                                      0
+                                    )}%)`;
+                              }}
+                              outerRadius={window.innerWidth < 640 ? 60 : 80}
+                              fill="#8884d8"
+                              dataKey="value"
+                            >
+                              {expenseData.map((entry, index) => (
+                                <Cell
+                                  key={`cell-${index}`}
+                                  fill={COLORS[index % COLORS.length]}
+                                />
+                              ))}
+                            </Pie>
+                            <Tooltip
+                              formatter={(value) =>
+                                formatCurrency(Number(value))
+                              }
+                            />
+                          </RechartsPieChart>
+                        </ResponsiveContainer>
+                      </div>
                     ) : (
-                      <div className="flex flex-col items-center justify-center h-[250px] text-center p-4">
-                        <TrendingDown className="h-10 w-10 text-gray-300 mb-3" />
-                        <h3 className="text-lg font-medium text-gray-500">
+                      <div className="flex flex-col items-center justify-center h-[180px] sm:h-[250px] text-center p-2 sm:p-4">
+                        <TrendingDown className="h-8 w-8 sm:h-10 sm:w-10 text-gray-300 mb-2 sm:mb-3" />
+                        <h3 className="text-base sm:text-lg font-medium text-gray-500">
                           No expense data available
                         </h3>
-                        <p className="text-sm text-gray-400">
-                          Cost structure information is not present in the uploaded
-                          file
+                        <p className="text-xs sm:text-sm text-gray-400">
+                          Cost structure information is not present in the
+                          uploaded file
                         </p>
                       </div>
                     )}
@@ -574,80 +636,80 @@ export default function ComprehensiveFinancialDashboard({
               </div>
 
               {/* Key Performance Indicators */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 <Card>
-                  <CardContent className="p-6">
+                  <CardContent className="p-3 sm:p-4 lg:p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground">
+                        <p className="text-xs sm:text-sm font-medium text-muted-foreground">
                           EBITDA
                         </p>
-                        <p className="text-2xl font-bold">
+                        <p className="text-base sm:text-xl lg:text-2xl font-bold truncate max-w-[140px] sm:max-w-full">
                           {formatCurrency(
                             analysis.profit_and_loss?.profitability_metrics
                               ?.ebitda || 0
                           )}
                         </p>
                       </div>
-                      <BarChart3 className="h-8 w-8 text-blue-500" />
+                      <BarChart3 className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-blue-500" />
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card>
-                  <CardContent className="p-6">
+                  <CardContent className="p-3 sm:p-4 lg:p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground">
+                        <p className="text-xs sm:text-sm font-medium text-muted-foreground">
                           Gross Margin
                         </p>
-                        <p className="text-2xl font-bold">
+                        <p className="text-base sm:text-xl lg:text-2xl font-bold">
                           {formatPercentage(
-                            analysis.profit_and_loss?.profitability_metrics?.margins
-                              ?.gross_margin || 0
+                            analysis.profit_and_loss?.profitability_metrics
+                              ?.margins?.gross_margin || 0
                           )}
                         </p>
                       </div>
-                      <Target className="h-8 w-8 text-green-500" />
+                      <Target className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-green-500" />
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card>
-                  <CardContent className="p-6">
+                  <CardContent className="p-3 sm:p-4 lg:p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground">
-                          Operating Margin
+                        <p className="text-xs sm:text-sm font-medium text-muted-foreground">
+                          Op. Margin
                         </p>
                         <p
-                          className={`text-2xl font-bold ${
-                            analysis.profit_and_loss?.profitability_metrics?.margins
-                              ?.operating_margin >= 0
+                          className={`text-base sm:text-xl lg:text-2xl font-bold ${
+                            analysis.profit_and_loss?.profitability_metrics
+                              ?.margins?.operating_margin >= 0
                               ? "text-green-600"
                               : "text-red-600"
                           }`}
                         >
                           {formatPercentage(
-                            analysis.profit_and_loss?.profitability_metrics?.margins
-                              ?.operating_margin || 0
+                            analysis.profit_and_loss?.profitability_metrics
+                              ?.margins?.operating_margin || 0
                           )}
                         </p>
                       </div>
-                      <Activity className="h-8 w-8 text-orange-500" />
+                      <Activity className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-orange-500" />
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card>
-                  <CardContent className="p-6">
+                  <CardContent className="p-3 sm:p-4 lg:p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground">
+                        <p className="text-xs sm:text-sm font-medium text-muted-foreground">
                           Cash Flow
                         </p>
                         <p
-                          className={`text-2xl font-bold ${
+                          className={`text-base sm:text-xl lg:text-2xl font-bold truncate max-w-[140px] sm:max-w-full ${
                             analysis.cash_flow_analysis?.operating_activities
                               ?.net_cash_from_operations >= 0
                               ? "text-green-600"
@@ -660,7 +722,7 @@ export default function ComprehensiveFinancialDashboard({
                           )}
                         </p>
                       </div>
-                      <DollarSign className="h-8 w-8 text-purple-500" />
+                      <DollarSign className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-purple-500" />
                     </div>
                   </CardContent>
                 </Card>
@@ -690,8 +752,8 @@ export default function ComprehensiveFinancialDashboard({
                         className={`font-bold ${
                           analysis.profit_and_loss?.profitability_metrics
                             ?.operating_profit >= 0
-                          ? "text-green-600"
-                          : "text-red-600"
+                            ? "text-green-600"
+                            : "text-red-600"
                         }`}
                       >
                         {formatCurrency(
@@ -704,15 +766,15 @@ export default function ComprehensiveFinancialDashboard({
                       <span>EBITDA:</span>
                       <span
                         className={`font-bold ${
-                          analysis.profit_and_loss?.profitability_metrics?.ebitda >=
-                          0
-                          ? "text-green-600"
-                          : "text-red-600"
+                          analysis.profit_and_loss?.profitability_metrics
+                            ?.ebitda >= 0
+                            ? "text-green-600"
+                            : "text-red-600"
                         }`}
                       >
                         {formatCurrency(
-                          analysis.profit_and_loss?.profitability_metrics?.ebitda ||
-                            0
+                          analysis.profit_and_loss?.profitability_metrics
+                            ?.ebitda || 0
                         )}
                       </span>
                     </div>
@@ -722,8 +784,8 @@ export default function ComprehensiveFinancialDashboard({
                         className={`font-bold ${
                           analysis.profit_and_loss?.profitability_metrics
                             ?.net_income >= 0
-                          ? "text-green-600"
-                          : "text-red-600"
+                            ? "text-green-600"
+                            : "text-red-600"
                         }`}
                       >
                         {formatCurrency(
@@ -754,8 +816,8 @@ export default function ComprehensiveFinancialDashboard({
                         <Progress
                           value={Math.max(
                             0,
-                            analysis.profit_and_loss?.profitability_metrics?.margins
-                              ?.gross_margin || 0 * 100
+                            analysis.profit_and_loss?.profitability_metrics
+                              ?.margins?.gross_margin || 0 * 100
                           )}
                           className="h-2"
                         />
@@ -774,8 +836,8 @@ export default function ComprehensiveFinancialDashboard({
                         <Progress
                           value={Math.max(
                             0,
-                            analysis.profit_and_loss?.profitability_metrics?.margins
-                              ?.operating_margin || 0 * 100
+                            analysis.profit_and_loss?.profitability_metrics
+                              ?.margins?.operating_margin || 0 * 100
                           )}
                           className="h-2"
                         />
@@ -794,8 +856,8 @@ export default function ComprehensiveFinancialDashboard({
                         <Progress
                           value={Math.max(
                             0,
-                            analysis.profit_and_loss?.profitability_metrics?.margins
-                              ?.ebitda_margin || 0 * 100
+                            analysis.profit_and_loss?.profitability_metrics
+                              ?.margins?.ebitda_margin || 0 * 100
                           )}
                           className="h-2"
                         />
@@ -814,8 +876,8 @@ export default function ComprehensiveFinancialDashboard({
                         <Progress
                           value={Math.max(
                             0,
-                            analysis.profit_and_loss?.profitability_metrics?.margins
-                              ?.net_margin || 0 * 100
+                            analysis.profit_and_loss?.profitability_metrics
+                              ?.margins?.net_margin || 0 * 100
                           )}
                           className="h-2"
                         />
@@ -875,8 +937,8 @@ export default function ComprehensiveFinancialDashboard({
                         <span>Current Liabilities:</span>
                         <span className="font-semibold">
                           {formatCurrency(
-                            analysis.balance_sheet?.liabilities?.current_liabilities
-                              ?.total_current || 0
+                            analysis.balance_sheet?.liabilities
+                              ?.current_liabilities?.total_current || 0
                           )}
                         </span>
                       </div>
@@ -918,7 +980,8 @@ export default function ComprehensiveFinancialDashboard({
                         <span>Retained Earnings:</span>
                         <span className="font-semibold">
                           {formatCurrency(
-                            analysis.balance_sheet?.equity?.retained_earnings || 0
+                            analysis.balance_sheet?.equity?.retained_earnings ||
+                              0
                           )}
                         </span>
                       </div>
@@ -941,9 +1004,9 @@ export default function ComprehensiveFinancialDashboard({
                       No Balance Sheet Data Available
                     </h3>
                     <p className="text-gray-500 max-w-md mx-auto">
-                      The uploaded financial document does not contain balance sheet
-                      information or all values are zero. This could be because the
-                      document is a Profit & Loss statement only.
+                      The uploaded financial document does not contain balance
+                      sheet information or all values are zero. This could be
+                      because the document is a Profit & Loss statement only.
                     </p>
                   </CardContent>
                 </Card>
@@ -964,8 +1027,8 @@ export default function ComprehensiveFinancialDashboard({
                         className={`font-semibold ${
                           analysis.cash_flow_analysis?.operating_activities
                             ?.net_cash_from_operations >= 0
-                          ? "text-green-600"
-                          : "text-red-600"
+                            ? "text-green-600"
+                            : "text-red-600"
                         }`}
                       >
                         {formatCurrency(
@@ -1024,8 +1087,8 @@ export default function ComprehensiveFinancialDashboard({
                         className={`${
                           analysis.cash_flow_analysis?.investing_activities
                             ?.net_investing_cash_flow >= 0
-                          ? "text-green-600"
-                          : "text-red-600"
+                            ? "text-green-600"
+                            : "text-red-600"
                         }`}
                       >
                         {formatCurrency(
@@ -1055,8 +1118,8 @@ export default function ComprehensiveFinancialDashboard({
                       <span>Ending Cash:</span>
                       <span className="font-semibold">
                         {formatCurrency(
-                          analysis.cash_flow_analysis?.cash_position?.ending_cash ||
-                            0
+                          analysis.cash_flow_analysis?.cash_position
+                            ?.ending_cash || 0
                         )}
                       </span>
                     </div>
@@ -1066,8 +1129,8 @@ export default function ComprehensiveFinancialDashboard({
                         className={`${
                           analysis.cash_flow_analysis?.cash_position
                             ?.free_cash_flow >= 0
-                          ? "text-green-600"
-                          : "text-red-600"
+                            ? "text-green-600"
+                            : "text-red-600"
                         }`}
                       >
                         {formatCurrency(
@@ -1103,14 +1166,17 @@ export default function ComprehensiveFinancialDashboard({
                             <div className="flex items-center gap-2">
                               {getTrendIcon(trend.trend_direction)}
                               <Badge
-                                className={getSeverityColor(trend.trend_strength)}
+                                className={getSeverityColor(
+                                  trend.trend_strength
+                                )}
                               >
                                 {trend.trend_strength}
                               </Badge>
                             </div>
                           </div>
                           <p className="text-sm text-gray-600 mb-2">
-                            Forecast: {formatCurrency(trend.forecast_next_period)}
+                            Forecast:{" "}
+                            {formatCurrency(trend.forecast_next_period)}
                           </p>
                           <div className="text-xs text-gray-500">
                             Confidence:{" "}
@@ -1138,7 +1204,9 @@ export default function ComprehensiveFinancialDashboard({
                             <span className="font-semibold">
                               {anomaly.metric.replace("_", " ").toUpperCase()}
                             </span>
-                            <Badge className={getSeverityColor(anomaly.severity)}>
+                            <Badge
+                              className={getSeverityColor(anomaly.severity)}
+                            >
                               {anomaly.severity}
                             </Badge>
                           </div>
@@ -1175,16 +1243,20 @@ export default function ComprehensiveFinancialDashboard({
                             <span className="font-semibold">
                               {alert.alert_type.replace("_", " ").toUpperCase()}
                             </span>
-                            <Badge className={getSeverityColor(alert.alert_level)}>
+                            <Badge
+                              className={getSeverityColor(alert.alert_level)}
+                            >
                               {alert.alert_level}
                             </Badge>
                           </div>
                           <div className="space-y-2 text-sm">
                             <div>
-                              Forecast: {alert.forecast_horizon.replace("_", " ")}
+                              Forecast:{" "}
+                              {alert.forecast_horizon.replace("_", " ")}
                             </div>
                             <div>
-                              Probability: {(alert.probability * 100).toFixed(0)}%
+                              Probability:{" "}
+                              {(alert.probability * 100).toFixed(0)}%
                             </div>
                             <div>
                               Impact: {formatCurrency(alert.potential_impact)}
@@ -1211,7 +1283,9 @@ export default function ComprehensiveFinancialDashboard({
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="p-3 bg-blue-50 rounded-lg">
-                      <div className="font-semibold mb-2">Baseline Scenario</div>
+                      <div className="font-semibold mb-2">
+                        Baseline Scenario
+                      </div>
                       <div className="text-sm space-y-1">
                         <div>
                           Revenue:{" "}
@@ -1238,7 +1312,9 @@ export default function ComprehensiveFinancialDashboard({
                     </div>
 
                     <div className="p-3 bg-red-50 rounded-lg">
-                      <div className="font-semibold mb-2">Revenue Decrease 20%</div>
+                      <div className="font-semibold mb-2">
+                        Revenue Decrease 20%
+                      </div>
                       <div className="text-sm space-y-1">
                         <div>
                           Revenue:{" "}
@@ -1258,15 +1334,17 @@ export default function ComprehensiveFinancialDashboard({
                           Impact:{" "}
                           <span className="text-red-600 font-semibold">
                             {analysis.what_if_scenarios?.revenue_impact_analysis
-                              ?.revenue_decrease_20_percent?.impact_assessment ||
-                              ""}
+                              ?.revenue_decrease_20_percent
+                              ?.impact_assessment || ""}
                           </span>
                         </div>
                       </div>
                     </div>
 
                     <div className="p-3 bg-green-50 rounded-lg">
-                      <div className="font-semibold mb-2">Revenue Increase 20%</div>
+                      <div className="font-semibold mb-2">
+                        Revenue Increase 20%
+                      </div>
                       <div className="text-sm space-y-1">
                         <div>
                           Revenue:{" "}
@@ -1308,14 +1386,17 @@ export default function ComprehensiveFinancialDashboard({
                         <div>
                           Cost Savings:{" "}
                           {formatCurrency(
-                            analysis.what_if_scenarios?.cost_optimization_scenarios
-                              ?.fixed_cost_reduction_15_percent?.cost_savings || 0
+                            analysis.what_if_scenarios
+                              ?.cost_optimization_scenarios
+                              ?.fixed_cost_reduction_15_percent?.cost_savings ||
+                              0
                           )}
                         </div>
                         <div>
                           Net Income Impact:{" "}
                           {formatCurrency(
-                            analysis.what_if_scenarios?.cost_optimization_scenarios
+                            analysis.what_if_scenarios
+                              ?.cost_optimization_scenarios
                               ?.fixed_cost_reduction_15_percent
                               ?.net_income_impact || 0
                           )}
@@ -1323,8 +1404,10 @@ export default function ComprehensiveFinancialDashboard({
                         <div>
                           Feasibility:{" "}
                           <span className="text-green-600 font-semibold">
-                            {analysis.what_if_scenarios?.cost_optimization_scenarios
-                              ?.fixed_cost_reduction_15_percent?.feasibility || ""}
+                            {analysis.what_if_scenarios
+                              ?.cost_optimization_scenarios
+                              ?.fixed_cost_reduction_15_percent?.feasibility ||
+                              ""}
                           </span>
                         </div>
                       </div>
@@ -1338,7 +1421,8 @@ export default function ComprehensiveFinancialDashboard({
                         <div>
                           Cost Savings:{" "}
                           {formatCurrency(
-                            analysis.what_if_scenarios?.cost_optimization_scenarios
+                            analysis.what_if_scenarios
+                              ?.cost_optimization_scenarios
                               ?.variable_cost_optimization_10_percent
                               ?.cost_savings || 0
                           )}
@@ -1346,7 +1430,8 @@ export default function ComprehensiveFinancialDashboard({
                         <div>
                           Margin Improvement:{" "}
                           {formatCurrency(
-                            analysis.what_if_scenarios?.cost_optimization_scenarios
+                            analysis.what_if_scenarios
+                              ?.cost_optimization_scenarios
                               ?.variable_cost_optimization_10_percent
                               ?.margin_improvement || 0
                           )}
@@ -1354,7 +1439,8 @@ export default function ComprehensiveFinancialDashboard({
                         <div>
                           Implementation:{" "}
                           <span className="text-blue-600 font-semibold">
-                            {analysis.what_if_scenarios?.cost_optimization_scenarios
+                            {analysis.what_if_scenarios
+                              ?.cost_optimization_scenarios
                               ?.variable_cost_optimization_10_percent
                               ?.implementation_difficulty || ""}
                           </span>
@@ -1363,7 +1449,9 @@ export default function ComprehensiveFinancialDashboard({
                     </div>
 
                     <div className="p-3 bg-yellow-50 rounded-lg">
-                      <div className="font-semibold mb-2">Break-even Analysis</div>
+                      <div className="font-semibold mb-2">
+                        Break-even Analysis
+                      </div>
                       <div className="text-sm space-y-1">
                         <div>
                           Break-even Revenue:{" "}
@@ -1415,7 +1503,9 @@ export default function ComprehensiveFinancialDashboard({
                                   {action.action}
                                 </span>
                               </div>
-                              <Badge className={getSeverityColor(action.priority)}>
+                              <Badge
+                                className={getSeverityColor(action.priority)}
+                              >
                                 {action.priority}
                               </Badge>
                             </div>
@@ -1429,7 +1519,8 @@ export default function ComprehensiveFinancialDashboard({
                                 {formatCurrency(action.implementation_cost)}
                               </div>
                               <div className="text-blue-600">
-                                Success Metrics: {action.success_metrics.join(", ")}
+                                Success Metrics:{" "}
+                                {action.success_metrics.join(", ")}
                               </div>
                             </div>
                           </div>
@@ -1456,14 +1547,21 @@ export default function ComprehensiveFinancialDashboard({
                               {improvement.initiative}
                             </div>
                             <div className="text-sm space-y-1">
-                              <div>Business Case: {improvement.business_case}</div>
+                              <div>
+                                Business Case: {improvement.business_case}
+                              </div>
                               <div>
                                 Investment Required:{" "}
-                                {formatCurrency(improvement.investment_required)}
+                                {formatCurrency(
+                                  improvement.investment_required
+                                )}
                               </div>
-                              <div>Expected ROI: {improvement.expected_roi}x</div>
+                              <div>
+                                Expected ROI: {improvement.expected_roi}x
+                              </div>
                               <div className="text-red-600">
-                                Risk Factors: {improvement.risk_factors.join(", ")}
+                                Risk Factors:{" "}
+                                {improvement.risk_factors.join(", ")}
                               </div>
                             </div>
                           </div>
@@ -1498,14 +1596,20 @@ export default function ComprehensiveFinancialDashboard({
                               </div>
                               <div>
                                 Investment Required:{" "}
-                                {formatCurrency(opportunity.investment_required)}
+                                {formatCurrency(
+                                  opportunity.investment_required
+                                )}
                               </div>
                               <div>
-                                Timeline to Impact: {opportunity.timeline_to_impact}
+                                Timeline to Impact:{" "}
+                                {opportunity.timeline_to_impact}
                               </div>
                               <div>
                                 Feasibility Score:{" "}
-                                {(opportunity.feasibility_score * 100).toFixed(0)}%
+                                {(opportunity.feasibility_score * 100).toFixed(
+                                  0
+                                )}
+                                %
                               </div>
                             </div>
                           </div>

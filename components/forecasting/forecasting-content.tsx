@@ -553,9 +553,13 @@ export default function ForecastingContent() {
             No Forecast Data Available
           </h3>
           <p className="text-gray-600 mb-6 max-w-md mx-auto">
-            Upload financial reports to generate cash flow forecasts and scenario analysis.
+            Upload financial reports to generate cash flow forecasts and
+            scenario analysis.
           </p>
-          <Button asChild className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300">
+          <Button
+            asChild
+            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300"
+          >
             <a href="/upload">Upload Report</a>
           </Button>
         </div>
@@ -580,31 +584,34 @@ export default function ForecastingContent() {
   }));
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto px-4">
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8 max-w-7xl mx-auto px-2 sm:px-3 lg:px-4">
       {/* Enhanced Header */}
       <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 opacity-10 rounded-3xl"></div>
-        <div className="relative bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/20">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 opacity-10 rounded-lg sm:rounded-xl lg:rounded-3xl"></div>
+        <div className="relative bg-white/80 backdrop-blur-xl rounded-lg sm:rounded-xl lg:rounded-3xl p-3 sm:p-5 lg:p-8 shadow-md sm:shadow-xl lg:shadow-2xl border border-white/20">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-3 sm:space-y-0">
+            <div className="flex items-center space-x-3 sm:space-x-4">
               <div className="relative">
-                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl transform rotate-3 hover:rotate-0 transition-all duration-300">
-                  <Calculator className="h-8 w-8 text-white" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg sm:rounded-xl lg:rounded-2xl flex items-center justify-center shadow-md sm:shadow-xl lg:shadow-2xl transform rotate-3 hover:rotate-0 transition-all duration-300">
+                  <Calculator className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-white" />
                 </div>
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-pink-500 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
-                  <Sparkles className="h-3 w-3 text-white" />
+                <div className="absolute -top-1 sm:-top-1.5 lg:-top-2 -right-1 sm:-right-1.5 lg:-right-2 w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 bg-gradient-to-r from-pink-500 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
+                  <Sparkles className="h-2 w-2 sm:h-2.5 sm:w-2.5 lg:h-3 lg:w-3 text-white" />
                 </div>
               </div>
               <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
+                <h1 className="text-xl sm:text-2xl lg:text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
                   Financial Forecasting
                 </h1>
-                <p className="text-gray-600 mt-1">Project future cash flows and analyze different business scenarios</p>
+                <p className="text-xs sm:text-sm lg:text-base text-gray-600 mt-0.5 sm:mt-1">
+                  Project future cash flows and analyze different business
+                  scenarios
+                </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
               <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-                <SelectTrigger className="w-32 bg-white/90 backdrop-blur-sm border-blue-200 hover:border-blue-300 shadow-lg hover:shadow-xl transition-all duration-300">
+                <SelectTrigger className="flex-1 sm:flex-none w-full sm:w-32 text-xs sm:text-sm bg-white/90 backdrop-blur-sm border-blue-200 hover:border-blue-300 shadow-md sm:shadow-lg hover:shadow-lg sm:hover:shadow-xl transition-all duration-300">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -614,13 +621,13 @@ export default function ForecastingContent() {
                   <SelectItem value="180">180 Days</SelectItem>
                 </SelectContent>
               </Select>
-              <Button 
-                onClick={generateForecast} 
+              <Button
+                onClick={generateForecast}
                 disabled={loading}
-                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300"
+                className="flex-1 sm:flex-none text-xs sm:text-sm bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-md sm:shadow-lg lg:shadow-xl hover:shadow-lg sm:hover:shadow-xl lg:hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300"
               >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh
+                <RefreshCw className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <span>Refresh</span>
               </Button>
             </div>
           </div>
@@ -628,78 +635,82 @@ export default function ForecastingContent() {
       </div>
 
       {/* Enhanced Key Forecast Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-600 opacity-10 rounded-2xl"></div>
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-blue-200 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                <Target className="h-5 w-5 text-white" />
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-600 opacity-10 rounded-lg sm:rounded-xl lg:rounded-2xl"></div>
+          <div className="relative bg-white/90 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-md sm:shadow-lg lg:shadow-xl border border-blue-200 hover:shadow-lg sm:hover:shadow-xl lg:hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md sm:shadow-lg">
+                <Target className="h-3.5 w-3.5 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-white" />
               </div>
-              <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+              <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 lg:w-3 lg:h-3 bg-blue-500 rounded-full animate-pulse"></div>
             </div>
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-base sm:text-xl lg:text-2xl font-bold text-blue-600 truncate">
               {formatPercentage(metrics.breakEvenPoint)}
             </div>
-            <div className="text-sm text-gray-600">Break-Even Point</div>
-            <p className="text-xs text-blue-600 mt-1 font-medium">
+            <div className="text-xs sm:text-sm text-gray-600">
+              Break-Even Point
+            </div>
+            <p className="text-xs text-blue-600 mt-0.5 sm:mt-1 font-medium">
               Revenue needed to cover costs
             </p>
           </div>
         </div>
 
         <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-600 opacity-10 rounded-2xl"></div>
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-green-200 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
-                <Calendar className="h-5 w-5 text-white" />
+          <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-600 opacity-10 rounded-lg sm:rounded-xl lg:rounded-2xl"></div>
+          <div className="relative bg-white/90 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-md sm:shadow-lg lg:shadow-xl border border-green-200 hover:shadow-lg sm:hover:shadow-xl lg:hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md sm:shadow-lg">
+                <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-white" />
               </div>
-              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+              <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 lg:w-3 lg:h-3 bg-green-500 rounded-full animate-pulse"></div>
             </div>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-base sm:text-xl lg:text-2xl font-bold text-green-600 truncate">
               {Math.round(metrics.cashRunway)} days
             </div>
-            <div className="text-sm text-gray-600">Cash Runway</div>
-            <p className="text-xs text-green-600 mt-1 font-medium">
+            <div className="text-xs sm:text-sm text-gray-600">Cash Runway</div>
+            <p className="text-xs text-green-600 mt-0.5 sm:mt-1 font-medium">
               Time until cash runs out
             </p>
           </div>
         </div>
 
         <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-pink-600 opacity-10 rounded-2xl"></div>
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-red-200 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-red-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
-                <TrendingDown className="h-5 w-5 text-white" />
+          <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-pink-600 opacity-10 rounded-lg sm:rounded-xl lg:rounded-2xl"></div>
+          <div className="relative bg-white/90 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-md sm:shadow-lg lg:shadow-xl border border-red-200 hover:shadow-lg sm:hover:shadow-xl lg:hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-red-500 to-pink-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md sm:shadow-lg">
+                <TrendingDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-white" />
               </div>
-              <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+              <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 lg:w-3 lg:h-3 bg-red-500 rounded-full animate-pulse"></div>
             </div>
-            <div className="text-2xl font-bold text-red-600">
+            <div className="text-base sm:text-xl lg:text-2xl font-bold text-red-600 truncate">
               {formatCurrency(metrics.burnRate)}
             </div>
-            <div className="text-sm text-gray-600">Monthly Burn Rate</div>
-            <p className="text-xs text-red-600 mt-1 font-medium">
+            <div className="text-xs sm:text-sm text-gray-600">
+              Monthly Burn Rate
+            </div>
+            <p className="text-xs text-red-600 mt-0.5 sm:mt-1 font-medium">
               Daily cash consumption
             </p>
           </div>
         </div>
 
         <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-600 opacity-10 rounded-2xl"></div>
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-purple-200 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
-                <TrendingUp className="h-5 w-5 text-white" />
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-600 opacity-10 rounded-lg sm:rounded-xl lg:rounded-2xl"></div>
+          <div className="relative bg-white/90 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-md sm:shadow-lg lg:shadow-xl border border-purple-200 hover:shadow-lg sm:hover:shadow-xl lg:hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md sm:shadow-lg">
+                <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-white" />
               </div>
-              <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
+              <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 lg:w-3 lg:h-3 bg-purple-500 rounded-full animate-pulse"></div>
             </div>
-            <div className="text-2xl font-bold text-purple-600">
+            <div className="text-base sm:text-xl lg:text-2xl font-bold text-purple-600 truncate">
               {formatPercentage(metrics.growthRate * 100)}
             </div>
-            <div className="text-sm text-gray-600">Growth Rate</div>
-            <p className="text-xs text-purple-600 mt-1 font-medium">
+            <div className="text-xs sm:text-sm text-gray-600">Growth Rate</div>
+            <p className="text-xs text-purple-600 mt-0.5 sm:mt-1 font-medium">
               Monthly growth projection
             </p>
           </div>
@@ -708,113 +719,49 @@ export default function ForecastingContent() {
 
       {/* Enhanced Cash Flow Projection Chart */}
       <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-10 rounded-2xl"></div>
-        <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-blue-200 hover:shadow-2xl transition-all duration-300">
-          <div className="p-6 border-b border-blue-100">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                <BarChart3 className="h-5 w-5 text-white" />
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-10 rounded-lg sm:rounded-xl lg:rounded-2xl"></div>
+        <div className="relative bg-white/90 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl shadow-md sm:shadow-lg lg:shadow-xl border border-blue-200 hover:shadow-lg sm:hover:shadow-xl lg:hover:shadow-2xl transition-all duration-300">
+          <div className="p-3 sm:p-4 lg:p-6 border-b border-blue-100">
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md sm:shadow-lg">
+                <BarChart3 className="h-3.5 w-3.5 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-white" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-900">Cash Flow Projection</h3>
-                <p className="text-sm text-gray-600">Projected cash flow over the next {selectedPeriod} days</p>
+                <h3 className="text-base sm:text-lg font-bold text-gray-900">
+                  Cash Flow Projection
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-600">
+                  Projected cash flow over the next {selectedPeriod} days
+                </p>
               </div>
             </div>
           </div>
-          <div className="p-6 pt-4">
-            <ResponsiveContainer width="100%" height={400}>
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis
-                  dataKey="date"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: "#64748b", fontSize: 12 }}
-                />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: "#64748b", fontSize: 12 }}
-                  tickFormatter={(value) =>
-                    formatCurrency(Number(value)).replace(/\.00$/, "")
-                  }
-                />
-                <Tooltip
-                  formatter={(value) => formatCurrency(Number(value))}
-                  contentStyle={{
-                    backgroundColor: "#ffffff",
-                    border: "1px solid #e2e8f0",
-                    borderRadius: "6px",
-                    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                  }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="projected"
-                  stroke="#3b82f6"
-                  strokeWidth={3}
-                  name="Projected"
-                  dot={{ r: 4, strokeWidth: 2 }}
-                  activeDot={{ r: 6, strokeWidth: 2 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="optimistic"
-                  stroke="#10b981"
-                  strokeWidth={2}
-                  strokeDasharray="5 5"
-                  name="Optimistic"
-                  dot={{ r: 4, strokeWidth: 2 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="pessimistic"
-                  stroke="#ef4444"
-                  strokeWidth={2}
-                  strokeDasharray="5 5"
-                  name="Pessimistic"
-                  dot={{ r: 4, strokeWidth: 2 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-
-      {/* Enhanced Scenario Analysis */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Enhanced Scenario Comparison */}
-        <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-600 opacity-10 rounded-2xl"></div>
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-green-200 hover:shadow-2xl transition-all duration-300">
-            <div className="p-6 border-b border-green-100">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
-                  <PieChart className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900">Scenario Analysis</h3>
-                  <p className="text-sm text-gray-600">Compare different business scenarios and their impact</p>
-                </div>
-              </div>
-            </div>
-            <div className="p-6 pt-4">
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={scenarioChartData}>
+          <div className="p-2 sm:p-4 lg:p-6 pt-2 sm:pt-3 lg:pt-4">
+            <div className="h-[250px] sm:h-[300px] lg:h-[400px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                   <XAxis
-                    dataKey="name"
+                    dataKey="date"
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: "#64748b", fontSize: 12 }}
+                    tick={{
+                      fill: "#64748b",
+                      fontSize: window.innerWidth < 640 ? 10 : 12,
+                    }}
+                    height={35}
                   />
                   <YAxis
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: "#64748b", fontSize: 12 }}
+                    tick={{
+                      fill: "#64748b",
+                      fontSize: window.innerWidth < 640 ? 10 : 12,
+                    }}
                     tickFormatter={(value) =>
                       formatCurrency(Number(value)).replace(/\.00$/, "")
                     }
+                    width={window.innerWidth < 640 ? 50 : 60}
                   />
                   <Tooltip
                     formatter={(value) => formatCurrency(Number(value))}
@@ -823,48 +770,162 @@ export default function ForecastingContent() {
                       border: "1px solid #e2e8f0",
                       borderRadius: "6px",
                       boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                      fontSize:
+                        window.innerWidth < 640 ? "0.75rem" : "0.875rem",
                     }}
                   />
-                  <Bar
-                    dataKey="profit"
-                    fill="#10b981"
-                    name="Profit"
-                    radius={[4, 4, 0, 0]}
+                  <Line
+                    type="monotone"
+                    dataKey="projected"
+                    stroke="#3b82f6"
+                    strokeWidth={window.innerWidth < 640 ? 2 : 3}
+                    name="Projected"
+                    dot={{
+                      r: window.innerWidth < 640 ? 3 : 4,
+                      strokeWidth: window.innerWidth < 640 ? 1 : 2,
+                    }}
+                    activeDot={{
+                      r: window.innerWidth < 640 ? 4 : 6,
+                      strokeWidth: window.innerWidth < 640 ? 1 : 2,
+                    }}
                   />
-                  <Bar
-                    dataKey="cashFlow"
-                    fill="#3b82f6"
-                    name="Cash Flow"
-                    radius={[4, 4, 0, 0]}
+                  <Line
+                    type="monotone"
+                    dataKey="optimistic"
+                    stroke="#10b981"
+                    strokeWidth={window.innerWidth < 640 ? 1.5 : 2}
+                    strokeDasharray="5 5"
+                    name="Optimistic"
+                    dot={{
+                      r: window.innerWidth < 640 ? 2 : 3,
+                      strokeWidth: window.innerWidth < 640 ? 1 : 2,
+                    }}
                   />
-                </BarChart>
+                  <Line
+                    type="monotone"
+                    dataKey="pessimistic"
+                    stroke="#ef4444"
+                    strokeWidth={window.innerWidth < 640 ? 1.5 : 2}
+                    strokeDasharray="5 5"
+                    name="Pessimistic"
+                    dot={{
+                      r: window.innerWidth < 640 ? 2 : 3,
+                      strokeWidth: window.innerWidth < 640 ? 1 : 2,
+                    }}
+                  />
+                </LineChart>
               </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Enhanced Scenario Analysis */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-5 lg:gap-8">
+        {/* Enhanced Scenario Comparison */}
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-600 opacity-10 rounded-lg sm:rounded-xl lg:rounded-2xl"></div>
+          <div className="relative bg-white/90 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl shadow-md sm:shadow-lg lg:shadow-xl border border-green-200 hover:shadow-lg sm:hover:shadow-xl lg:hover:shadow-2xl transition-all duration-300">
+            <div className="p-3 sm:p-4 lg:p-6 border-b border-green-100">
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md sm:shadow-lg">
+                  <PieChart className="h-3.5 w-3.5 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-lg font-bold text-gray-900">
+                    Scenario Analysis
+                  </h3>
+                  <p className="text-xs sm:text-sm text-gray-600">
+                    Compare different business scenarios and their impact
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="p-2 sm:p-4 lg:p-6 pt-2 sm:pt-3 lg:pt-4">
+              <div className="h-[200px] sm:h-[250px] lg:h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={scenarioChartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <XAxis
+                      dataKey="name"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{
+                        fill: "#64748b",
+                        fontSize: window.innerWidth < 640 ? 10 : 12,
+                      }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{
+                        fill: "#64748b",
+                        fontSize: window.innerWidth < 640 ? 10 : 12,
+                      }}
+                      tickFormatter={(value) =>
+                        formatCurrency(Number(value)).replace(/\.00$/, "")
+                      }
+                      width={window.innerWidth < 640 ? 50 : 60}
+                    />
+                    <Tooltip
+                      formatter={(value) => formatCurrency(Number(value))}
+                      contentStyle={{
+                        backgroundColor: "#ffffff",
+                        border: "1px solid #e2e8f0",
+                        borderRadius: "6px",
+                        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                        fontSize:
+                          window.innerWidth < 640 ? "0.75rem" : "0.875rem",
+                      }}
+                    />
+                    <Bar
+                      dataKey="profit"
+                      fill="#10b981"
+                      name="Profit"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar
+                      dataKey="cashFlow"
+                      fill="#3b82f6"
+                      name="Cash Flow"
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Enhanced Custom Scenario Builder */}
         <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-600 opacity-10 rounded-2xl"></div>
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-purple-200 hover:shadow-2xl transition-all duration-300">
-            <div className="p-6 border-b border-purple-100">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
-                  <Calculator className="h-5 w-5 text-white" />
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-600 opacity-10 rounded-lg sm:rounded-xl lg:rounded-2xl"></div>
+          <div className="relative bg-white/90 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl shadow-md sm:shadow-lg lg:shadow-xl border border-purple-200 hover:shadow-lg sm:hover:shadow-xl lg:hover:shadow-2xl transition-all duration-300">
+            <div className="p-3 sm:p-4 lg:p-6 border-b border-purple-100">
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md sm:shadow-lg">
+                  <Calculator className="h-3.5 w-3.5 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">Custom Scenario Builder</h3>
-                  <p className="text-sm text-gray-600">Create and analyze custom business scenarios</p>
+                  <h3 className="text-base sm:text-lg font-bold text-gray-900">
+                    Custom Scenario Builder
+                  </h3>
+                  <p className="text-xs sm:text-sm text-gray-600">
+                    Create and analyze custom business scenarios
+                  </p>
                 </div>
               </div>
             </div>
-            <div className="p-6 space-y-4 pt-2">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4 pt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <Label htmlFor="revenue-change" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="revenue-change"
+                    className="text-xs sm:text-sm font-medium text-gray-700"
+                  >
                     Revenue Change (%)
                   </Label>
-                  <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-center gap-1 sm:gap-2 mt-1">
                     <Button
                       variant="outline"
                       size="sm"
@@ -874,9 +935,9 @@ export default function ForecastingContent() {
                           revenueChange: prev.revenueChange - 5,
                         }))
                       }
-                      className="border-purple-200 hover:border-purple-300 hover:bg-purple-50"
+                      className="h-7 w-7 p-0 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
                     >
-                      <Minus className="h-3 w-3" />
+                      <Minus className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                     </Button>
                     <Input
                       id="revenue-change"
@@ -888,7 +949,7 @@ export default function ForecastingContent() {
                           revenueChange: Number(e.target.value),
                         }))
                       }
-                      className="text-center border-purple-200 focus:border-purple-400 focus:ring-purple-400"
+                      className="text-center border-purple-200 focus:border-purple-400 focus:ring-purple-400 text-xs sm:text-sm h-7 sm:h-8"
                     />
                     <Button
                       variant="outline"
@@ -899,16 +960,21 @@ export default function ForecastingContent() {
                           revenueChange: prev.revenueChange + 5,
                         }))
                       }
-                      className="border-purple-200 hover:border-purple-300 hover:bg-purple-50"
+                      className="h-7 w-7 p-0 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
                     >
-                      <Plus className="h-3 w-3" />
+                      <Plus className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                     </Button>
                   </div>
                 </div>
 
                 <div>
-                  <Label htmlFor="expense-change" className="text-sm font-medium text-gray-700">Expense Change (%)</Label>
-                  <div className="flex items-center gap-2 mt-1">
+                  <Label
+                    htmlFor="expense-change"
+                    className="text-xs sm:text-sm font-medium text-gray-700"
+                  >
+                    Expense Change (%)
+                  </Label>
+                  <div className="flex items-center gap-1 sm:gap-2 mt-1">
                     <Button
                       variant="outline"
                       size="sm"
@@ -918,9 +984,9 @@ export default function ForecastingContent() {
                           expenseChange: prev.expenseChange - 5,
                         }))
                       }
-                      className="border-purple-200 hover:border-purple-300 hover:bg-purple-50"
+                      className="h-7 w-7 p-0 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
                     >
-                      <Minus className="h-3 w-3" />
+                      <Minus className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                     </Button>
                     <Input
                       id="expense-change"
@@ -932,7 +998,7 @@ export default function ForecastingContent() {
                           expenseChange: Number(e.target.value),
                         }))
                       }
-                      className="text-center border-purple-200 focus:border-purple-400 focus:ring-purple-400"
+                      className="text-center border-purple-200 focus:border-purple-400 focus:ring-purple-400 text-xs sm:text-sm h-7 sm:h-8"
                     />
                     <Button
                       variant="outline"
@@ -943,17 +1009,22 @@ export default function ForecastingContent() {
                           expenseChange: prev.expenseChange + 5,
                         }))
                       }
-                      className="border-purple-200 hover:border-purple-300 hover:bg-purple-50"
+                      className="h-7 w-7 p-0 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
                     >
-                      <Plus className="h-3 w-3" />
+                      <Plus className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                     </Button>
                   </div>
                 </div>
               </div>
 
               <div>
-                <Label htmlFor="cashflow-change" className="text-sm font-medium text-gray-700">Cash Flow Change (%)</Label>
-                <div className="flex items-center gap-2 mt-1">
+                <Label
+                  htmlFor="cashflow-change"
+                  className="text-xs sm:text-sm font-medium text-gray-700"
+                >
+                  Cash Flow Change (%)
+                </Label>
+                <div className="flex items-center gap-1 sm:gap-2 mt-1">
                   <Button
                     variant="outline"
                     size="sm"
@@ -963,9 +1034,9 @@ export default function ForecastingContent() {
                         cashFlowChange: prev.cashFlowChange - 5,
                       }))
                     }
-                    className="border-purple-200 hover:border-purple-300 hover:bg-purple-50"
+                    className="h-7 w-7 p-0 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
                   >
-                    <Minus className="h-3 w-3" />
+                    <Minus className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                   </Button>
                   <Input
                     id="cashflow-change"
@@ -977,7 +1048,7 @@ export default function ForecastingContent() {
                         cashFlowChange: Number(e.target.value),
                       }))
                     }
-                    className="text-center border-purple-200 focus:border-purple-400 focus:ring-purple-400"
+                    className="text-center border-purple-200 focus:border-purple-400 focus:ring-purple-400 text-xs sm:text-sm h-7 sm:h-8"
                   />
                   <Button
                     variant="outline"
@@ -988,18 +1059,18 @@ export default function ForecastingContent() {
                         cashFlowChange: prev.cashFlowChange + 5,
                       }))
                     }
-                    className="border-purple-200 hover:border-purple-300 hover:bg-purple-50"
+                    className="h-7 w-7 p-0 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
                   >
-                    <Plus className="h-3 w-3" />
+                    <Plus className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                   </Button>
                 </div>
               </div>
 
-              <Button 
-                onClick={createCustomScenario} 
-                className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300"
+              <Button
+                onClick={createCustomScenario}
+                className="w-full text-xs sm:text-sm bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white shadow-md sm:shadow-lg lg:shadow-xl hover:shadow-lg sm:hover:shadow-xl lg:hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 h-8 sm:h-9 lg:h-10"
               >
-                <Calculator className="h-4 w-4 mr-2" />
+                <Calculator className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 Create Custom Scenario
               </Button>
             </div>
@@ -1009,40 +1080,44 @@ export default function ForecastingContent() {
 
       {/* Enhanced Detailed Scenario Table */}
       <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-yellow-600 opacity-10 rounded-2xl"></div>
-        <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-orange-200 hover:shadow-2xl transition-all duration-300">
-          <div className="p-6 border-b border-orange-100">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-yellow-600 rounded-xl flex items-center justify-center shadow-lg">
-                <Eye className="h-5 w-5 text-white" />
+        <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-yellow-600 opacity-10 rounded-lg sm:rounded-xl lg:rounded-2xl"></div>
+        <div className="relative bg-white/90 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl shadow-md sm:shadow-lg lg:shadow-xl border border-orange-200 hover:shadow-lg sm:hover:shadow-xl lg:hover:shadow-2xl transition-all duration-300">
+          <div className="p-3 sm:p-4 lg:p-6 border-b border-orange-100">
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-orange-500 to-yellow-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md sm:shadow-lg">
+                <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-white" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-900">Scenario Details</h3>
-                <p className="text-sm text-gray-600">Comprehensive breakdown of all scenarios with probabilities</p>
+                <h3 className="text-base sm:text-lg font-bold text-gray-900">
+                  Scenario Details
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-600">
+                  Comprehensive breakdown of all scenarios with probabilities
+                </p>
               </div>
             </div>
           </div>
-          <div className="p-6">
+          <div className="p-2 sm:p-4 lg:p-6">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-orange-100">
-                    <th className="text-left p-3 font-medium text-gray-700 bg-orange-50 rounded-l-lg">
+                    <th className="text-left p-2 sm:p-3 font-medium text-xs sm:text-sm text-gray-700 bg-orange-50 rounded-l-lg">
                       Scenario
                     </th>
-                    <th className="text-left p-3 font-medium text-gray-700 bg-orange-50">
+                    <th className="text-left p-2 sm:p-3 font-medium text-xs sm:text-sm text-gray-700 bg-orange-50 hidden sm:table-cell">
                       Revenue
                     </th>
-                    <th className="text-left p-3 font-medium text-gray-700 bg-orange-50">
+                    <th className="text-left p-2 sm:p-3 font-medium text-xs sm:text-sm text-gray-700 bg-orange-50 hidden sm:table-cell">
                       Expenses
                     </th>
-                    <th className="text-left p-3 font-medium text-gray-700 bg-orange-50">
+                    <th className="text-left p-2 sm:p-3 font-medium text-xs sm:text-sm text-gray-700 bg-orange-50">
                       Profit
                     </th>
-                    <th className="text-left p-3 font-medium text-gray-700 bg-orange-50">
+                    <th className="text-left p-2 sm:p-3 font-medium text-xs sm:text-sm text-gray-700 bg-orange-50">
                       Cash Flow
                     </th>
-                    <th className="text-left p-3 font-medium text-gray-700 bg-orange-50 rounded-r-lg">
+                    <th className="text-left p-2 sm:p-3 font-medium text-xs sm:text-sm text-gray-700 bg-orange-50 rounded-r-lg">
                       Probability
                     </th>
                   </tr>
@@ -1054,16 +1129,21 @@ export default function ForecastingContent() {
                         scenario.revenue !== 0 || scenario.expenses !== 0
                     )
                     .map((scenario, index) => (
-                      <tr key={index} className="border-b border-orange-50 hover:bg-orange-50/30 transition-colors duration-200">
-                        <td className="p-3 font-medium text-gray-800">{scenario.name}</td>
-                        <td className="p-3 text-green-600 font-semibold">
+                      <tr
+                        key={index}
+                        className="border-b border-orange-50 hover:bg-orange-50/30 transition-colors duration-200"
+                      >
+                        <td className="p-2 sm:p-3 font-medium text-xs sm:text-sm text-gray-800">
+                          {scenario.name}
+                        </td>
+                        <td className="p-2 sm:p-3 text-green-600 font-semibold text-xs sm:text-sm hidden sm:table-cell">
                           {formatCurrency(scenario.revenue)}
                         </td>
-                        <td className="p-3 text-red-600 font-semibold">
+                        <td className="p-2 sm:p-3 text-red-600 font-semibold text-xs sm:text-sm hidden sm:table-cell">
                           {formatCurrency(scenario.expenses)}
                         </td>
                         <td
-                          className={`p-3 font-semibold ${
+                          className={`p-2 sm:p-3 font-semibold text-xs sm:text-sm ${
                             scenario.profit >= 0
                               ? "text-green-600"
                               : "text-red-600"
@@ -1072,7 +1152,7 @@ export default function ForecastingContent() {
                           {formatCurrency(scenario.profit)}
                         </td>
                         <td
-                          className={`p-3 font-semibold ${
+                          className={`p-2 sm:p-3 font-semibold text-xs sm:text-sm ${
                             scenario.cashFlow >= 0
                               ? "text-green-600"
                               : "text-red-600"
@@ -1080,10 +1160,10 @@ export default function ForecastingContent() {
                         >
                           {formatCurrency(scenario.cashFlow)}
                         </td>
-                        <td className="p-3">
-                          <Badge 
-                            variant="secondary" 
-                            className="font-medium bg-gradient-to-r from-orange-100 to-yellow-100 text-orange-800 border-orange-200 hover:from-orange-200 hover:to-yellow-200"
+                        <td className="p-2 sm:p-3">
+                          <Badge
+                            variant="secondary"
+                            className="font-medium text-xs h-5 sm:h-6 bg-gradient-to-r from-orange-100 to-yellow-100 text-orange-800 border-orange-200 hover:from-orange-200 hover:to-yellow-200"
                           >
                             {formatPercentage(scenario.probability * 100)}
                           </Badge>

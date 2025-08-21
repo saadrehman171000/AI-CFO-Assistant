@@ -112,16 +112,18 @@ enum SubscriptionStatus {
 }
 
 model FinancialAnalysis {
-  id              String    @id @default(cuid())
-  userId          String
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  fileName        String
-  fileType        String
-  fileSizeMb      Float
-  uploadDate      DateTime  @default(now())
-  analysisData    Json      // Store the complete analysis JSON response
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id                     String    @id @default(cuid())
+  userId                 String
+  user                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fileName               String
+  fileType               String
+  fileSizeMb             Float
+  uploadDate             DateTime  @default(now())
+  analysisData           Json      // Store the complete analysis JSON response
+  isMultiFileAnalysis    Boolean   @default(false)
+  multiFileAnalysisGroupId String?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
 
   @@map("financial_analyses")
 }

@@ -18,9 +18,31 @@ export async function GET(request: NextRequest) {
     const id = url.searchParams.get("id");
     const latest = url.searchParams.get("latest") === "true";
     const all = url.searchParams.get("all") === "true";
+    const groupId = url.searchParams.get("groupId");
 
     // Query the database based on parameters
-    if (id) {
+    if (groupId) {
+      // Get analyses for a specific multi-file analysis group
+      const analyses = await prisma.financialAnalysis.findMany({
+        where: {
+          userId: user.id,
+          multiFileAnalysisGroupId: groupId,
+        },
+        orderBy: {
+          uploadDate: "desc",
+        },
+      });
+
+      if (analyses.length === 0) {
+        return NextResponse.json(
+          { error: "No analyses found for this group" },
+          { status: 404 }
+        );
+      }
+
+      // Return all analyses in the group with their full data
+      return NextResponse.json(analyses);
+    } else if (id) {
       // Get a specific financial analysis by ID
       const analysis = await prisma.financialAnalysis.findUnique({
         where: {

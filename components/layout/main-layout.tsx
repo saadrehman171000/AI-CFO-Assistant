@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import { UserButton, useUser } from "@clerk/nextjs"
-import { Sidebar } from "./sidebar"
-import { TopNavigation } from "./top-navigation"
+import { UserButton, useUser } from "@clerk/nextjs";
+import { Sidebar } from "./sidebar";
+import { TopNavigation } from "./top-navigation";
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
-  const { user, isLoaded } = useUser()
+  const { user, isLoaded } = useUser();
 
   // If still loading, show enhanced loading state
   if (!isLoaded) {
@@ -18,7 +18,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   // Show main layout with enhanced 3D sidebar and navigation
@@ -27,18 +27,16 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden lg:ml-64">
         <TopNavigation user={user} />
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-transparent p-4">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-transparent p-2 sm:p-3 md:p-4">
           <div className="relative">
             {/* Subtle background pattern */}
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/20 via-transparent to-purple-50/20 rounded-3xl opacity-30"></div>
-            <div className="relative bg-white/60 backdrop-blur-sm rounded-3xl shadow-xl border border-white/30 min-h-full">
-              <div className="p-6">
-                {children}
-              </div>
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/20 via-transparent to-purple-50/20 rounded-xl md:rounded-2xl lg:rounded-3xl opacity-30"></div>
+            <div className="relative bg-white/60 backdrop-blur-sm rounded-xl md:rounded-2xl lg:rounded-3xl shadow-xl border border-white/30 min-h-full">
+              <div className="p-3 sm:p-4 md:p-5 lg:p-6">{children}</div>
             </div>
           </div>
         </main>
       </div>
     </div>
-  )
+  );
 }

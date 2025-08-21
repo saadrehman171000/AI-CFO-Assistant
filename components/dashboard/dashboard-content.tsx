@@ -215,35 +215,77 @@ export default function DashboardContent() {
       );
       let analysisData = null;
       let analysisHistory = [];
+      let isMultiFileAnalysis = false;
+      let multiFileAnalysisGroupId = null;
 
       if (analysisResponse.ok) {
         const analysisResult = await analysisResponse.json();
         // Direct response without success wrapper
         if (analysisResult.file_info && analysisResult.analysis) {
           analysisData = analysisResult;
+          // Check if this is a multi-file analysis
+          if (
+            analysisResult.isMultiFileAnalysis &&
+            analysisResult.multiFileAnalysisGroupId
+          ) {
+            isMultiFileAnalysis = true;
+            multiFileAnalysisGroupId = analysisResult.multiFileAnalysisGroupId;
+          }
         } else if (analysisResult.success && analysisResult.data) {
           // Backward compatibility with wrapped response
           analysisData = analysisResult.data;
+          // Check if this is a multi-file analysis
+          if (
+            analysisResult.data.isMultiFileAnalysis &&
+            analysisResult.data.multiFileAnalysisGroupId
+          ) {
+            isMultiFileAnalysis = true;
+            multiFileAnalysisGroupId =
+              analysisResult.data.multiFileAnalysisGroupId;
+          }
         }
 
-        // Also fetch analysis history if available using the unified endpoint
-        try {
-          const historyResponse = await fetch(
-            "/api/financial-analysis?all=true"
-          );
-          if (historyResponse.ok) {
-            const historyResult = await historyResponse.json();
-            if (Array.isArray(historyResult)) {
-              // Direct array response from the all=true parameter
-              analysisHistory = historyResult;
-            } else if (historyResult.data) {
-              // Handle wrapped data response
-              analysisHistory = historyResult.data;
+        // If this is a multi-file analysis, fetch all files with the same groupId
+        if (isMultiFileAnalysis && multiFileAnalysisGroupId) {
+          try {
+            const groupAnalysisResponse = await fetch(
+              `/api/financial-analysis?groupId=${multiFileAnalysisGroupId}`
+            );
+
+            if (groupAnalysisResponse.ok) {
+              const groupResult = await groupAnalysisResponse.json();
+              if (Array.isArray(groupResult)) {
+                analysisHistory = groupResult;
+              } else if (groupResult.data && Array.isArray(groupResult.data)) {
+                analysisHistory = groupResult.data;
+              }
             }
+          } catch (groupError) {
+            console.error(
+              "Error fetching multi-file analysis group:",
+              groupError
+            );
           }
-        } catch (historyError) {
-          console.error("Error fetching history:", historyError);
-          // Non-critical, can continue without history
+        } else {
+          // If not a multi-file analysis, fetch regular history
+          try {
+            const historyResponse = await fetch(
+              "/api/financial-analysis?all=true"
+            );
+            if (historyResponse.ok) {
+              const historyResult = await historyResponse.json();
+              if (Array.isArray(historyResult)) {
+                // Direct array response from the all=true parameter
+                analysisHistory = historyResult;
+              } else if (historyResult.data) {
+                // Handle wrapped data response
+                analysisHistory = historyResult.data;
+              }
+            }
+          } catch (historyError) {
+            console.error("Error fetching history:", historyError);
+            // Non-critical, can continue without history
+          }
         }
       }
 
@@ -481,9 +523,13 @@ export default function DashboardContent() {
             No Financial Data Available
           </h3>
           <p className="text-gray-600 mb-6 max-w-md mx-auto">
-            Upload your first financial document to see AI-powered insights and analytics.
+            Upload your first financial document to see AI-powered insights and
+            analytics.
           </p>
-          <Button asChild className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300">
+          <Button
+            asChild
+            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300"
+          >
             <a href="/upload">Upload Document</a>
           </Button>
         </div>
@@ -493,14 +539,61 @@ export default function DashboardContent() {
 
   // Check if we have comprehensive analysis data
   if (dashboardData.analysisData) {
-    return (
-      <div className="space-y-6">
-        {/* Render the comprehensive financial dashboard without duplicate header */}
-        <ComprehensiveFinancialDashboard
-          analysisData={dashboardData.analysisData}
-        />
-      </div>
-    );
+    // Check if this is a multi-file analysis
+    if (dashboardData.analysisData.isMultiFileAnalysis) {
+      return (
+        <div className="space-y-6">
+          {/* Multi-file analysis header */}
+          <div className="relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 opacity-10 rounded-3xl"></div>
+            <div className="relative bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/20">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="relative">
+                    <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl transform rotate-3 hover:rotate-0 transition-all duration-300">
+                      <BarChart3 className="h-8 w-8 text-white" />
+                    </div>
+                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-pink-500 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
+                      <Sparkles className="h-3 w-3 text-white" />
+                    </div>
+                  </div>
+                  <div>
+                    <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
+                      Multi-File Financial Analysis
+                    </h1>
+                    <p className="text-gray-600 mt-1">
+                      Combined analysis of{" "}
+                      {dashboardData.analysisHistory.length} financial documents
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Individual file analysis */}
+          {dashboardData.analysisHistory.map((analysis, index) => (
+            <div key={index} className="mb-8">
+              <h2 className="text-xl font-bold mb-4 px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-lg">
+                {analysis.file_info.filename}
+              </h2>
+              <ComprehensiveFinancialDashboard analysisData={analysis} />
+              <div className="border-b border-gray-200 my-8"></div>
+            </div>
+          ))}
+        </div>
+      );
+    } else {
+      // Single file analysis
+      return (
+        <div className="space-y-6">
+          {/* Render the comprehensive financial dashboard without duplicate header */}
+          <ComprehensiveFinancialDashboard
+            analysisData={dashboardData.analysisData}
+          />
+        </div>
+      );
+    }
   }
 
   // Legacy dashboard rendering
@@ -559,11 +652,13 @@ export default function DashboardContent() {
                 <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
                   Financial Dashboard
                 </h1>
-                <p className="text-gray-600 mt-1">AI-powered insights and analytics for your financial data</p>
+                <p className="text-gray-600 mt-1">
+                  AI-powered insights and analytics for your financial data
+                </p>
               </div>
             </div>
-            <Button 
-              onClick={refreshDashboard} 
+            <Button
+              onClick={refreshDashboard}
               disabled={refreshing}
               className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300"
             >
@@ -586,8 +681,12 @@ export default function DashboardContent() {
                 <FileText className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-900">Latest Report Analysis</h3>
-                <p className="text-sm text-gray-600">AI-powered financial insights</p>
+                <h3 className="text-lg font-bold text-gray-900">
+                  Latest Report Analysis
+                </h3>
+                <p className="text-sm text-gray-600">
+                  AI-powered financial insights
+                </p>
               </div>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -726,8 +825,12 @@ export default function DashboardContent() {
                   <TrendingUp className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">Financial Trends</h3>
-                  <p className="text-sm text-gray-600">Revenue, expenses, and profit over time</p>
+                  <h3 className="text-lg font-bold text-gray-900">
+                    Financial Trends
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Revenue, expenses, and profit over time
+                  </p>
                 </div>
               </div>
             </div>
@@ -737,7 +840,9 @@ export default function DashboardContent() {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis />
-                  <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                  <Tooltip
+                    formatter={(value) => formatCurrency(Number(value))}
+                  />
                   <Area
                     type="monotone"
                     dataKey="revenue"
@@ -778,8 +883,12 @@ export default function DashboardContent() {
                   <PieChart className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">Expense Breakdown</h3>
-                  <p className="text-sm text-gray-600">Top expense categories by amount</p>
+                  <h3 className="text-lg font-bold text-gray-900">
+                    Expense Breakdown
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Top expense categories by amount
+                  </p>
                 </div>
               </div>
             </div>
@@ -802,7 +911,9 @@ export default function DashboardContent() {
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                  <Tooltip
+                    formatter={(value) => formatCurrency(Number(value))}
+                  />
                 </RechartsPieChart>
               </ResponsiveContainer>
             </div>
@@ -820,24 +931,40 @@ export default function DashboardContent() {
                 <BarChart3 className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-900">Top Accounts by Category</h3>
-                <p className="text-sm text-gray-600">Highest value accounts in each financial category</p>
+                <h3 className="text-lg font-bold text-gray-900">
+                  Top Accounts by Category
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Highest value accounts in each financial category
+                </p>
               </div>
             </div>
           </div>
           <div className="p-6">
             <Tabs defaultValue="revenue" className="w-full">
               <TabsList className="grid w-full grid-cols-4 bg-gray-100 p-1 rounded-lg">
-                <TabsTrigger value="revenue" className="data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-purple-600 rounded-md transition-all duration-200">
+                <TabsTrigger
+                  value="revenue"
+                  className="data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-purple-600 rounded-md transition-all duration-200"
+                >
                   Revenue
                 </TabsTrigger>
-                <TabsTrigger value="expenses" className="data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-purple-600 rounded-md transition-all duration-200">
+                <TabsTrigger
+                  value="expenses"
+                  className="data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-purple-600 rounded-md transition-all duration-200"
+                >
                   Expenses
                 </TabsTrigger>
-                <TabsTrigger value="assets" className="data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-purple-600 rounded-md transition-all duration-200">
+                <TabsTrigger
+                  value="assets"
+                  className="data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-purple-600 rounded-md transition-all duration-200"
+                >
                   Assets
                 </TabsTrigger>
-                <TabsTrigger value="liabilities" className="data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-purple-600 rounded-md transition-all duration-200">
+                <TabsTrigger
+                  value="liabilities"
+                  className="data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-purple-600 rounded-md transition-all duration-200"
+                >
                   Liabilities
                 </TabsTrigger>
               </TabsList>
@@ -850,7 +977,9 @@ export default function DashboardContent() {
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                      <span className="font-medium text-gray-800">{account.accountName}</span>
+                      <span className="font-medium text-gray-800">
+                        {account.accountName}
+                      </span>
                     </div>
                     <span className="text-green-600 font-semibold">
                       {formatCurrency(Number(account.amount))}
@@ -867,7 +996,9 @@ export default function DashboardContent() {
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-                      <span className="font-medium text-gray-800">{account.accountName}</span>
+                      <span className="font-medium text-gray-800">
+                        {account.accountName}
+                      </span>
                     </div>
                     <span className="text-red-600 font-semibold">
                       {formatCurrency(Number(account.amount))}
@@ -884,7 +1015,9 @@ export default function DashboardContent() {
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
-                      <span className="font-medium text-gray-800">{account.accountName}</span>
+                      <span className="font-medium text-gray-800">
+                        {account.accountName}
+                      </span>
                     </div>
                     <span className="text-blue-600 font-semibold">
                       {formatCurrency(Number(account.amount))}
@@ -901,7 +1034,9 @@ export default function DashboardContent() {
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-3 h-3 bg-orange-500 rounded-full animate-pulse"></div>
-                      <span className="font-medium text-gray-800">{account.accountName}</span>
+                      <span className="font-medium text-gray-800">
+                        {account.accountName}
+                      </span>
                     </div>
                     <span className="text-orange-600 font-semibold">
                       {formatCurrency(Number(account.amount))}
@@ -924,8 +1059,13 @@ export default function DashboardContent() {
                 <Zap className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-900">AI-Powered Insights</h3>
-                <p className="text-sm text-gray-600">Intelligent analysis of your financial data with actionable recommendations</p>
+                <h3 className="text-lg font-bold text-gray-900">
+                  AI-Powered Insights
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Intelligent analysis of your financial data with actionable
+                  recommendations
+                </p>
               </div>
             </div>
             <div className="flex gap-2">
@@ -938,7 +1078,9 @@ export default function DashboardContent() {
                 All ({insights.length})
               </Button>
               <Button
-                variant={selectedInsightType === "trend" ? "default" : "outline"}
+                variant={
+                  selectedInsightType === "trend" ? "default" : "outline"
+                }
                 size="sm"
                 onClick={() => setSelectedInsightType("trend")}
                 className="bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white border-0"
@@ -953,11 +1095,14 @@ export default function DashboardContent() {
                 onClick={() => setSelectedInsightType("anomaly")}
                 className="bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white border-0"
               >
-                Anomalies ({insights.filter((i) => i.type === "anomaly").length})
+                Anomalies ({insights.filter((i) => i.type === "anomaly").length}
+                )
               </Button>
               <Button
                 variant={
-                  selectedInsightType === "recommendation" ? "default" : "outline"
+                  selectedInsightType === "recommendation"
+                    ? "default"
+                    : "outline"
                 }
                 size="sm"
                 onClick={() => setSelectedInsightType("recommendation")}
@@ -979,7 +1124,9 @@ export default function DashboardContent() {
                     <div className="mt-1">{getInsightIcon(insight.type)}</div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <h4 className="font-semibold text-gray-900">{insight.title}</h4>
+                        <h4 className="font-semibold text-gray-900">
+                          {insight.title}
+                        </h4>
                         <Badge variant={getSeverityColor(insight.severity)}>
                           {insight.severity}
                         </Badge>
@@ -1019,14 +1166,20 @@ export default function DashboardContent() {
                   <DollarSign className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">Cash Flow Analysis</h3>
-                  <p className="text-sm text-gray-600">Operating, investing & financing activities</p>
+                  <h3 className="text-lg font-bold text-gray-900">
+                    Cash Flow Analysis
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Operating, investing & financing activities
+                  </p>
                 </div>
               </div>
             </div>
             <div className="p-6 space-y-4">
               <div className="flex justify-between items-center p-3 bg-blue-50 rounded-xl">
-                <span className="text-sm font-medium text-gray-700">Operations:</span>
+                <span className="text-sm font-medium text-gray-700">
+                  Operations:
+                </span>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                   <span
@@ -1041,7 +1194,9 @@ export default function DashboardContent() {
                 </div>
               </div>
               <div className="flex justify-between items-center p-3 bg-indigo-50 rounded-xl">
-                <span className="text-sm font-medium text-gray-700">Investing:</span>
+                <span className="text-sm font-medium text-gray-700">
+                  Investing:
+                </span>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
                   <span
@@ -1056,7 +1211,9 @@ export default function DashboardContent() {
                 </div>
               </div>
               <div className="flex justify-between items-center p-3 bg-blue-100 rounded-xl border border-blue-200">
-                <span className="text-sm font-bold text-gray-800">Net Cash Flow:</span>
+                <span className="text-sm font-bold text-gray-800">
+                  Net Cash Flow:
+                </span>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-blue-600 rounded-full animate-pulse"></div>
                   <span
@@ -1083,14 +1240,20 @@ export default function DashboardContent() {
                   <Target className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">Financial Ratios</h3>
-                  <p className="text-sm text-gray-600">Key performance indicators</p>
+                  <h3 className="text-lg font-bold text-gray-900">
+                    Financial Ratios
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Key performance indicators
+                  </p>
                 </div>
               </div>
             </div>
             <div className="p-6 space-y-4">
               <div className="flex justify-between items-center p-3 bg-green-50 rounded-xl">
-                <span className="text-sm font-medium text-gray-700">Current Ratio:</span>
+                <span className="text-sm font-medium text-gray-700">
+                  Current Ratio:
+                </span>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                   <span className="font-semibold text-green-600">
@@ -1099,7 +1262,9 @@ export default function DashboardContent() {
                 </div>
               </div>
               <div className="flex justify-between items-center p-3 bg-emerald-50 rounded-xl">
-                <span className="text-sm font-medium text-gray-700">Debt/Equity:</span>
+                <span className="text-sm font-medium text-gray-700">
+                  Debt/Equity:
+                </span>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
                   <span className="font-semibold text-emerald-600">
@@ -1108,7 +1273,9 @@ export default function DashboardContent() {
                 </div>
               </div>
               <div className="flex justify-between items-center p-3 bg-green-100 rounded-xl border border-green-200">
-                <span className="text-sm font-bold text-gray-800">Quick Ratio:</span>
+                <span className="text-sm font-bold text-gray-800">
+                  Quick Ratio:
+                </span>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-green-600 rounded-full animate-pulse"></div>
                   <span className="font-bold text-lg text-green-600">
@@ -1129,14 +1296,20 @@ export default function DashboardContent() {
                   <Activity className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">Key Performance Indicators</h3>
-                  <p className="text-sm text-gray-600">Business health metrics</p>
+                  <h3 className="text-lg font-bold text-gray-900">
+                    Key Performance Indicators
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Business health metrics
+                  </p>
                 </div>
               </div>
             </div>
             <div className="p-6 space-y-4">
               <div className="flex justify-between items-center p-3 bg-purple-50 rounded-xl">
-                <span className="text-sm font-medium text-gray-700">EBITDA:</span>
+                <span className="text-sm font-medium text-gray-700">
+                  EBITDA:
+                </span>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                   <span className="font-semibold text-purple-600">
@@ -1145,7 +1318,9 @@ export default function DashboardContent() {
                 </div>
               </div>
               <div className="flex justify-between items-center p-3 bg-pink-50 rounded-xl">
-                <span className="text-sm font-medium text-gray-700">AR Days:</span>
+                <span className="text-sm font-medium text-gray-700">
+                  AR Days:
+                </span>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-pink-500 rounded-full"></div>
                   <span className="font-semibold text-pink-600">
@@ -1154,7 +1329,9 @@ export default function DashboardContent() {
                 </div>
               </div>
               <div className="flex justify-between items-center p-3 bg-purple-100 rounded-xl border border-purple-200">
-                <span className="text-sm font-bold text-gray-800">AP Days:</span>
+                <span className="text-sm font-bold text-gray-800">
+                  AP Days:
+                </span>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-purple-600 rounded-full animate-pulse"></div>
                   <span className="font-bold text-lg text-purple-600">
