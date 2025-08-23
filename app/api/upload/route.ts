@@ -5,6 +5,8 @@ import { parseFinancialReport } from '@/lib/parsers'
 import { AIFinancialAnalyzer } from '@/lib/ai-financial-analyzer'
 import { ReportType, ParsedFinancialData } from '@prisma/client'
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000"
+
 export async function DELETE(request: NextRequest) {
   try {
     const clerkUser = await currentUser()
@@ -147,6 +149,43 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    // Also send to Python backend for vector storage and AI analysis
+    let vectorStorageResult = null;
+    try {
+      // Create FormData for the backend request
+      const backendFormData = new FormData();
+
+      // We need to recreate the file since it may have been consumed
+      let backendFile: File;
+      if (typeof fileContent === 'string') {
+        // CSV file
+        backendFile = new File([fileContent], file.name, { type: 'text/csv' });
+      } else {
+        // PDF or Excel file
+        backendFile = new File([fileContent], file.name, { type: file.type });
+      }
+
+      backendFormData.append('file', backendFile);
+
+      const backendResponse = await fetch(
+        `${BACKEND_URL}/upload-financial-document?user_id=${encodeURIComponent(clerkUser.id)}&store_in_vector_db=true`,
+        {
+          method: 'POST',
+          body: backendFormData,
+        }
+      );
+
+      if (backendResponse.ok) {
+        vectorStorageResult = await backendResponse.json();
+        console.log('Successfully stored in vector database:', vectorStorageResult.vector_storage);
+      } else {
+        console.error('Failed to store in vector database:', await backendResponse.text());
+      }
+    } catch (vectorError) {
+      console.error('Vector storage error:', vectorError);
+      // Don't fail the entire request if vector storage fails
+    }
+
     // Return the created report with parsed data
     const createdReport = await prisma.financialReport.findUnique({
       where: { id: financialReport.id },
@@ -158,7 +197,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ 
       success: true,
       report: createdReport,
-      message: `Successfully processed ${file.name}. Found ${recordsToStore.length} financial records.`
+      vectorStorage: vectorStorageResult?.vector_storage || { stored: false, document_id: null },
+      message: `Successfully processed ${file.name}. Found ${recordsToStore.length} financial records.${vectorStorageResult?.vector_storage?.stored ? ' Data also stored for AI chatbot.' : ''}`
     })
 
   } catch (error) {

@@ -17,6 +17,8 @@ import {
   Sparkles,
   Zap,
   Eye,
+  Bot,
+  MessageCircle,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -33,49 +35,57 @@ const navigation = [
     href: "/dashboard",
     icon: BarChart3,
     requiresSubscription: true,
-    color: "from-blue-500 to-cyan-500",
+    color: "bg-blue-600",
   },
   {
     name: "Upload",
     href: "/upload",
     icon: Upload,
     requiresSubscription: true,
-    color: "from-green-500 to-emerald-500",
+    color: "bg-emerald-600",
+  },
+  {
+    name: "AI Bot",
+    href: "/chatbot",
+    icon: Bot,
+    requiresSubscription: true,
+    color: "bg-purple-600",
+    featured: true,
   },
   {
     name: "Reports",
     href: "/reports",
     icon: FileText,
     requiresSubscription: true,
-    color: "from-purple-500 to-pink-500",
+    color: "bg-indigo-600",
   },
   {
     name: "Analytics",
     href: "/analytics",
     icon: TrendingUp,
     requiresSubscription: true,
-    color: "from-orange-500 to-red-500",
+    color: "bg-orange-600",
   },
   {
     name: "Forecasting",
     href: "/forecasting",
     icon: TrendingUp,
     requiresSubscription: true,
-    color: "from-indigo-500 to-purple-500",
+    color: "bg-cyan-600",
   },
   {
     name: "Profile",
     href: "/profile",
     icon: User,
     requiresSubscription: false,
-    color: "from-gray-500 to-slate-500",
+    color: "bg-gray-600",
   },
   {
     name: "Subscription",
     href: "/subscription",
     icon: CreditCard,
     requiresSubscription: false,
-    color: "from-yellow-500 to-orange-500",
+    color: "bg-amber-600",
   },
 ];
 
@@ -122,68 +132,59 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Enhanced 3D Mobile menu button */}
+      {/* Clean Mobile menu button */}
       <div className="lg:hidden fixed top-4 left-4 z-50">
-        <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl blur-lg opacity-30 animate-pulse"></div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="relative bg-white/90 backdrop-blur-sm shadow-2xl border border-white/30 hover:bg-white hover:shadow-3xl transition-all duration-300 transform hover:scale-110"
-          >
-            {isMobileMenuOpen ? (
-              <X className="h-5 w-5" />
-            ) : (
-              <Menu className="h-5 w-5" />
-            )}
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="bg-white shadow-lg border-gray-200 hover:bg-gray-50 transition-all duration-200"
+        >
+          {isMobileMenuOpen ? (
+            <X className="h-5 w-5 text-gray-600" />
+          ) : (
+            <Menu className="h-5 w-5 text-gray-600" />
+          )}
+        </Button>
       </div>
 
-      {/* Enhanced mobile menu overlay with touch capture */}
+      {/* Mobile menu overlay */}
       {isMobileMenuOpen && (
         <div
-          className="lg:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm touch-auto"
+          className="lg:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
 
-      {/* Enhanced 3D Sidebar */}
+      {/* Clean Professional Sidebar */}
       <div
         className={cn(
           "lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:z-50",
-          "fixed inset-y-0 left-0 z-50 w-[250px] sm:w-64 transform transition-all duration-300 ease-out",
+          "fixed inset-y-0 left-0 z-50 w-64 transform transition-all duration-300 ease-out",
           isMobileMenuOpen
             ? "translate-x-0"
             : "-translate-x-full lg:translate-x-0"
         )}
       >
-        <div className="relative h-full">
-          {/* Background gradient and blur effects */}
-          <div className="absolute inset-0 bg-gradient-to-b from-blue-50/50 via-purple-50/30 to-pink-50/50 rounded-r-3xl"></div>
-          <div className="absolute inset-0 bg-white/80 backdrop-blur-xl rounded-r-3xl border-r border-white/30 shadow-2xl"></div>
-
+        <div className="h-full bg-white border-r border-gray-200 shadow-lg">
           {/* Content */}
-          <div className="relative h-full flex flex-col">
-            {/* Enhanced 3D Logo */}
-            <div className="flex items-center justify-between h-16 sm:h-20 px-4 sm:px-6 border-b border-white/20 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10">
+          <div className="h-full flex flex-col">
+            {/* Clean Professional Logo */}
+            <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
               <Link
                 href="/dashboard"
-                className="flex items-center space-x-2 sm:space-x-3 group"
+                className="flex items-center space-x-3 group"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity duration-300"></div>
-                  <div className="relative w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl group-hover:shadow-3xl transition-all duration-300 transform group-hover:scale-110 group-hover:rotate-3">
-                    <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                  <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-200 transform group-hover:scale-105">
+                    <TrendingUp className="h-5 w-5 text-white" />
                   </div>
-                  <div className="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-gradient-to-r from-pink-500 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
-                    <Sparkles className="h-1.5 w-1.5 sm:h-2 sm:w-2 text-white" />
-                  </div>
+                  {/* Subtle modern accent */}
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-400 rounded-full opacity-80"></div>
                 </div>
                 <div>
-                  <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
+                  <span className="text-xl font-bold text-gray-900">
                     AI CFO
                   </span>
                   <div className="text-xs text-gray-500 font-medium">
@@ -197,9 +198,9 @@ export function Sidebar() {
                   variant="ghost"
                   size="icon"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="relative bg-white/80 border border-white/30 hover:bg-white hover:shadow-lg transition-all"
+                  className="text-gray-600 hover:text-gray-900 hover:bg-gray-100"
                 >
-                  <X className="h-4 w-4 text-gray-600" />
+                  <X className="h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -266,18 +267,15 @@ export function Sidebar() {
               </div>
             )}
 
-            {/* Enhanced 3D Navigation */}
-            <nav className="flex-1 px-3 sm:px-4 py-4 sm:py-6 space-y-2 sm:space-y-3 overflow-y-auto touch-auto">
+            {/* Clean Professional Navigation */}
+            <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
               {isLoading
-                ? // Enhanced loading skeleton for navigation items
+                ? // Clean loading skeleton for navigation items
                   Array.from({ length: 7 }).map((_, index) => (
-                    <div key={index} className="relative">
-                      <div className="absolute inset-0 bg-gradient-to-r from-gray-100 to-blue-100 rounded-xl opacity-40"></div>
-                      <div className="relative bg-white/80 backdrop-blur-sm rounded-xl p-2 sm:p-3 shadow-lg">
-                        <div className="flex items-center space-x-3">
-                          <div className="animate-pulse bg-gradient-to-r from-gray-200 to-blue-200 h-5 w-5 rounded-lg"></div>
-                          <div className="animate-pulse bg-gradient-to-r from-gray-200 to-blue-200 h-4 w-20 rounded"></div>
-                        </div>
+                    <div key={index} className="rounded-lg p-3 bg-gray-50">
+                      <div className="flex items-center space-x-3">
+                        <div className="animate-pulse bg-gray-200 h-5 w-5 rounded"></div>
+                        <div className="animate-pulse bg-gray-200 h-4 w-20 rounded"></div>
                       </div>
                     </div>
                   ))
@@ -289,45 +287,52 @@ export function Sidebar() {
 
                     return (
                       <div key={item.name} className="relative group">
-                        <div
-                          className={`absolute inset-0 bg-gradient-to-r ${item.color} rounded-xl opacity-0 group-hover:opacity-10 transition-opacity duration-300`}
-                        ></div>
                         <Link
                           href={isLocked ? "/subscription" : item.href}
                           onClick={() => setIsMobileMenuOpen(false)}
                           className={cn(
-                            "relative flex items-center space-x-2 sm:space-x-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-medium transition-all duration-300 transform hover:scale-[1.02]",
+                            "flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group",
                             isActive
-                              ? "bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-blue-700 border border-blue-200/50 shadow-lg"
+                              ? item.featured
+                                ? "bg-purple-100 text-purple-900 border border-purple-200"
+                                : "bg-blue-100 text-blue-900 border border-blue-200"
                               : isLocked
-                              ? "text-gray-400 cursor-not-allowed bg-white/60"
-                              : "text-gray-700 hover:bg-white/80 hover:text-gray-900 hover:shadow-lg"
+                                ? "text-gray-400 cursor-not-allowed"
+                                : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                           )}
                           title={
                             isLocked
                               ? "Upgrade to Pro to access this feature"
+                              : item.featured
+                                ? "Chat with AI about your financial data"
                               : undefined
                           }
                         >
                           <div
-                            className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shadow-lg transition-all duration-300 ${
+                            className={cn(
+                              "w-8 h-8 rounded-lg flex items-center justify-center shadow-sm transition-all duration-200 group-hover:shadow-md group-hover:scale-105",
                               isActive
-                                ? `bg-gradient-to-r ${item.color}`
+                                ? item.color
                                 : isLocked
                                 ? "bg-gray-200"
-                                : `bg-gradient-to-r ${item.color}`
-                            }`}
+                                  : item.color
+                            )}
                           >
                             {isLocked ? (
-                              <Lock className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
+                              <Lock className="h-4 w-4 text-gray-400" />
                             ) : (
-                              <item.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" />
+                                <item.icon className="h-4 w-4 text-white" />
                             )}
                           </div>
                           <span className="font-medium">{item.name}</span>
+                          {item.featured && !isLocked && (
+                            <Badge className="ml-auto text-xs bg-purple-600 text-white border-0 px-2 py-0.5">
+                              NEW
+                            </Badge>
+                          )}
                           {isLocked && (
                             <div className="ml-auto">
-                              <Crown className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-yellow-600" />
+                              <Crown className="h-3 w-3 text-amber-500" />
                             </div>
                           )}
                         </Link>
@@ -336,34 +341,31 @@ export function Sidebar() {
                   })}
             </nav>
 
-            {/* Enhanced 3D Footer */}
-            <div className="p-3 sm:p-4 border-t border-white/20">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg sm:rounded-xl opacity-40"></div>
-                <div className="relative bg-white/80 backdrop-blur-sm rounded-lg sm:rounded-xl p-2 sm:p-3 shadow-lg border border-white/30">
-                  <div className="text-xs text-gray-500 text-center font-medium">
-                    AI CFO Assistant v1.0
+            {/* Clean Footer */}
+            <div className="p-4 border-t border-gray-200">
+              <div className="bg-gray-50 rounded-lg p-3">
+                <div className="text-xs text-gray-500 text-center font-medium mb-3">
+                  AI CFO Assistant v1.0
+                </div>
+                {isLoading ? (
+                  <div className="text-center">
+                    <div className="animate-pulse bg-gray-200 h-8 w-full rounded-lg"></div>
                   </div>
-                  {isLoading ? (
-                    <div className="mt-2 sm:mt-3 text-center">
-                      <div className="animate-pulse bg-gradient-to-r from-gray-200 to-blue-200 h-7 sm:h-8 w-full rounded-lg"></div>
-                    </div>
-                  ) : (
-                    !subscriptionStatus?.hasActiveSubscription && (
-                      <div className="mt-2 sm:mt-3 text-center">
+                ) : (
+                  !subscriptionStatus?.hasActiveSubscription && (
+                      <div className="text-center">
                         <Link href="/subscription">
                           <Button
                             size="sm"
-                            className="w-full text-xs py-1 sm:py-1.5 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                            className="w-full text-xs py-2 bg-amber-500 hover:bg-amber-600 shadow-sm hover:shadow-md transition-all duration-200 transform hover:scale-105"
                           >
-                            <Crown className="h-3 w-3 mr-1" />
-                            <span className="text-xs">Upgrade to Pro</span>
-                          </Button>
-                        </Link>
-                      </div>
-                    )
-                  )}
-                </div>
+                          <Crown className="h-3 w-3 mr-2" />
+                          Upgrade to Pro
+                        </Button>
+                      </Link>
+                    </div>
+                  )
+                )}
               </div>
             </div>
           </div>

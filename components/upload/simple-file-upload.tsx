@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8000";
 
@@ -37,6 +38,7 @@ export default function SimpleFileUpload() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const router = useRouter();
+  const { user } = useUser();
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -68,11 +70,22 @@ export default function SimpleFileUpload() {
     const formData = new FormData();
     formData.append("file", selectedFile);
 
+    // Get the user ID from Clerk
+    const userId = user?.id;
+
+    // Build URL with user_id parameter
+    const uploadUrl = new URL(`${BASE_URL}/upload-financial-document`);
+    if (userId) {
+      uploadUrl.searchParams.append("user_id", userId);
+    }
+    uploadUrl.searchParams.append("store_in_vector_db", "true");
+
     try {
-      console.log("Uploading to:", `${BASE_URL}/upload-financial-document`);
+      console.log("Uploading to:", uploadUrl.toString());
+      console.log("User ID:", userId);
 
       // Step 1: Send file to Flask backend for analysis
-      const response = await fetch(`${BASE_URL}/upload-financial-document`, {
+      const response = await fetch(uploadUrl.toString(), {
         method: "POST",
         body: formData,
       });
@@ -166,97 +179,87 @@ export default function SimpleFileUpload() {
   };
 
   return (
-    <div className="max-w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl mx-auto">
-      <Card className="border-2 border-dashed border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50">
-        <CardHeader className="text-center py-3 sm:py-4 md:py-6">
-          <CardTitle className="text-xl sm:text-2xl flex items-center justify-center gap-2 sm:gap-3">
-            <Upload className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
-            <span>Upload Financial Document</span>
-          </CardTitle>
-          <CardDescription className="text-xs sm:text-sm md:text-base">
-            Simply upload your financial document for AI-powered analysis
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4 sm:space-y-6 px-3 sm:px-4 md:px-6">
+    <div className="max-w-2xl mx-auto">
+      <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center bg-slate-50/50 hover:border-slate-400 transition-colors">
+        <div className="space-y-6">
           {/* File Upload Area */}
-          <div className="border-2 border-dashed border-blue-300 rounded-lg p-4 sm:p-6 md:p-8 text-center hover:border-blue-400 transition-colors">
-            <div className="space-y-3 sm:space-y-4 md:space-y-6">
-              <div className="mx-auto w-12 h-12 sm:w-16 sm:h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                <FileText className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
-              </div>
-
-              <div>
-                <Label htmlFor="file" className="cursor-pointer">
-                  <span className="text-base sm:text-lg font-medium text-gray-900 block mb-2 line-clamp-1 sm:line-clamp-2">
-                    {selectedFile
-                      ? selectedFile.name
-                      : "Choose your financial document"}
-                  </span>
-                  <Input
-                    id="file"
-                    type="file"
-                    accept=".csv,.pdf,.xlsx"
-                    onChange={handleFileSelect}
-                    ref={fileInputRef}
-                    className="hidden"
-                  />
-                  {selectedFile ? (
-                    <div className="mt-2 flex items-center justify-center text-green-600 text-xs sm:text-sm">
-                      <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />
-                      <span>
-                        File selected:{" "}
-                        {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                      </span>
-                    </div>
-                  ) : (
-                    <Button
-                      variant="outline"
-                      className="mt-2 text-xs sm:text-sm py-1 sm:py-2"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      <Upload className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                      Browse Files
-                    </Button>
-                  )}
-                </Label>
-              </div>
-
-              <div className="text-xs sm:text-sm text-gray-500">
-                <p>Supported formats: Excel (.xlsx), CSV, PDF</p>
-                <p>Maximum file size: 10MB</p>
-              </div>
-            </div>
+          <div className="mx-auto w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center">
+            <FileText className="h-8 w-8 text-slate-600" />
           </div>
 
-          {error && (
-            <Alert
-              variant="destructive"
-              className="mt-3 sm:mt-4 text-xs sm:text-sm py-2 px-3"
-            >
-              <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Upload Financial Document
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Simply upload your financial document for AI-powered analysis
+            </p>
 
-          <Button
-            onClick={handleUpload}
-            disabled={!selectedFile || isUploading}
-            className="w-full h-10 sm:h-12 text-sm sm:text-base md:text-lg font-medium bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
-          >
-            {isUploading ? (
-              <>
-                <Loader2 className="mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
-                <span>Uploading...</span>
-              </>
-            ) : (
-              <>
-                <Upload className="mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5" />
-                <span>Upload Document</span>
-              </>
-            )}
-          </Button>
-        </CardContent>
-      </Card>
+            <Label htmlFor="file" className="cursor-pointer">
+              <span className="text-base font-medium text-gray-900 block mb-2">
+                {selectedFile
+                  ? selectedFile.name
+                  : "Choose your financial document"}
+              </span>
+              <Input
+                id="file"
+                type="file"
+                accept=".csv,.pdf,.xlsx"
+                onChange={handleFileSelect}
+                ref={fileInputRef}
+                className="hidden"
+              />
+              {selectedFile ? (
+                <div className="mt-2 flex items-center justify-center text-emerald-600 text-sm">
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  <span>
+                    File selected: {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                  </span>
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                    className="mt-2"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                  <Upload className="mr-2 h-4 w-4" />
+                  Browse Files
+                </Button>
+              )}
+            </Label>
+          </div>
+
+          <div className="text-sm text-gray-500 space-y-1">
+            <p>Supported formats: Excel (.xlsx), CSV, PDF</p>
+            <p>Maximum file size: 10MB</p>
+          </div>
+        </div>
+      </div>
+
+      {error && (
+        <Alert variant="destructive" className="mt-4">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      <Button
+        onClick={handleUpload}
+        disabled={!selectedFile || isUploading}
+        className="w-full mt-6 h-12 text-base font-medium"
+      >
+        {isUploading ? (
+          <>
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+            <span>Uploading...</span>
+          </>
+        ) : (
+          <>
+            <Upload className="mr-2 h-5 w-5" />
+            <span>Upload Document</span>
+          </>
+        )}
+      </Button>
     </div>
   );
 }

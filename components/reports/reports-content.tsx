@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useActiveFile } from "@/components/contexts/active-file-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,6 +36,7 @@ interface TableRow {
 }
 
 export function ReportsContent() {
+  const { activeFileData, activeFile } = useActiveFile();
   const [activeTab, setActiveTab] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -375,12 +377,17 @@ export function ReportsContent() {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch("/api/financial-analysis?latest=true");
-        if (!response.ok) {
-          throw new Error("Failed to fetch financial data");
+        // Use active file data if available, otherwise fetch latest
+        if (activeFileData) {
+          setFinancialData(activeFileData);
+        } else {
+          const response = await fetch("/api/financial-analysis?latest=true");
+          if (!response.ok) {
+            throw new Error("Failed to fetch financial data");
+          }
+          const data = await response.json();
+          setFinancialData(data);
         }
-        const data = await response.json();
-        setFinancialData(data);
       } catch (err) {
         console.error("Error fetching financial data:", err);
         setError(err instanceof Error ? err.message : "An error occurred");
@@ -390,7 +397,7 @@ export function ReportsContent() {
     };
 
     fetchFinancialData();
-  }, []);
+  }, [activeFileData]); // Re-fetch when active file changes
 
   // Reset page when tab changes
   useEffect(() => {
@@ -419,171 +426,116 @@ export function ReportsContent() {
   );
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto px-4">
-      {/* Enhanced 3D Header */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 opacity-10 rounded-lg sm:rounded-xl lg:rounded-3xl"></div>
-        <div className="relative bg-white/80 backdrop-blur-xl rounded-lg sm:rounded-xl lg:rounded-3xl p-4 sm:p-6 lg:p-8 shadow-xl sm:shadow-2xl border border-white/20">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
-            <div className="flex items-center space-x-3 sm:space-x-4">
-              <div className="relative">
-                <div className="w-10 h-10 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-xl sm:shadow-2xl transform rotate-3 hover:rotate-0 transition-all duration-300">
-                  <BarChart3 className="h-5 w-5 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-white" />
-                </div>
-                <div className="absolute -top-1 sm:-top-2 -right-1 sm:-right-2 w-3 h-3 sm:w-5 sm:h-5 lg:w-6 lg:h-6 bg-gradient-to-r from-pink-500 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
-                  <Sparkles className="h-1.5 w-1.5 sm:h-2.5 sm:w-2.5 lg:h-3 lg:w-3 text-white" />
-                </div>
-              </div>
-              <div>
-                <h1 className="text-xl sm:text-2xl lg:text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
-                  Financial Reports
-                </h1>
-                <p className="text-xs sm:text-sm lg:text-base text-gray-600 mt-0.5 sm:mt-1">
-                  AI-Powered Financial Analysis & Insights
-                </p>
-              </div>
+    <div className="space-y-6 mx-auto">
+      {/* Header */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
+          <div className="flex items-center space-x-4">
+            <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center">
+              <BarChart3 className="h-5 w-5 text-slate-600" />
             </div>
+            <div>
+              <h1 className="text-2xl font-semibold text-gray-900">
+                Financial Reports
+              </h1>
+              <p className="text-sm text-gray-600 mt-1">
+                AI-Powered Financial Analysis & Insights
+              </p>
+            </div>
+          </div>
 
-            <div className="flex space-x-2 sm:space-x-3 w-full sm:w-auto">
-              <Button
-                variant="outline"
-                onClick={handleExportToPDF}
-                disabled={exporting}
-                className="flex-1 sm:flex-none text-xs sm:text-sm bg-white/90 backdrop-blur-sm border-blue-200 hover:bg-blue-50 hover:border-blue-300 shadow-md sm:shadow-lg hover:shadow-lg sm:hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-              >
-                <FileText className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 text-blue-600" />
-                <span>{exporting ? "Exporting..." : "Export PDF"}</span>
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleExportToCSV}
-                disabled={exporting}
-                className="flex-1 sm:flex-none text-xs sm:text-sm bg-white/90 backdrop-blur-sm border-purple-200 hover:bg-purple-50 hover:border-purple-300 shadow-md sm:shadow-lg hover:shadow-lg sm:hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-              >
-                <FileText className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 text-purple-600" />
-                <span>{exporting ? "Exporting..." : "Export CSV"}</span>
-              </Button>
-            </div>
+          <div className="flex space-x-3 w-full sm:w-auto">
+            <Button
+              variant="outline"
+              onClick={handleExportToPDF}
+              disabled={exporting}
+              size="sm"
+              className="flex-1 sm:flex-none"
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              <span>{exporting ? "Exporting..." : "Export PDF"}</span>
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleExportToCSV}
+              disabled={exporting}
+              size="sm"
+              className="flex-1 sm:flex-none"
+            >
+              <FileSpreadsheet className="w-4 h-4 mr-2" />
+              <span>{exporting ? "Exporting..." : "Export CSV"}</span>
+            </Button>
           </div>
         </div>
       </div>
 
-      {/* Enhanced 3D Loading State */}
+      {/* Loading State */}
       {loading && (
-        <div className="flex items-center justify-center h-48 sm:h-64">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full blur-xl opacity-20 animate-pulse"></div>
-            <div className="relative bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl lg:rounded-3xl p-4 sm:p-6 lg:p-8 shadow-xl sm:shadow-2xl border border-white/30">
-              <div className="text-center">
-                <div className="relative w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 mx-auto mb-4 sm:mb-6">
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full animate-spin"></div>
-                  <div className="absolute inset-1.5 sm:inset-2 bg-white rounded-full flex items-center justify-center">
-                    <Loader2 className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-blue-600" />
-                  </div>
-                </div>
-                <p className="text-gray-700 text-sm sm:text-base font-medium">
-                  Loading financial data...
-                </p>
-                <p className="text-gray-500 text-xs sm:text-sm mt-1 sm:mt-2">
-                  Analyzing your financial documents
-                </p>
-              </div>
-            </div>
+        <div className="flex items-center justify-center h-64">
+          <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+            <Loader2 className="h-8 w-8 animate-spin text-slate-600 mx-auto mb-4" />
+            <p className="text-gray-700 font-medium">
+              Loading financial data...
+            </p>
+            <p className="text-gray-500 text-sm mt-2">
+              Analyzing your financial documents
+            </p>
           </div>
         </div>
       )}
 
-      {/* Enhanced 3D Error State */}
+      {/* Error State */}
       {error && (
-        <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-red-50 to-pink-50 rounded-lg sm:rounded-xl lg:rounded-2xl opacity-60"></div>
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-4 sm:p-6 shadow-xl sm:shadow-2xl border border-red-200">
-            <Alert
-              variant="destructive"
-              className="bg-transparent border-0 p-0"
-            >
-              <div className="flex items-start sm:items-center space-x-2 sm:space-x-3">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-red-500 to-pink-600 rounded-full flex items-center justify-center shadow-lg mt-1 sm:mt-0">
-                  <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                </div>
-                <div>
-                  <AlertDescription className="text-red-700 font-medium text-xs sm:text-sm md:text-base">
-                    {error}. Please try refreshing the page.
-                  </AlertDescription>
-                </div>
-              </div>
-            </Alert>
-          </div>
-        </div>
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            {error}. Please try refreshing the page.
+          </AlertDescription>
+        </Alert>
       )}
 
-      {/* Enhanced 3D No Data State */}
+      {/* No Data State */}
       {!loading && !error && !financialData && (
-        <div className="flex flex-col items-center justify-center h-48 sm:h-64">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-gray-100 to-blue-100 rounded-lg sm:rounded-xl lg:rounded-3xl blur-xl opacity-40"></div>
-            <div className="relative bg-white/90 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-3xl p-4 sm:p-6 lg:p-8 shadow-xl sm:shadow-2xl border border-white/30 text-center">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 bg-gradient-to-r from-gray-300 to-blue-300 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg">
-                <BarChart3 className="h-6 w-6 sm:h-8 sm:w-8 lg:h-10 lg:w-10 text-gray-500" />
-              </div>
-              <h3 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-700 mb-1 sm:mb-2">
-                No Financial Data Available
-              </h3>
-              <p className="text-xs sm:text-sm text-gray-500 max-w-xs sm:max-w-sm md:max-w-md">
-                Upload a financial document to see detailed reports.
-              </p>
+        <div className="flex flex-col items-center justify-center h-64">
+          <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+            <div className="w-16 h-16 bg-slate-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <BarChart3 className="h-8 w-8 text-slate-600" />
             </div>
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">
+              No Financial Data Available
+            </h3>
+            <p className="text-sm text-gray-500 max-w-md">
+              Upload a financial document to see detailed reports.
+            </p>
           </div>
         </div>
       )}
 
-      {/* Floating Action Button */}
-      {!loading && !error && financialData && (
-        <div className="fixed bottom-4 sm:bottom-6 lg:bottom-8 right-4 sm:right-6 lg:right-8 z-50">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full blur-xl opacity-30 animate-pulse"></div>
-            <Button
-              className="relative w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-lg sm:shadow-xl lg:shadow-2xl hover:shadow-xl sm:hover:shadow-2xl lg:hover:shadow-3xl transition-all duration-300 transform hover:scale-110"
-              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            >
-              <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-white" />
-            </Button>
-          </div>
-        </div>
-      )}
+
 
       {/* Data Content */}
       {!loading && !error && financialData && (
         <>
-          {/* Enhanced 3D Tabs */}
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 rounded-lg sm:rounded-xl lg:rounded-2xl opacity-60"></div>
-            <div className="relative bg-white/70 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-1 sm:p-2 shadow-lg sm:shadow-xl border border-white/30">
+          {/* Tabs */}
+          <div className="bg-white rounded-lg border border-gray-200">
+            <div className="border-b border-gray-200 px-6 pt-6">
               <div className="overflow-x-auto">
-                <nav className="flex space-x-1 sm:space-x-2 min-w-[400px] sm:min-w-0">
+                <nav className="flex space-x-2 min-w-[400px] sm:min-w-0">
                   {tabs.map((tab, index) => (
                     <button
                       key={tab}
                       onClick={() => setActiveTab(index)}
-                      className={`relative flex-1 py-2 sm:py-3 lg:py-4 px-2 sm:px-4 lg:px-6 rounded-lg sm:rounded-xl font-medium sm:font-semibold text-xs sm:text-sm transition-all duration-300 transform hover:scale-[1.02] ${
+                      className={`relative flex-1 py-3 px-4 rounded-lg font-medium text-sm transition-colors ${
                         activeTab === index
-                          ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg sm:shadow-2xl scale-[1.02] sm:scale-105"
-                          : "bg-white/80 text-gray-600 hover:bg-white hover:text-gray-800 shadow-md hover:shadow-xl"
+                        ? "bg-slate-100 text-slate-900"
+                        : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
                       }`}
                     >
-                      <div className="flex items-center justify-center space-x-1 sm:space-x-2">
-                        {activeTab === index && (
-                          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full animate-pulse"></div>
-                        )}
-                        <span>
-                          {index === 1 && window.innerWidth < 640
-                            ? "Balance"
-                            : tab}
-                        </span>
-                      </div>
-                      {activeTab === index && (
-                        <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 sm:w-3 sm:h-3 bg-gradient-to-r from-blue-500 to-purple-600 rotate-45 hidden sm:block"></div>
-                      )}
+                      <span>
+                        {index === 1 && window.innerWidth < 640
+                          ? "Balance"
+                          : tab}
+                      </span>
                     </button>
                   ))}
                 </nav>
@@ -591,409 +543,367 @@ export function ReportsContent() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
-            {/* Enhanced 3D Main Report Table */}
-            <Card className="lg:col-span-3 transform hover:scale-[1.01] transition-all duration-500">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 rounded-lg sm:rounded-xl lg:rounded-2xl opacity-30"></div>
-                <div className="relative bg-white/90 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl shadow-lg sm:shadow-xl lg:shadow-2xl border border-white/30 overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 border-b border-white/20 p-3 sm:p-4 lg:p-6">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-3 sm:space-y-0">
-                      <CardTitle className="flex items-center gap-2 sm:gap-3 text-base sm:text-lg lg:text-xl">
-                        <div
-                          className={`w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md sm:shadow-lg ${
-                            activeTab === 0
-                              ? "bg-gradient-to-r from-blue-500 to-cyan-500"
-                              : activeTab === 1
-                              ? "bg-gradient-to-r from-green-500 to-emerald-500"
-                              : "bg-gradient-to-r from-purple-500 to-pink-500"
-                          }`}
-                        >
-                          {activeTab === 0 && (
-                            <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-white" />
-                          )}
-                          {activeTab === 1 && (
-                            <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-white" />
-                          )}
-                          {activeTab === 2 && (
-                            <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-white" />
-                          )}
-                        </div>
-                        <div>
-                          <div className="text-lg sm:text-xl lg:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                            {tabs[activeTab]}
-                          </div>
-                          <div className="text-xs sm:text-sm text-gray-500 font-normal truncate max-w-[200px] sm:max-w-xs">
-                            {financialData.file_info.filename}
-                          </div>
-                        </div>
-                      </CardTitle>
-                      <div className="relative w-full sm:w-auto">
-                        <div className="absolute inset-0 bg-white/80 rounded-lg sm:rounded-xl blur-sm"></div>
-                        <div className="relative bg-white/90 backdrop-blur-sm rounded-lg sm:rounded-xl border border-white/30 shadow-md sm:shadow-lg w-full">
-                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
-                          <input
-                            type="text"
-                            placeholder="Search accounts..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-3 bg-transparent border-0 focus:ring-0 focus:outline-none text-xs sm:text-sm text-gray-700 placeholder-gray-400 w-full sm:w-56 lg:w-64"
-                          />
-                        </div>
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Main Report Table */}
+            <Card className="lg:col-span-3">
+              <CardHeader className="border-b border-gray-200">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-3 sm:space-y-0">
+                  <CardTitle className="flex items-center gap-3">
+                    <div
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center ${activeTab === 0
+                        ? "bg-blue-100 text-blue-600"
+                        : activeTab === 1
+                          ? "bg-emerald-100 text-emerald-600"
+                          : "bg-purple-100 text-purple-600"
+                        }`}
+                    >
+                      {activeTab === 0 && <TrendingUp className="h-4 w-4" />}
+                      {activeTab === 1 && <BarChart3 className="h-4 w-4" />}
+                      {activeTab === 2 && <DollarSign className="h-4 w-4" />}
+                    </div>
+                    <div>
+                      <div className="text-lg font-semibold text-gray-900">
+                        {tabs[activeTab]}
+                      </div>
+                      <div className="text-sm text-gray-500 font-normal truncate max-w-xs">
+                        {financialData.file_info.filename}
                       </div>
                     </div>
-                  </CardHeader>
-                  <CardContent className="p-2 sm:p-4 lg:py-6">
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full">
-                        <thead>
-                          <tr>
-                            <th className="px-3 sm:px-6 lg:px-8 py-2 sm:py-3 lg:py-4 text-left text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wider bg-gradient-to-r from-gray-50 to-gray-100 rounded-l-lg sm:rounded-l-xl">
-                              Account
-                            </th>
-                            <th className="px-3 sm:px-6 lg:px-8 py-2 sm:py-3 lg:py-4 text-right text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wider bg-gradient-to-r from-gray-50 to-gray-100 rounded-r-lg sm:rounded-r-xl">
-                              Amount
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                          {paginatedData.length === 0 ? (
-                            <tr>
-                              <td
-                                colSpan={2}
-                                className="px-3 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12 text-center text-xs sm:text-sm text-gray-500"
-                              >
-                                {tableData.length === 0
-                                  ? "No data available for this report"
-                                  : "No results found for your search"}
-                              </td>
-                            </tr>
-                          ) : (
-                            paginatedData.map((row, index) => (
-                              <tr
-                                key={index}
-                                className={`group transition-all duration-200 hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-purple-50/50 ${
-                                  row.isTotal
-                                    ? "bg-gradient-to-r from-gray-50 to-blue-50/30"
-                                    : ""
-                                } ${
-                                  row.isNetIncome
-                                    ? "bg-gradient-to-r from-blue-50/50 to-cyan-50/50"
-                                    : ""
-                                }`}
-                              >
-                                <td className="px-3 sm:px-6 lg:px-8 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900 group-hover:text-gray-700 transition-colors duration-200">
-                                  <div className="flex items-center space-x-1 sm:space-x-2">
-                                    {row.isTotal && (
-                                      <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full"></div>
-                                    )}
-                                    {row.isNetIncome && (
-                                      <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-cyan-500 rounded-full animate-pulse"></div>
-                                    )}
-                                    <span
-                                      className={`${
-                                        row.isTotal ? "font-bold" : ""
-                                      } ${
-                                        row.isNetIncome ? "font-extrabold" : ""
-                                      }`}
-                                    >
-                                      {row.account}
-                                    </span>
-                                  </div>
-                                </td>
-                                <td
-                                  className={`px-3 sm:px-6 lg:px-8 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-right font-medium transition-all duration-200 ${
-                                    row.amount === 0
-                                      ? "text-gray-400"
-                                      : row.amount > 0
-                                      ? "text-green-600 group-hover:text-green-700"
-                                      : "text-red-600 group-hover:text-red-700"
-                                  } ${
-                                    row.isNetIncome
-                                      ? "text-blue-600 font-bold text-base sm:text-lg"
-                                      : ""
-                                  }`}
+                  </CardTitle>
+                  <div className="relative w-full sm:w-auto">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search accounts..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 pr-4 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-700 placeholder-gray-400 w-full sm:w-64"
+                    />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
+                          Account
+                        </th>
+                        <th className="px-6 py-3 text-right text-sm font-medium text-gray-600 uppercase tracking-wider">
+                          Amount
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {paginatedData.length === 0 ? (
+                        <tr>
+                          <td
+                            colSpan={2}
+                            className="px-6 py-8 text-center text-sm text-gray-500"
+                          >
+                            {tableData.length === 0
+                              ? "No data available for this report"
+                              : "No results found for your search"}
+                          </td>
+                        </tr>
+                      ) : (
+                        paginatedData.map((row, index) => (
+                          <tr
+                            key={index}
+                            className={`hover:bg-gray-50 ${row.isTotal ? "bg-gray-50" : ""
+                              } ${row.isNetIncome ? "bg-blue-50" : ""}`}
+                          >
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              <div className="flex items-center space-x-2">
+                                {row.isTotal && (
+                                  <div className="w-2 h-2 bg-slate-400 rounded-full"></div>
+                                )}
+                                {row.isNetIncome && (
+                                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                )}
+                                <span
+                                  className={`${
+                                    row.isTotal ? "font-semibold" : ""
+                                    } ${row.isNetIncome ? "font-bold" : ""}`}
                                 >
-                                  {row.amount === 0 && row.isTotal
-                                    ? ""
-                                    : `$${Math.abs(
-                                        row.amount
-                                      ).toLocaleString()}`}
-                                </td>
-                              </tr>
-                            ))
-                          )}
+                                  {row.account}
+                                </span>
+                              </div>
+                            </td>
+                            <td
+                              className={`px-6 py-4 whitespace-nowrap text-sm text-right font-medium ${row.amount === 0
+                                ? "text-gray-400"
+                                : row.amount > 0
+                                  ? "text-emerald-600"
+                                  : "text-red-600"
+                                } ${row.isNetIncome
+                                  ? "text-blue-600 font-bold text-base"
+                                  : ""
+                                }`}
+                            >
+                              {row.amount === 0 && row.isTotal
+                                ? ""
+                                : `$${Math.abs(row.amount).toLocaleString()}`}
+                            </td>
+                          </tr>
+                        ))
+                      )}
                         </tbody>
                       </table>
-                    </div>
-
-                    {/* Enhanced 3D Pagination */}
-                    {filteredData.length > itemsPerPage && (
-                      <div className="flex flex-col sm:flex-row items-center justify-between mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-100 gap-3 sm:gap-0">
-                        <div className="text-xs sm:text-sm text-gray-600 bg-white/80 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border border-gray-200 w-full sm:w-auto text-center sm:text-left">
-                          Showing {startIndex + 1} to{" "}
-                          {Math.min(
-                            startIndex + itemsPerPage,
-                            filteredData.length
-                          )}{" "}
-                          of {filteredData.length} results
-                        </div>
-                        <div className="flex space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              setCurrentPage((prev) => Math.max(prev - 1, 1))
-                            }
-                            disabled={currentPage === 1}
-                            className="text-xs h-7 sm:h-8 w-8 sm:w-9 p-0 bg-white/90 backdrop-blur-sm border-gray-200 hover:bg-gray-50 hover:border-gray-300 shadow-md sm:shadow-lg hover:shadow-lg sm:hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-                          >
-                            <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              setCurrentPage((prev) =>
-                                Math.min(prev + 1, totalPages)
-                              )
-                            }
-                            disabled={currentPage === totalPages}
-                            className="text-xs h-7 sm:h-8 w-8 sm:w-9 p-0 bg-white/90 backdrop-blur-sm border-gray-200 hover:bg-gray-50 hover:border-gray-300 shadow-md sm:shadow-lg hover:shadow-lg sm:hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-                          >
-                            <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
                 </div>
-              </div>
+
+                {/* Pagination */}
+                {filteredData.length > itemsPerPage && (
+                  <div className="flex flex-col sm:flex-row items-center justify-between mt-6 pt-6 border-t border-gray-200 gap-3 sm:gap-0">
+                    <div className="text-sm text-gray-600 w-full sm:w-auto text-center sm:text-left">
+                      Showing {startIndex + 1} to{" "}
+                      {Math.min(startIndex + itemsPerPage, filteredData.length)}{" "}
+                      of {filteredData.length} results
+                    </div>
+                    <div className="flex space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setCurrentPage((prev) => Math.max(prev - 1, 1))
+                        }
+                        disabled={currentPage === 1}
+                        className="h-8 w-8 p-0"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setCurrentPage((prev) =>
+                            Math.min(prev + 1, totalPages)
+                          )
+                        }
+                        disabled={currentPage === totalPages}
+                        className="h-8 w-8 p-0"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
             </Card>
 
-            {/* Enhanced 3D Sidebar */}
-            <Card className="shadow-lg sm:shadow-xl lg:shadow-2xl h-fit lg:sticky lg:top-4 transform hover:scale-[1.02] transition-all duration-500">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 rounded-lg sm:rounded-xl lg:rounded-2xl opacity-40"></div>
-                <div className="relative bg-white/90 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl shadow-lg sm:shadow-xl lg:shadow-2xl border border-white/30 overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 border-b border-white/20 p-3 sm:p-4 lg:p-6">
-                    <CardTitle className="flex items-center gap-1.5 sm:gap-2 text-base sm:text-lg">
-                      <div className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-md sm:shadow-lg">
-                        <Eye className="h-3 w-3 sm:h-3.5 sm:w-3.5 lg:h-4 lg:w-4 text-white" />
+            {/* Sidebar */}
+            <Card className="h-fit lg:sticky lg:top-4">
+              <CardHeader className="border-b border-gray-200">
+                <CardTitle className="flex items-center gap-2">
+                  <div className="w-6 h-6 bg-slate-100 rounded-lg flex items-center justify-center">
+                    <Eye className="h-3 w-3 text-slate-600" />
+                  </div>
+                  Report Details
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6 p-6">
+                {/* File Info Section */}
+                <div className="space-y-4">
+                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                    <p className="text-sm font-medium text-gray-600 mb-1">
+                      File Name
+                    </p>
+                    <p
+                      className="text-sm font-semibold text-gray-900 truncate"
+                      title={financialData.file_info.filename}
+                    >
+                      {financialData.file_info.filename}
+                    </p>
+                  </div>
+                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                    <p className="text-sm font-medium text-gray-600 mb-1">
+                      File Type
+                    </p>
+                    <p className="text-sm font-semibold text-gray-900 capitalize">
+                      {financialData.file_info.file_type}
+                    </p>
+                  </div>
+                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                    <p className="text-sm font-medium text-gray-600 mb-1">
+                      File Size
+                    </p>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {financialData.file_info.file_size_mb.toFixed(2)} MB
+                    </p>
+                  </div>
+                </div>
+
+                {/* Key Metrics Section */}
+                {activeTab === 0 && (
+                  <div className="space-y-4 pt-4 border-t border-gray-200">
+                    <h4 className="text-sm font-semibold text-gray-700">
+                      P&L Metrics
+                    </h4>
+                    <div className="space-y-3">
+                      <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
+                        <p className="text-sm font-medium text-gray-600 mb-1">
+                          Revenue
+                        </p>
+                        <p className="text-lg font-bold text-emerald-600">
+                          $
+                          {(
+                            financialData.analysis.profit_and_loss
+                              .revenue_analysis?.total_revenue || 0
+                          ).toLocaleString()}
+                        </p>
                       </div>
-                      Report Details
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3 sm:space-y-4 lg:space-y-6 p-3 sm:p-4 lg:p-6">
-                    {/* File Info Section */}
-                    <div className="space-y-2 sm:space-y-3 lg:space-y-4">
-                      <div className="p-2 sm:p-3 lg:p-4 bg-gradient-to-r from-blue-50/50 to-purple-50/50 rounded-lg sm:rounded-xl border border-blue-100/50">
-                        <p className="text-xs sm:text-sm font-medium text-gray-600 mb-0.5 sm:mb-1">
-                          File Name
+                      <div className="p-4 bg-red-50 rounded-lg border border-red-200">
+                        <p className="text-sm font-medium text-gray-600 mb-1">
+                          Expenses
+                        </p>
+                        <p className="text-lg font-bold text-red-600">
+                          $
+                          {Math.abs(
+                            financialData.analysis.profit_and_loss
+                              .cost_structure?.total_expenses || 0
+                          ).toLocaleString()}
+                        </p>
+                      </div>
+                      <div
+                        className={`p-4 rounded-lg border ${(financialData.analysis.profit_and_loss
+                          .profitability_metrics?.net_income || 0) >= 0
+                          ? "bg-blue-50 border-blue-200"
+                          : "bg-orange-50 border-orange-200"
+                          }`}
+                      >
+                        <p className="text-sm font-medium text-gray-600 mb-1">
+                          Net Income
                         </p>
                         <p
-                          className="text-xs sm:text-sm lg:text-base font-semibold text-gray-900 truncate"
-                          title={financialData.file_info.filename}
+                          className={`text-lg font-bold ${(financialData.analysis.profit_and_loss
+                            .profitability_metrics?.net_income || 0) >= 0
+                            ? "text-blue-600"
+                            : "text-orange-600"
+                            }`}
                         >
-                          {financialData.file_info.filename}
-                        </p>
-                      </div>
-                      <div className="p-2 sm:p-3 lg:p-4 bg-gradient-to-r from-green-50/50 to-emerald-50/50 rounded-lg sm:rounded-xl border border-green-100/50">
-                        <p className="text-xs sm:text-sm font-medium text-gray-600 mb-0.5 sm:mb-1">
-                          File Type
-                        </p>
-                        <p className="text-xs sm:text-sm lg:text-base font-semibold text-gray-900 capitalize">
-                          {financialData.file_info.file_type}
-                        </p>
-                      </div>
-                      <div className="p-2 sm:p-3 lg:p-4 bg-gradient-to-r from-purple-50/50 to-pink-50/50 rounded-lg sm:rounded-xl border border-purple-100/50">
-                        <p className="text-xs sm:text-sm font-medium text-gray-600 mb-0.5 sm:mb-1">
-                          File Size
-                        </p>
-                        <p className="text-xs sm:text-sm lg:text-base font-semibold text-gray-900">
-                          {financialData.file_info.file_size_mb.toFixed(2)} MB
+                          $
+                          {Math.abs(
+                            financialData.analysis.profit_and_loss
+                              .profitability_metrics?.net_income || 0
+                          ).toLocaleString()}
+                          {(financialData.analysis.profit_and_loss
+                            .profitability_metrics?.net_income || 0) < 0
+                            ? " (Loss)"
+                            : ""}
                         </p>
                       </div>
                     </div>
+                  </div>
+                )}
 
-                    {/* Key Metrics Section */}
-                    {activeTab === 0 && (
-                      <div className="space-y-2 sm:space-y-3 lg:space-y-4 pt-2 sm:pt-3 lg:pt-4 border-t border-gray-200">
-                        <h4 className="text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wider">
-                          P&L Metrics
-                        </h4>
-                        <div className="space-y-2 sm:space-y-3">
-                          <div className="p-2 sm:p-3 lg:p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg sm:rounded-xl border border-green-200 shadow-md sm:shadow-lg">
-                            <p className="text-xs sm:text-sm font-medium text-gray-600 mb-0.5 sm:mb-1">
-                              Revenue
-                            </p>
-                            <p className="text-sm sm:text-base lg:text-xl font-bold text-green-600">
-                              $
-                              {(
-                                financialData.analysis.profit_and_loss
-                                  .revenue_analysis?.total_revenue || 0
-                              ).toLocaleString()}
-                            </p>
-                          </div>
-                          <div className="p-2 sm:p-3 lg:p-4 bg-gradient-to-r from-red-50 to-pink-50 rounded-lg sm:rounded-xl border border-red-200 shadow-md sm:shadow-lg">
-                            <p className="text-xs sm:text-sm font-medium text-gray-600 mb-0.5 sm:mb-1">
-                              Expenses
-                            </p>
-                            <p className="text-sm sm:text-base lg:text-xl font-bold text-red-600">
-                              $
-                              {Math.abs(
-                                financialData.analysis.profit_and_loss
-                                  .cost_structure?.total_expenses || 0
-                              ).toLocaleString()}
-                            </p>
-                          </div>
-                          <div
-                            className={`p-2 sm:p-3 lg:p-4 rounded-lg sm:rounded-xl border shadow-md sm:shadow-lg ${
-                              (financialData.analysis.profit_and_loss
-                                .profitability_metrics?.net_income || 0) >= 0
-                                ? "bg-gradient-to-r from-blue-50 to-cyan-50 border-blue-200"
-                                : "bg-gradient-to-r from-orange-50 to-red-50 border-orange-200"
-                            }`}
-                          >
-                            <p className="text-xs sm:text-sm font-medium text-gray-600 mb-0.5 sm:mb-1">
-                              Net Income
-                            </p>
-                            <p
-                              className={`text-sm sm:text-base lg:text-xl font-bold ${
-                                (financialData.analysis.profit_and_loss
-                                  .profitability_metrics?.net_income || 0) >= 0
-                                  ? "text-blue-600"
-                                  : "text-orange-600"
-                              }`}
-                            >
-                              $
-                              {Math.abs(
-                                financialData.analysis.profit_and_loss
-                                  .profitability_metrics?.net_income || 0
-                              ).toLocaleString()}
-                              {(financialData.analysis.profit_and_loss
-                                .profitability_metrics?.net_income || 0) < 0
-                                ? " (Loss)"
-                                : ""}
-                            </p>
-                          </div>
-                        </div>
+                {activeTab === 1 && (
+                  <div className="space-y-4 pt-4 border-t border-gray-200">
+                    <h4 className="text-sm font-semibold text-gray-700">
+                      Balance Sheet
+                    </h4>
+                    <div className="space-y-3">
+                      <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <p className="text-sm font-medium text-gray-600 mb-1">
+                          Total Assets
+                        </p>
+                        <p className="text-lg font-bold text-blue-600">
+                          $
+                          {(
+                            financialData.analysis.balance_sheet?.assets
+                              ?.total_assets || 0
+                          ).toLocaleString()}
+                        </p>
                       </div>
-                    )}
+                      <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
+                        <p className="text-sm font-medium text-gray-600 mb-1">
+                          Total Liabilities
+                        </p>
+                        <p className="text-lg font-bold text-orange-600">
+                          $
+                          {(
+                            financialData.analysis.balance_sheet
+                              ?.liabilities?.total_liabilities || 0
+                          ).toLocaleString()}
+                        </p>
+                      </div>
+                      <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                        <p className="text-sm font-medium text-gray-600 mb-1">
+                          Total Equity
+                        </p>
+                        <p className="text-lg font-bold text-purple-600">
+                          $
+                          {(
+                            financialData.analysis.balance_sheet?.equity
+                              ?.total_equity || 0
+                          ).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
-                    {activeTab === 1 && (
-                      <div className="space-y-2 sm:space-y-3 lg:space-y-4 pt-2 sm:pt-3 lg:pt-4 border-t border-gray-200">
-                        <h4 className="text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wider">
-                          Balance Sheet
-                        </h4>
-                        <div className="space-y-2 sm:space-y-3">
-                          <div className="p-2 sm:p-3 lg:p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg sm:rounded-xl border border-blue-200 shadow-md sm:shadow-lg">
-                            <p className="text-xs sm:text-sm font-medium text-gray-600 mb-0.5 sm:mb-1">
-                              Total Assets
-                            </p>
-                            <p className="text-sm sm:text-base lg:text-xl font-bold text-blue-600">
-                              $
-                              {(
-                                financialData.analysis.balance_sheet?.assets
-                                  ?.total_assets || 0
-                              ).toLocaleString()}
-                            </p>
-                          </div>
-                          <div className="p-2 sm:p-3 lg:p-4 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg sm:rounded-xl border border-orange-200 shadow-md sm:shadow-lg">
-                            <p className="text-xs sm:text-sm font-medium text-gray-600 mb-0.5 sm:mb-1">
-                              Total Liabilities
-                            </p>
-                            <p className="text-sm sm:text-base lg:text-xl font-bold text-orange-600">
-                              $
-                              {(
-                                financialData.analysis.balance_sheet
-                                  ?.liabilities?.total_liabilities || 0
-                              ).toLocaleString()}
-                            </p>
-                          </div>
-                          <div className="p-2 sm:p-3 lg:p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg sm:rounded-xl border border-purple-200 shadow-md sm:shadow-lg">
-                            <p className="text-xs sm:text-sm font-medium text-gray-600 mb-0.5 sm:mb-1">
-                              Total Equity
-                            </p>
-                            <p className="text-sm sm:text-base lg:text-xl font-bold text-purple-600">
-                              $
-                              {(
-                                financialData.analysis.balance_sheet?.equity
-                                  ?.total_equity || 0
-                              ).toLocaleString()}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {activeTab === 2 && (
-                      <div className="space-y-2 sm:space-y-3 lg:space-y-4 pt-2 sm:pt-3 lg:pt-4 border-t border-gray-200">
-                        <h4 className="text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wider">
-                          Cash Flow
-                        </h4>
-                        <div className="space-y-2 sm:space-y-3">
-                          <div
-                            className={`p-2 sm:p-3 lg:p-4 rounded-lg sm:rounded-xl border shadow-md sm:shadow-lg ${
-                              (financialData.analysis.cash_flow_analysis
-                                ?.operating_activities
-                                ?.net_cash_from_operations || 0) >= 0
-                                ? "bg-gradient-to-r from-green-50 to-emerald-50 border-green-200"
-                                : "bg-gradient-to-r from-red-50 to-pink-50 border-red-200"
+                {activeTab === 2 && (
+                  <div className="space-y-4 pt-4 border-t border-gray-200">
+                    <h4 className="text-sm font-semibold text-gray-700">
+                      Cash Flow
+                    </h4>
+                    <div className="space-y-3">
+                      <div
+                        className={`p-4 rounded-lg border ${(financialData.analysis.cash_flow_analysis
+                          ?.operating_activities
+                          ?.net_cash_from_operations || 0) >= 0
+                          ? "bg-emerald-50 border-emerald-200"
+                          : "bg-red-50 border-red-200"
+                          }`}
+                      >
+                        <p className="text-sm font-medium text-gray-600 mb-1">
+                          Operating Cash Flow
+                        </p>
+                        <p
+                          className={`text-lg font-bold ${(financialData.analysis.cash_flow_analysis
+                            ?.operating_activities
+                            ?.net_cash_from_operations || 0) >= 0
+                            ? "text-emerald-600"
+                            : "text-red-600"
                             }`}
-                          >
-                            <p className="text-xs sm:text-sm font-medium text-gray-600 mb-0.5 sm:mb-1">
-                              Operating Cash Flow
-                            </p>
-                            <p
-                              className={`text-sm sm:text-base lg:text-xl font-bold ${
-                                (financialData.analysis.cash_flow_analysis
-                                  ?.operating_activities
-                                  ?.net_cash_from_operations || 0) >= 0
-                                  ? "text-green-600"
-                                  : "text-red-600"
-                              }`}
-                            >
-                              $
-                              {Math.abs(
-                                financialData.analysis.cash_flow_analysis
-                                  ?.operating_activities
-                                  ?.net_cash_from_operations || 0
-                              ).toLocaleString()}
-                            </p>
-                          </div>
-                          <div
-                            className={`p-2 sm:p-3 lg:p-4 rounded-lg sm:rounded-xl border shadow-md sm:shadow-lg ${
-                              (financialData.analysis.cash_flow_analysis
-                                ?.cash_position?.free_cash_flow || 0) >= 0
-                                ? "bg-gradient-to-r from-blue-50 to-cyan-50 border-blue-200"
-                                : "bg-gradient-to-r from-orange-50 to-red-50 border-orange-200"
-                            }`}
-                          >
-                            <p className="text-xs sm:text-sm font-medium text-gray-600 mb-0.5 sm:mb-1">
-                              Free Cash Flow
-                            </p>
-                            <p
-                              className={`text-sm sm:text-base lg:text-xl font-bold ${
-                                (financialData.analysis.cash_flow_analysis
-                                  ?.cash_position?.free_cash_flow || 0) >= 0
-                                  ? "text-blue-600"
-                                  : "text-orange-600"
-                              }`}
-                            >
-                              $
-                              {Math.abs(
-                                financialData.analysis.cash_flow_analysis
-                                  ?.cash_position?.free_cash_flow || 0
-                              ).toLocaleString()}
-                            </p>
-                          </div>
-                        </div>
+                        >
+                          $
+                          {Math.abs(
+                            financialData.analysis.cash_flow_analysis
+                              ?.operating_activities
+                              ?.net_cash_from_operations || 0
+                          ).toLocaleString()}
+                        </p>
                       </div>
-                    )}
-                  </CardContent>
-                </div>
-              </div>
+                      <div
+                        className={`p-4 rounded-lg border ${(financialData.analysis.cash_flow_analysis
+                          ?.cash_position?.free_cash_flow || 0) >= 0
+                          ? "bg-blue-50 border-blue-200"
+                          : "bg-orange-50 border-orange-200"
+                          }`}
+                      >
+                        <p className="text-sm font-medium text-gray-600 mb-1">
+                          Free Cash Flow
+                        </p>
+                        <p
+                          className={`text-lg font-bold ${(financialData.analysis.cash_flow_analysis
+                            ?.cash_position?.free_cash_flow || 0) >= 0
+                            ? "text-blue-600"
+                            : "text-orange-600"
+                            }`}
+                        >
+                          $
+                          {Math.abs(
+                            financialData.analysis.cash_flow_analysis
+                              ?.cash_position?.free_cash_flow || 0
+                          ).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
             </Card>
           </div>
         </>

@@ -2,6 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { ClerkProvider } from "@clerk/nextjs"
+import { ActiveFileProvider } from "@/components/contexts/active-file-context"
 import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -42,7 +43,11 @@ export default function RootLayout({
       }}
     >
       <html lang="en">
-        <body className={inter.className}>{children}</body>
+        <body className={inter.className}>
+          <ActiveFileProvider>
+            {children}
+          </ActiveFileProvider>
+        </body>
       </html>
     </ClerkProvider>
   )

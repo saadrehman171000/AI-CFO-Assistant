@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useActiveFile } from "@/components/contexts/active-file-context";
 import {
   Card,
   CardContent,
@@ -196,6 +197,7 @@ interface DashboardData {
 }
 
 export default function DashboardContent() {
+  const { activeFileData, activeFile, loading: activeFileLoading } = useActiveFile();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(
     null
   );
@@ -209,83 +211,87 @@ export default function DashboardContent() {
       setLoading(true);
       setError(null);
 
-      // Get the latest financial analysis using the new unified endpoint
-      const analysisResponse = await fetch(
-        "/api/financial-analysis?latest=true"
-      );
-      let analysisData = null;
+      // Use active file data if available, otherwise fetch latest
+      let analysisData = activeFileData;
       let analysisHistory = [];
       let isMultiFileAnalysis = false;
       let multiFileAnalysisGroupId = null;
 
-      if (analysisResponse.ok) {
-        const analysisResult = await analysisResponse.json();
-        // Direct response without success wrapper
-        if (analysisResult.file_info && analysisResult.analysis) {
-          analysisData = analysisResult;
-          // Check if this is a multi-file analysis
-          if (
-            analysisResult.isMultiFileAnalysis &&
-            analysisResult.multiFileAnalysisGroupId
-          ) {
-            isMultiFileAnalysis = true;
-            multiFileAnalysisGroupId = analysisResult.multiFileAnalysisGroupId;
-          }
-        } else if (analysisResult.success && analysisResult.data) {
-          // Backward compatibility with wrapped response
-          analysisData = analysisResult.data;
-          // Check if this is a multi-file analysis
-          if (
-            analysisResult.data.isMultiFileAnalysis &&
-            analysisResult.data.multiFileAnalysisGroupId
-          ) {
-            isMultiFileAnalysis = true;
-            multiFileAnalysisGroupId =
-              analysisResult.data.multiFileAnalysisGroupId;
+      // If no active file data is available, fetch the latest analysis
+      if (!analysisData) {
+        const analysisResponse = await fetch(
+          "/api/financial-analysis?latest=true"
+        );
+
+        if (analysisResponse.ok) {
+          const analysisResult = await analysisResponse.json();
+          // Direct response without success wrapper
+          if (analysisResult.file_info && analysisResult.analysis) {
+            analysisData = analysisResult;
+            // Check if this is a multi-file analysis
+            if (
+              analysisResult.isMultiFileAnalysis &&
+              analysisResult.multiFileAnalysisGroupId
+            ) {
+              isMultiFileAnalysis = true;
+              multiFileAnalysisGroupId = analysisResult.multiFileAnalysisGroupId;
+            }
+          } else if (analysisResult.success && analysisResult.data) {
+            // Backward compatibility with wrapped response
+            analysisData = analysisResult.data;
+            // Check if this is a multi-file analysis
+            if (
+              analysisResult.data.isMultiFileAnalysis &&
+              analysisResult.data.multiFileAnalysisGroupId
+            ) {
+              isMultiFileAnalysis = true;
+              multiFileAnalysisGroupId =
+                analysisResult.data.multiFileAnalysisGroupId;
+            }
           }
         }
+      }
 
-        // If this is a multi-file analysis, fetch all files with the same groupId
-        if (isMultiFileAnalysis && multiFileAnalysisGroupId) {
-          try {
-            const groupAnalysisResponse = await fetch(
-              `/api/financial-analysis?groupId=${multiFileAnalysisGroupId}`
-            );
+      // Handle multi-file analysis or fetch history
+      if (isMultiFileAnalysis && multiFileAnalysisGroupId) {
+        try {
+          const groupAnalysisResponse = await fetch(
+            `/api/financial-analysis?groupId=${multiFileAnalysisGroupId}`
+          );
 
-            if (groupAnalysisResponse.ok) {
-              const groupResult = await groupAnalysisResponse.json();
-              if (Array.isArray(groupResult)) {
-                analysisHistory = groupResult;
-              } else if (groupResult.data && Array.isArray(groupResult.data)) {
-                analysisHistory = groupResult.data;
-              }
+          if (groupAnalysisResponse.ok) {
+            const groupResult = await groupAnalysisResponse.json();
+            if (Array.isArray(groupResult)) {
+              analysisHistory = groupResult;
+            } else if (groupResult.data && Array.isArray(groupResult.data)) {
+              analysisHistory = groupResult.data;
             }
-          } catch (groupError) {
-            console.error(
-              "Error fetching multi-file analysis group:",
-              groupError
-            );
           }
-        } else {
-          // If not a multi-file analysis, fetch regular history
-          try {
-            const historyResponse = await fetch(
-              "/api/financial-analysis?all=true"
-            );
-            if (historyResponse.ok) {
-              const historyResult = await historyResponse.json();
-              if (Array.isArray(historyResult)) {
-                // Direct array response from the all=true parameter
-                analysisHistory = historyResult;
-              } else if (historyResult.data) {
-                // Handle wrapped data response
-                analysisHistory = historyResult.data;
-              }
+        } catch (groupError) {
+          console.error(
+            "Error fetching multi-file analysis group:",
+            groupError
+          );
+        }
+      } else {
+        // If not a multi-file analysis, fetch regular history
+        try {
+          const historyResponse = await fetch(
+            "/api/financial-analysis?all=true"
+          );
+          if (historyResponse.ok) {
+            const historyResult = await historyResponse.json();
+            if (Array.isArray(historyResult)) {
+              // Direct array response from the all=true parameter
+              analysisHistory = historyResult;
+            } else if (historyResult.data) {
+              // Handle wrapped data response
+              analysisHistory = historyResult.data;
             }
-          } catch (historyError) {
-            console.error("Error fetching history:", historyError);
-            // Non-critical, can continue without history
           }
+        } catch (historyError) {
+          console.error("Error fetching history:", historyError);
+          // Non-critical, can continue without history
         }
       }
 
@@ -398,7 +404,7 @@ export default function DashboardContent() {
 
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+  }, [activeFileData]); // Re-fetch when active file changes
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -540,7 +546,7 @@ export default function DashboardContent() {
   // Check if we have comprehensive analysis data
   if (dashboardData.analysisData) {
     // Check if this is a multi-file analysis
-    if (dashboardData.analysisData.isMultiFileAnalysis) {
+    if ((dashboardData.analysisData as any).isMultiFileAnalysis) {
       return (
         <div className="space-y-6">
           {/* Multi-file analysis header */}
@@ -634,715 +640,580 @@ export default function DashboardContent() {
 
   return (
     <div className="space-y-6">
-      {/* Enhanced Header */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 opacity-10 rounded-3xl"></div>
-        <div className="relative bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/20">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="relative">
-                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl transform rotate-3 hover:rotate-0 transition-all duration-300">
-                  <BarChart3 className="h-8 w-8 text-white" />
-                </div>
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-pink-500 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
-                  <Sparkles className="h-3 w-3 text-white" />
-                </div>
-              </div>
-              <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
-                  Financial Dashboard
-                </h1>
-                <p className="text-gray-600 mt-1">
-                  AI-powered insights and analytics for your financial data
-                </p>
-              </div>
+      {/* Clean Professional Header */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center">
+              <BarChart3 className="h-5 w-5 text-slate-600" />
             </div>
-            <Button
-              onClick={refreshDashboard}
-              disabled={refreshing}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300"
-            >
-              <RefreshCw
-                className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
-              />
-              Refresh
-            </Button>
+            <div>
+              <h1 className="text-2xl font-semibold text-gray-900">
+                Financial Dashboard
+              </h1>
+              <p className="text-sm text-gray-600">
+                AI-powered insights and analytics for your financial data
+              </p>
+            </div>
           </div>
+          <Button
+            onClick={refreshDashboard}
+            disabled={refreshing}
+            variant="outline"
+            size="sm"
+          >
+            <RefreshCw
+              className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
+            />
+            Refresh
+          </Button>
         </div>
       </div>
 
-      {/* Enhanced Report Info */}
+      {/* Report Info */}
       {reportInfo && (
-        <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-10 rounded-2xl"></div>
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-blue-200 hover:shadow-2xl transition-all duration-300">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                <FileText className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">
-                  Latest Report Analysis
-                </h3>
-                <p className="text-sm text-gray-600">
-                  AI-powered financial insights
-                </p>
-              </div>
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center">
+              <FileText className="h-4 w-4 text-slate-600" />
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center p-3 bg-blue-50 rounded-xl">
-                <div
-                  className="text-lg font-bold text-blue-600 truncate"
-                  title={reportInfo.latestReport.fileName}
-                >
-                  {reportInfo.latestReport.fileName}
-                </div>
-                <div className="text-sm text-gray-600">File Name</div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Latest Report Analysis
+              </h3>
+              <p className="text-sm text-gray-600">
+                Financial document analysis summary
+              </p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <div
+                className="text-sm font-semibold text-slate-700 truncate"
+                title={reportInfo.latestReport.fileName}
+              >
+                {reportInfo.latestReport.fileName}
               </div>
-              <div className="text-center p-3 bg-green-50 rounded-xl">
-                <div className="text-lg font-bold text-green-600">
-                  {reportInfo.latestReport.reportType.replace("_", " ")}
-                </div>
-                <div className="text-sm text-gray-600">Report Type</div>
+              <div className="text-xs text-gray-500 mt-1">File Name</div>
+            </div>
+            <div className="text-center p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <div className="text-sm font-semibold text-slate-700">
+                {reportInfo.latestReport.reportType.replace("_", " ")}
               </div>
-              <div className="text-center p-3 bg-purple-50 rounded-xl">
-                <div className="text-lg font-bold text-purple-600">
-                  {reportInfo.latestReport.totalRecords}
-                </div>
-                <div className="text-sm text-gray-600">Records Parsed</div>
+              <div className="text-xs text-gray-500 mt-1">Report Type</div>
+            </div>
+            <div className="text-center p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <div className="text-sm font-semibold text-slate-700">
+                {reportInfo.latestReport.totalRecords}
               </div>
-              <div className="text-center p-3 bg-orange-50 rounded-xl">
-                <div className="text-lg font-bold text-orange-600">
-                  {reportInfo.totalReports}
-                </div>
-                <div className="text-sm text-gray-600">Total Reports</div>
+              <div className="text-xs text-gray-500 mt-1">Records Parsed</div>
+            </div>
+            <div className="text-center p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <div className="text-sm font-semibold text-slate-700">
+                {reportInfo.totalReports}
               </div>
+              <div className="text-xs text-gray-500 mt-1">Total Reports</div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Enhanced Key Metrics */}
+      {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-600 opacity-10 rounded-2xl"></div>
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-green-200 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
-                <DollarSign className="h-5 w-5 text-white" />
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+                <p className="text-2xl font-semibold text-gray-900">
+                  {formatCurrency(summary.totalRevenue || 0)}
+                </p>
+                {summary.grossMargin && (
+                  <p className="text-xs text-emerald-600 mt-1">
+                    Gross Margin: {formatPercentage(summary.grossMargin)}
+                  </p>
+                )}
               </div>
-              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+              <div className="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center">
+                <DollarSign className="h-5 w-5 text-emerald-600" />
+              </div>
             </div>
-            <div className="text-2xl font-bold text-green-600">
-              {formatCurrency(summary.totalRevenue || 0)}
-            </div>
-            <div className="text-sm text-gray-600">Total Revenue</div>
-            {summary.grossMargin && (
-              <p className="text-xs text-green-600 mt-1 font-medium">
-                Gross Margin: {formatPercentage(summary.grossMargin)}
-              </p>
-            )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-pink-600 opacity-10 rounded-2xl"></div>
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-red-200 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-red-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
-                <TrendingDown className="h-5 w-5 text-white" />
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Expenses</p>
+                <p className="text-2xl font-semibold text-gray-900">
+                  {formatCurrency(Math.abs(summary.totalExpenses || 0))}
+                </p>
+                {summary.netMargin && (
+                  <p className="text-xs text-red-600 mt-1">
+                    Net Margin: {formatPercentage(summary.netMargin)}
+                  </p>
+                )}
               </div>
-              <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+              <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center">
+                <TrendingDown className="h-5 w-5 text-red-600" />
+              </div>
             </div>
-            <div className="text-2xl font-bold text-red-600">
-              {formatCurrency(Math.abs(summary.totalExpenses || 0))}
-            </div>
-            <div className="text-sm text-gray-600">Total Expenses</div>
-            {summary.netMargin && (
-              <p className="text-xs text-red-600 mt-1 font-medium">
-                Net Margin: {formatPercentage(summary.netMargin)}
-              </p>
-            )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-600 opacity-10 rounded-2xl"></div>
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-blue-200 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                <Activity className="h-5 w-5 text-white" />
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Net Profit</p>
+                <p
+                  className={`text-2xl font-semibold ${(summary.netProfit || 0) >= 0
+                    ? "text-emerald-600"
+                    : "text-red-600"
+                    }`}
+                >
+                  {formatCurrency(summary.netProfit || 0)}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {(summary.netProfit || 0) >= 0 ? "Profit" : "Loss"}
+                </p>
               </div>
-              <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+              <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                <Activity className="h-5 w-5 text-blue-600" />
+              </div>
             </div>
-            <div
-              className={`text-2xl font-bold ${
-                (summary.netProfit || 0) >= 0
-                  ? "text-green-600"
-                  : "text-red-600"
-              }`}
-            >
-              {formatCurrency(summary.netProfit || 0)}
-            </div>
-            <div className="text-sm text-gray-600">Net Profit</div>
-            <p className="text-xs text-gray-500 mt-1">
-              {(summary.netProfit || 0) >= 0 ? "Profit" : "Loss"}
-            </p>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-600 opacity-10 rounded-2xl"></div>
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-purple-200 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
-                <BarChart3 className="h-5 w-5 text-white" />
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Assets</p>
+                <p className="text-2xl font-semibold text-gray-900">
+                  {formatCurrency(summary.totalAssets || 0)}
+                </p>
+                {summary.topAccounts && (
+                  <p className="text-xs text-slate-600 mt-1">
+                    {summary.topAccounts.length} Accounts
+                  </p>
+                )}
               </div>
-              <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
+              <div className="w-10 h-10 bg-slate-50 rounded-lg flex items-center justify-center">
+                <BarChart3 className="h-5 w-5 text-slate-600" />
+              </div>
             </div>
-            <div className="text-2xl font-bold text-purple-600">
-              {formatCurrency(summary.totalAssets || 0)}
-            </div>
-            <div className="text-sm text-gray-600">Total Assets</div>
-            {summary.topAccounts && (
-              <p className="text-xs text-purple-600 mt-1 font-medium">
-                {summary.topAccounts.length} Accounts
-              </p>
-            )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Enhanced Charts and Analytics */}
+      {/* Charts and Analytics */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Financial Trends Chart */}
-        <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-10 rounded-2xl"></div>
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-blue-200 hover:shadow-2xl transition-all duration-300">
-            <div className="p-6 border-b border-blue-100">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                  <TrendingUp className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900">
-                    Financial Trends
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    Revenue, expenses, and profit over time
-                  </p>
-                </div>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center space-x-2">
+              <TrendingUp className="h-5 w-5 text-slate-600" />
+              <div>
+                <CardTitle className="text-lg">Financial Trends</CardTitle>
+                <CardDescription>
+                  Revenue, expenses, and profit over time
+                </CardDescription>
               </div>
             </div>
-            <div className="p-6">
-              <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip
-                    formatter={(value) => formatCurrency(Number(value))}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="revenue"
-                    stackId="1"
-                    stroke="#10b981"
-                    fill="#10b981"
-                    fillOpacity={0.3}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="expenses"
-                    stackId="1"
-                    stroke="#ef4444"
-                    fill="#ef4444"
-                    fillOpacity={0.3}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="profit"
-                    stackId="1"
-                    stroke="#3b82f6"
-                    fill="#3b82f6"
-                    fillOpacity={0.3}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip
+                  formatter={(value) => formatCurrency(Number(value))}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="revenue"
+                  stackId="1"
+                  stroke="#10b981"
+                  fill="#10b981"
+                  fillOpacity={0.2}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="expenses"
+                  stackId="1"
+                  stroke="#ef4444"
+                  fill="#ef4444"
+                  fillOpacity={0.2}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="profit"
+                  stackId="1"
+                  stroke="#3b82f6"
+                  fill="#3b82f6"
+                  fillOpacity={0.2}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
 
         {/* Expense Breakdown Pie Chart */}
-        <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-600 opacity-10 rounded-2xl"></div>
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-green-200 hover:shadow-2xl transition-all duration-300">
-            <div className="p-6 border-b border-green-100">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
-                  <PieChart className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900">
-                    Expense Breakdown
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    Top expense categories by amount
-                  </p>
-                </div>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center space-x-2">
+              <PieChart className="h-5 w-5 text-slate-600" />
+              <div>
+                <CardTitle className="text-lg">Expense Breakdown</CardTitle>
+                <CardDescription>
+                  Top expense categories by amount
+                </CardDescription>
               </div>
             </div>
-            <div className="p-6">
-              <ResponsiveContainer width="100%" height={300}>
-                <RechartsPieChart>
-                  <Pie
-                    data={expenseBreakdown}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) =>
-                      `${name} (${((percent || 0) * 100).toFixed(0)}%)`
-                    }
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {expenseBreakdown.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(value) => formatCurrency(Number(value))}
-                  />
-                </RechartsPieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <RechartsPieChart>
+                <Pie
+                  data={expenseBreakdown}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) =>
+                    `${name} (${((percent || 0) * 100).toFixed(0)}%)`
+                  }
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {expenseBreakdown.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(value) => formatCurrency(Number(value))}
+                />
+              </RechartsPieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Enhanced Top Accounts with Tabs */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-600 opacity-10 rounded-2xl"></div>
-        <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-purple-200 hover:shadow-2xl transition-all duration-300">
-          <div className="p-6 border-b border-purple-100">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
-                <BarChart3 className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">
-                  Top Accounts by Category
-                </h3>
-                <p className="text-sm text-gray-600">
-                  Highest value accounts in each financial category
-                </p>
-              </div>
+      {/* Top Accounts with Tabs */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center space-x-2">
+            <BarChart3 className="h-5 w-5 text-slate-600" />
+            <div>
+              <CardTitle className="text-lg">Top Accounts by Category</CardTitle>
+              <CardDescription>
+                Highest value accounts in each financial category
+              </CardDescription>
             </div>
           </div>
-          <div className="p-6">
-            <Tabs defaultValue="revenue" className="w-full">
-              <TabsList className="grid w-full grid-cols-4 bg-gray-100 p-1 rounded-lg">
-                <TabsTrigger
-                  value="revenue"
-                  className="data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-purple-600 rounded-md transition-all duration-200"
-                >
-                  Revenue
-                </TabsTrigger>
-                <TabsTrigger
-                  value="expenses"
-                  className="data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-purple-600 rounded-md transition-all duration-200"
-                >
-                  Expenses
-                </TabsTrigger>
-                <TabsTrigger
-                  value="assets"
-                  className="data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-purple-600 rounded-md transition-all duration-200"
-                >
-                  Assets
-                </TabsTrigger>
-                <TabsTrigger
-                  value="liabilities"
-                  className="data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-purple-600 rounded-md transition-all duration-200"
-                >
-                  Liabilities
-                </TabsTrigger>
-              </TabsList>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="revenue" className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="revenue">Revenue</TabsTrigger>
+              <TabsTrigger value="expenses">Expenses</TabsTrigger>
+              <TabsTrigger value="assets">Assets</TabsTrigger>
+              <TabsTrigger value="liabilities">Liabilities</TabsTrigger>
+            </TabsList>
 
-              <TabsContent value="revenue" className="space-y-2 mt-4">
-                {topAccounts.revenue.map((account: any, index: number) => (
-                  <div
-                    key={index}
-                    className="flex justify-between items-center p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200 hover:shadow-lg transition-all duration-200"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                      <span className="font-medium text-gray-800">
-                        {account.accountName}
-                      </span>
-                    </div>
-                    <span className="text-green-600 font-semibold">
-                      {formatCurrency(Number(account.amount))}
-                    </span>
-                  </div>
-                ))}
-              </TabsContent>
-
-              <TabsContent value="expenses" className="space-y-2 mt-4">
-                {topAccounts.expenses.map((account: any, index: number) => (
-                  <div
-                    key={index}
-                    className="flex justify-between items-center p-4 bg-gradient-to-r from-red-50 to-pink-50 rounded-xl border border-red-200 hover:shadow-lg transition-all duration-200"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-                      <span className="font-medium text-gray-800">
-                        {account.accountName}
-                      </span>
-                    </div>
-                    <span className="text-red-600 font-semibold">
-                      {formatCurrency(Number(account.amount))}
-                    </span>
-                  </div>
-                ))}
-              </TabsContent>
-
-              <TabsContent value="assets" className="space-y-2 mt-4">
-                {topAccounts.assets.map((account: any, index: number) => (
-                  <div
-                    key={index}
-                    className="flex justify-between items-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200 hover:shadow-lg transition-all duration-200"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
-                      <span className="font-medium text-gray-800">
-                        {account.accountName}
-                      </span>
-                    </div>
-                    <span className="text-blue-600 font-semibold">
-                      {formatCurrency(Number(account.amount))}
-                    </span>
-                  </div>
-                ))}
-              </TabsContent>
-
-              <TabsContent value="liabilities" className="space-y-2 mt-4">
-                {topAccounts.liabilities.map((account: any, index: number) => (
-                  <div
-                    key={index}
-                    className="flex justify-between items-center p-4 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-xl border border-orange-200 hover:shadow-lg transition-all duration-200"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 bg-orange-500 rounded-full animate-pulse"></div>
-                      <span className="font-medium text-gray-800">
-                        {account.accountName}
-                      </span>
-                    </div>
-                    <span className="text-orange-600 font-semibold">
-                      {formatCurrency(Number(account.amount))}
-                    </span>
-                  </div>
-                ))}
-              </TabsContent>
-            </Tabs>
-          </div>
-        </div>
-      </div>
-
-      {/* Enhanced AI Insights with Filtering */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-yellow-500 to-orange-600 opacity-10 rounded-2xl"></div>
-        <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-yellow-200 hover:shadow-2xl transition-all duration-300">
-          <div className="p-6 border-b border-yellow-100">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
-                <Zap className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">
-                  AI-Powered Insights
-                </h3>
-                <p className="text-sm text-gray-600">
-                  Intelligent analysis of your financial data with actionable
-                  recommendations
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant={selectedInsightType === "all" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedInsightType("all")}
-                className="bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white border-0"
-              >
-                All ({insights.length})
-              </Button>
-              <Button
-                variant={
-                  selectedInsightType === "trend" ? "default" : "outline"
-                }
-                size="sm"
-                onClick={() => setSelectedInsightType("trend")}
-                className="bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white border-0"
-              >
-                Trends ({insights.filter((i) => i.type === "trend").length})
-              </Button>
-              <Button
-                variant={
-                  selectedInsightType === "anomaly" ? "default" : "outline"
-                }
-                size="sm"
-                onClick={() => setSelectedInsightType("anomaly")}
-                className="bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white border-0"
-              >
-                Anomalies ({insights.filter((i) => i.type === "anomaly").length}
-                )
-              </Button>
-              <Button
-                variant={
-                  selectedInsightType === "recommendation"
-                    ? "default"
-                    : "outline"
-                }
-                size="sm"
-                onClick={() => setSelectedInsightType("recommendation")}
-                className="bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white border-0"
-              >
-                Recommendations (
-                {insights.filter((i) => i.type === "recommendation").length})
-              </Button>
-            </div>
-          </div>
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredInsights.map((insight, index) => (
+            <TabsContent value="revenue" className="space-y-2 mt-4">
+              {topAccounts.revenue.map((account: any, index: number) => (
                 <div
                   key={index}
-                  className="p-4 border border-gray-200 rounded-xl hover:shadow-lg transition-all duration-200 bg-gradient-to-r from-gray-50 to-white"
+                  className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200"
                 >
-                  <div className="flex items-start gap-3">
-                    <div className="mt-1">{getInsightIcon(insight.type)}</div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h4 className="font-semibold text-gray-900">
-                          {insight.title}
-                        </h4>
-                        <Badge variant={getSeverityColor(insight.severity)}>
-                          {insight.severity}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-gray-600 mb-2">
-                        {insight.description}
-                      </p>
-                      <p className="text-sm font-medium mb-2">
-                        <span className="text-blue-600">Impact:</span>{" "}
-                        {insight.impact}
-                      </p>
-                      {insight.suggestion && (
-                        <p className="text-sm">
-                          <span className="text-green-600 font-medium">
-                            Suggestion:
-                          </span>{" "}
-                          {insight.suggestion}
-                        </p>
-                      )}
-                    </div>
-                  </div>
+                  <span className="font-medium text-gray-700">
+                    {account.accountName}
+                  </span>
+                  <span className="text-emerald-600 font-semibold">
+                    {formatCurrency(Number(account.amount))}
+                  </span>
                 </div>
               ))}
+            </TabsContent>
+
+            <TabsContent value="expenses" className="space-y-2 mt-4">
+              {topAccounts.expenses.map((account: any, index: number) => (
+                <div
+                  key={index}
+                  className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200"
+                >
+                  <span className="font-medium text-gray-700">
+                    {account.accountName}
+                  </span>
+                  <span className="text-red-600 font-semibold">
+                    {formatCurrency(Number(account.amount))}
+                  </span>
+                </div>
+              ))}
+            </TabsContent>
+
+            <TabsContent value="assets" className="space-y-2 mt-4">
+              {topAccounts.assets.map((account: any, index: number) => (
+                <div
+                  key={index}
+                  className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200"
+                >
+                  <span className="font-medium text-gray-700">
+                    {account.accountName}
+                  </span>
+                  <span className="text-blue-600 font-semibold">
+                    {formatCurrency(Number(account.amount))}
+                  </span>
+                </div>
+              ))}
+            </TabsContent>
+
+            <TabsContent value="liabilities" className="space-y-2 mt-4">
+              {topAccounts.liabilities.map((account: any, index: number) => (
+                <div
+                  key={index}
+                  className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200"
+                >
+                  <span className="font-medium text-gray-700">
+                    {account.accountName}
+                  </span>
+                  <span className="text-orange-600 font-semibold">
+                    {formatCurrency(Number(account.amount))}
+                  </span>
+                </div>
+              ))}
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+
+      {/* AI Insights */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Zap className="h-5 w-5 text-slate-600" />
+              <div>
+                <CardTitle className="text-lg">AI-Powered Insights</CardTitle>
+                <CardDescription>
+                  Intelligent analysis of your financial data with actionable recommendations
+                </CardDescription>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+          <div className="flex gap-2 mt-4">
+            <Button
+              variant={selectedInsightType === "all" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedInsightType("all")}
+            >
+              All ({insights.length})
+            </Button>
+            <Button
+              variant={selectedInsightType === "trend" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedInsightType("trend")}
+            >
+              Trends ({insights.filter((i) => i.type === "trend").length})
+            </Button>
+            <Button
+              variant={selectedInsightType === "anomaly" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedInsightType("anomaly")}
+            >
+              Anomalies ({insights.filter((i) => i.type === "anomaly").length})
+            </Button>
+            <Button
+              variant={selectedInsightType === "recommendation" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedInsightType("recommendation")}
+            >
+              Recommendations ({insights.filter((i) => i.type === "recommendation").length})
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {filteredInsights.map((insight, index) => (
+              <div
+                key={index}
+                className="p-4 border border-gray-200 rounded-lg bg-slate-50"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="mt-1">{getInsightIcon(insight.type)}</div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h4 className="font-semibold text-gray-900">
+                        {insight.title}
+                      </h4>
+                      <Badge variant={getSeverityColor(insight.severity)}>
+                        {insight.severity}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-2">
+                      {insight.description}
+                    </p>
+                    <p className="text-sm font-medium mb-2">
+                      <span className="text-slate-700">Impact:</span>{" "}
+                      {insight.impact}
+                    </p>
+                    {insight.suggestion && (
+                      <p className="text-sm">
+                        <span className="text-slate-700 font-medium">
+                          Suggestion:
+                        </span>{" "}
+                        {insight.suggestion}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Enhanced Additional Financial Metrics */}
+      {/* Additional Financial Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-600 opacity-10 rounded-2xl"></div>
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-blue-200 hover:shadow-2xl transition-all duration-300">
-            <div className="p-6 border-b border-blue-100">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                  <DollarSign className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900">
-                    Cash Flow Analysis
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    Operating, investing & financing activities
-                  </p>
-                </div>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center space-x-2">
+              <DollarSign className="h-5 w-5 text-slate-600" />
+              <div>
+                <CardTitle className="text-lg">Cash Flow Analysis</CardTitle>
+                <CardDescription>
+                  Operating, investing & financing activities
+                </CardDescription>
               </div>
             </div>
-            <div className="p-6 space-y-4">
-              <div className="flex justify-between items-center p-3 bg-blue-50 rounded-xl">
-                <span className="text-sm font-medium text-gray-700">
-                  Operations:
-                </span>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <span
-                    className={`font-semibold ${
-                      (summary.cashFlowOperating || 0) >= 0
-                        ? "text-green-600"
-                        : "text-red-600"
-                    }`}
-                  >
-                    {formatCurrency(summary.cashFlowOperating || 0)}
-                  </span>
-                </div>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-indigo-50 rounded-xl">
-                <span className="text-sm font-medium text-gray-700">
-                  Investing:
-                </span>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
-                  <span
-                    className={`font-semibold ${
-                      (summary.cashFlowInvesting || 0) >= 0
-                        ? "text-green-600"
-                        : "text-red-600"
-                    }`}
-                  >
-                    {formatCurrency(summary.cashFlowInvesting || 0)}
-                  </span>
-                </div>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-blue-100 rounded-xl border border-blue-200">
-                <span className="text-sm font-bold text-gray-800">
-                  Net Cash Flow:
-                </span>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-blue-600 rounded-full animate-pulse"></div>
-                  <span
-                    className={`font-bold text-lg ${
-                      (summary.netCashFlow || 0) >= 0
-                        ? "text-green-600"
-                        : "text-red-600"
-                    }`}
-                  >
-                    {formatCurrency(summary.netCashFlow || 0)}
-                  </span>
-                </div>
-              </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <span className="text-sm font-medium text-gray-700">
+                Operations:
+              </span>
+              <span
+                className={`font-semibold ${(summary.cashFlowOperating || 0) >= 0
+                  ? "text-green-600"
+                  : "text-red-600"
+                  }`}
+              >
+                {formatCurrency(summary.cashFlowOperating || 0)}
+              </span>
             </div>
-          </div>
-        </div>
+            <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <span className="text-sm font-medium text-gray-700">
+                Investing:
+              </span>
+              <span
+                className={`font-semibold ${(summary.cashFlowInvesting || 0) >= 0
+                  ? "text-green-600"
+                  : "text-red-600"
+                  }`}
+              >
+                {formatCurrency(summary.cashFlowInvesting || 0)}
+              </span>
+            </div>
+            <div className="flex justify-between items-center p-3 bg-slate-100 rounded-lg border border-slate-300">
+              <span className="text-sm font-bold text-gray-800">
+                Net Cash Flow:
+              </span>
+              <span
+                className={`font-bold text-lg ${(summary.netCashFlow || 0) >= 0
+                  ? "text-green-600"
+                  : "text-red-600"
+                  }`}
+              >
+                {formatCurrency(summary.netCashFlow || 0)}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
 
-        <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-600 opacity-10 rounded-2xl"></div>
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-green-200 hover:shadow-2xl transition-all duration-300">
-            <div className="p-6 border-b border-green-100">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
-                  <Target className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900">
-                    Financial Ratios
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    Key performance indicators
-                  </p>
-                </div>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center space-x-2">
+              <Target className="h-5 w-5 text-slate-600" />
+              <div>
+                <CardTitle className="text-lg">Financial Ratios</CardTitle>
+                <CardDescription>
+                  Key performance indicators
+                </CardDescription>
               </div>
             </div>
-            <div className="p-6 space-y-4">
-              <div className="flex justify-between items-center p-3 bg-green-50 rounded-xl">
-                <span className="text-sm font-medium text-gray-700">
-                  Current Ratio:
-                </span>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="font-semibold text-green-600">
-                    {extendedSummary.currentRatio?.toFixed(2) || "N/A"}
-                  </span>
-                </div>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-emerald-50 rounded-xl">
-                <span className="text-sm font-medium text-gray-700">
-                  Debt/Equity:
-                </span>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                  <span className="font-semibold text-emerald-600">
-                    {extendedSummary.debtToEquityRatio?.toFixed(2) || "N/A"}
-                  </span>
-                </div>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-green-100 rounded-xl border border-green-200">
-                <span className="text-sm font-bold text-gray-800">
-                  Quick Ratio:
-                </span>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-green-600 rounded-full animate-pulse"></div>
-                  <span className="font-bold text-lg text-green-600">
-                    {extendedSummary.quickRatio?.toFixed(2) || "N/A"}
-                  </span>
-                </div>
-              </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <span className="text-sm font-medium text-gray-700">
+                Current Ratio:
+              </span>
+              <span className="font-semibold text-emerald-600">
+                {extendedSummary.currentRatio?.toFixed(2) || "N/A"}
+              </span>
             </div>
-          </div>
-        </div>
+            <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <span className="text-sm font-medium text-gray-700">
+                Debt/Equity:
+              </span>
+              <span className="font-semibold text-red-600">
+                {extendedSummary.debtToEquityRatio?.toFixed(2) || "N/A"}
+              </span>
+            </div>
+            <div className="flex justify-between items-center p-3 bg-slate-100 rounded-lg border border-slate-300">
+              <span className="text-sm font-bold text-gray-800">
+                Quick Ratio:
+              </span>
+              <span className="font-bold text-lg text-blue-600">
+                {extendedSummary.quickRatio?.toFixed(2) || "N/A"}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
 
-        <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-600 opacity-10 rounded-2xl"></div>
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-purple-200 hover:shadow-2xl transition-all duration-300">
-            <div className="p-6 border-b border-purple-100">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
-                  <Activity className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900">
-                    Key Performance Indicators
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    Business health metrics
-                  </p>
-                </div>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center space-x-2">
+              <Activity className="h-5 w-5 text-slate-600" />
+              <div>
+                <CardTitle className="text-lg">Key Performance Indicators</CardTitle>
+                <CardDescription>
+                  Business health metrics
+                </CardDescription>
               </div>
             </div>
-            <div className="p-6 space-y-4">
-              <div className="flex justify-between items-center p-3 bg-purple-50 rounded-xl">
-                <span className="text-sm font-medium text-gray-700">
-                  EBITDA:
-                </span>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                  <span className="font-semibold text-purple-600">
-                    {formatCurrency(extendedSummary.ebitda || 0)}
-                  </span>
-                </div>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-pink-50 rounded-xl">
-                <span className="text-sm font-medium text-gray-700">
-                  AR Days:
-                </span>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-pink-500 rounded-full"></div>
-                  <span className="font-semibold text-pink-600">
-                    {extendedSummary.arDays || "N/A"}
-                  </span>
-                </div>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-purple-100 rounded-xl border border-purple-200">
-                <span className="text-sm font-bold text-gray-800">
-                  AP Days:
-                </span>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-purple-600 rounded-full animate-pulse"></div>
-                  <span className="font-bold text-lg text-purple-600">
-                    {extendedSummary.apDays || "N/A"}
-                  </span>
-                </div>
-              </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <span className="text-sm font-medium text-gray-700">
+                EBITDA:
+              </span>
+              <span className="font-semibold text-slate-700">
+                {formatCurrency(extendedSummary.ebitda || 0)}
+              </span>
             </div>
-          </div>
-        </div>
-      </div>
+            <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <span className="text-sm font-medium text-gray-700">
+                AR Days:
+              </span>
+              <span className="font-semibold text-slate-700">
+                {extendedSummary.arDays || "N/A"}
+              </span>
+            </div>
+            <div className="flex justify-between items-center p-3 bg-slate-100 rounded-lg border border-slate-300">
+              <span className="text-sm font-bold text-gray-800">
+                AP Days:
+              </span>
+              <span className="font-bold text-lg text-slate-700">
+                {extendedSummary.apDays || "N/A"}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      </div >
     </div>
   );
 }

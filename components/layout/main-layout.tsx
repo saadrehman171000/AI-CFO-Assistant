@@ -7,33 +7,27 @@ import { TopNavigation } from "./top-navigation";
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const { user, isLoaded } = useUser();
 
-  // If still loading, show enhanced loading state
+  // If still loading, show clean loading state
   if (!isLoaded) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-        <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full blur-xl opacity-20 animate-pulse"></div>
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-full p-8 shadow-2xl border border-white/30">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-          </div>
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Loading AI CFO Assistant...</p>
         </div>
       </div>
     );
   }
 
-  // Show main layout with enhanced 3D sidebar and navigation
+  // Show clean, professional main layout
   return (
-    <div className="flex h-screen bg-gradient-to-br from-blue-50/30 via-white to-purple-50/30">
+    <div className="flex h-screen bg-gray-50">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden lg:ml-64">
         <TopNavigation user={user} />
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-transparent p-2 sm:p-3 md:p-4">
-          <div className="relative">
-            {/* Subtle background pattern */}
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/20 via-transparent to-purple-50/20 rounded-xl md:rounded-2xl lg:rounded-3xl opacity-30"></div>
-            <div className="relative bg-white/60 backdrop-blur-sm rounded-xl md:rounded-2xl lg:rounded-3xl shadow-xl border border-white/30 min-h-full">
-              <div className="p-3 sm:p-4 md:p-5 lg:p-6">{children}</div>
-            </div>
+        <main className="flex-1 overflow-x-hidden overflow-y-auto p-4">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 min-h-full">
+            <div className="p-6">{children}</div>
           </div>
         </main>
       </div>

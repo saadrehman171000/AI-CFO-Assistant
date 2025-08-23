@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useUser } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -68,6 +69,7 @@ export default function FinancialDocumentUpload({
     useState<FinancialAnalysisResponse | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const { user } = useUser();
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -100,11 +102,22 @@ export default function FinancialDocumentUpload({
     const formData = new FormData();
     formData.append("file", selectedFile);
 
-    try {
-      console.log("Uploading to:", `${BASE_URL}/upload-financial-document`);
-      console.log("File:", selectedFile.name, selectedFile.size, "bytes");
+    // Get the user ID from Clerk
+    const userId = user?.id;
 
-      const response = await fetch(`${BASE_URL}/upload-financial-document`, {
+    // Build URL with user_id parameter
+    const uploadUrl = new URL(`${BASE_URL}/upload-financial-document`);
+    if (userId) {
+      uploadUrl.searchParams.append("user_id", userId);
+    }
+    uploadUrl.searchParams.append("store_in_vector_db", "true");
+
+    try {
+      console.log("Uploading to:", uploadUrl.toString());
+      console.log("File:", selectedFile.name, selectedFile.size, "bytes");
+      console.log("User ID:", userId);
+
+      const response = await fetch(uploadUrl.toString(), {
         method: "POST",
         body: formData,
       });

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useActiveFile } from "@/components/contexts/active-file-context";
 import {
   Card,
   CardContent,
@@ -135,6 +136,7 @@ interface AnalyticsData {
 }
 
 export default function AnalyticsContent() {
+  const { activeFileData, activeFile } = useActiveFile();
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(
     null
   );
@@ -149,13 +151,17 @@ export default function AnalyticsContent() {
       setLoading(true);
       setError(null);
 
-      // Use the new unified API endpoint with latest=true parameter
-      const response = await fetch("/api/financial-analysis?latest=true");
-      if (!response.ok) {
-        throw new Error("Failed to fetch analytics data");
+      // Use active file data if available, otherwise fetch latest
+      let analysisResult;
+      if (activeFileData) {
+        analysisResult = activeFileData;
+      } else {
+        const response = await fetch("/api/financial-analysis?latest=true");
+        if (!response.ok) {
+          throw new Error("Failed to fetch analytics data");
+        }
+        analysisResult = await response.json();
       }
-
-      const analysisResult = await response.json();
 
       // Check if we have the Flask backend format (file_info and analysis structure)
       if (
@@ -295,7 +301,7 @@ export default function AnalyticsContent() {
 
   useEffect(() => {
     fetchAnalyticsData();
-  }, []);
+  }, [activeFileData]); // Re-fetch when active file changes
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -340,36 +346,36 @@ export default function AnalyticsContent() {
 
   if (loading) {
     return (
-      <div className="space-y-4 sm:space-y-6 p-3 sm:p-6 lg:p-10">
+      <div className="space-y-6 p-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-3 sm:space-y-0">
-          <Skeleton className="h-6 sm:h-8 w-48 sm:w-64" />
-          <Skeleton className="h-8 sm:h-10 w-full sm:w-32" />
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-10 w-32" />
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => (
-            <Card key={i} className="shadow-md sm:shadow-lg">
-              <CardHeader className="p-3 sm:p-4 pb-2">
-                <Skeleton className="h-3 sm:h-4 w-16 sm:w-24" />
-                <Skeleton className="h-6 sm:h-8 w-24 sm:w-32 mt-2" />
+            <Card key={i}>
+              <CardHeader className="p-4 pb-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-8 w-32 mt-2" />
               </CardHeader>
             </Card>
           ))}
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
-          <Card className="shadow-md sm:shadow-lg">
-            <CardHeader className="p-3 sm:p-4">
-              <Skeleton className="h-5 sm:h-6 w-32 sm:w-48" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader className="p-4">
+              <Skeleton className="h-6 w-48" />
             </CardHeader>
-            <CardContent className="p-3 sm:p-4">
-              <Skeleton className="h-48 sm:h-56 lg:h-64 w-full" />
+            <CardContent className="p-4">
+              <Skeleton className="h-64 w-full" />
             </CardContent>
           </Card>
-          <Card className="shadow-md sm:shadow-lg">
-            <CardHeader className="p-3 sm:p-4">
-              <Skeleton className="h-5 sm:h-6 w-32 sm:w-48" />
+          <Card>
+            <CardHeader className="p-4">
+              <Skeleton className="h-6 w-48" />
             </CardHeader>
-            <CardContent className="p-3 sm:p-4">
-              <Skeleton className="h-48 sm:h-56 lg:h-64 w-full" />
+            <CardContent className="p-4">
+              <Skeleton className="h-64 w-full" />
             </CardContent>
           </Card>
         </div>
@@ -379,51 +385,35 @@ export default function AnalyticsContent() {
 
   if (error) {
     return (
-      <div className="p-3 sm:p-6 lg:p-10">
-        <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-pink-600 opacity-10 rounded-lg sm:rounded-xl lg:rounded-2xl"></div>
-          <div className="relative bg-red-50/90 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-md sm:shadow-xl border border-red-200">
-            <Alert
-              variant="destructive"
-              className="bg-transparent border-0 p-0"
-            >
-              <AlertTriangle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              <AlertDescription className="text-xs sm:text-sm lg:text-base">
-                {error}. Please try refreshing the page.
-              </AlertDescription>
-            </Alert>
-          </div>
-        </div>
+      <div className="p-6">
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            {error}. Please try refreshing the page.
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }
 
   if (!analyticsData) {
     return (
-      <div className="p-3 sm:p-6 lg:p-10 text-center">
-        <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-10 rounded-lg sm:rounded-xl lg:rounded-2xl"></div>
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-5 sm:p-8 lg:p-12 shadow-md sm:shadow-xl border border-blue-200">
-            <div className="relative z-10">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg sm:shadow-2xl animate-pulse">
-                <FileText className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-white" />
-              </div>
-              <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-2 sm:mb-3 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                No Analytics Data Available
-              </h3>
-              <p className="text-xs sm:text-sm lg:text-base text-gray-600 mb-4 sm:mb-6 max-w-xs sm:max-w-sm lg:max-w-md mx-auto">
-                Upload your first financial report to see detailed analytics and
-                insights.
-              </p>
-              <Button
-                size="sm"
-                className="text-xs sm:text-sm bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-md sm:shadow-lg lg:shadow-xl hover:shadow-lg sm:hover:shadow-xl lg:hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300"
-              >
-                <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
-                Upload Report
-              </Button>
-            </div>
+      <div className="p-6 text-center">
+        <div className="bg-white rounded-lg border border-gray-200 p-12">
+          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <FileText className="h-8 w-8 text-slate-600" />
           </div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-3">
+            No Analytics Data Available
+          </h3>
+          <p className="text-gray-600 mb-6 max-w-md mx-auto">
+            Upload your first financial report to see detailed analytics and
+            insights.
+          </p>
+          <Button>
+            <FileText className="h-4 w-4 mr-2" />
+            Upload Report
+          </Button>
         </div>
       </div>
     );
@@ -451,506 +441,425 @@ export default function AnalyticsContent() {
   ].filter((item) => item.value > 0);
 
   return (
-    <div className="space-y-4 sm:space-y-6 p-3 sm:p-6 lg:p-10">
-      {/* Enhanced Header */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-10 rounded-lg sm:rounded-xl lg:rounded-2xl"></div>
-        <div className="relative bg-white/90 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-md sm:shadow-xl border border-blue-200">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-3 sm:space-y-0">
-            <div className="flex items-center space-x-3 sm:space-x-4">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md sm:shadow-lg">
-                <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-              </div>
-              <div className="relative">
-                <div className="absolute -top-1 sm:-top-2 -right-1 sm:-right-2 w-4 h-4 sm:w-6 sm:h-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg animate-pulse">
-                  <Sparkles className="h-2 w-2 sm:h-3 sm:w-3 text-white" />
-                </div>
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  Financial Analytics
-                </h1>
-                <p className="text-xs sm:text-sm lg:text-base text-gray-600">
-                  Deep dive into your financial performance with AI-powered
-                  insights
-                </p>
-              </div>
+    <div className="space-y-6 p-6">
+      {/* Header */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
+          <div className="flex items-center space-x-4">
+            <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center">
+              <BarChart3 className="h-5 w-5 text-slate-600" />
             </div>
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <Button
-                onClick={refreshAnalytics}
-                disabled={refreshing}
-                className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-md sm:shadow-lg hover:shadow-lg sm:hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 text-xs sm:text-sm"
-              >
-                <RefreshCw
-                  className={`h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2 ${
-                    refreshing ? "animate-spin" : ""
-                  }`}
-                />
-                Refresh
-              </Button>
+            <div>
+              <h1 className="text-2xl font-semibold text-gray-900">
+                Financial Analytics
+              </h1>
+              <p className="text-sm text-gray-600 mt-1">
+                Deep dive into your financial performance with AI-powered insights
+              </p>
             </div>
+          </div>
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <Button
+              onClick={refreshAnalytics}
+              disabled={refreshing}
+              variant="outline"
+              size="sm"
+              className="w-full sm:w-auto"
+            >
+              <RefreshCw
+                className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
+              />
+              Refresh
+            </Button>
           </div>
         </div>
       </div>
 
-      {/* Enhanced Key Performance Indicators */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-        <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-600 opacity-10 rounded-lg sm:rounded-xl lg:rounded-2xl"></div>
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-md sm:shadow-xl border border-green-200 hover:shadow-lg sm:hover:shadow-2xl transition-all duration-300">
-            <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-4">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md sm:shadow-lg">
-                <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-white" />
+      {/* Key Performance Indicators */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                <TrendingUp className="h-4 w-4 text-emerald-600" />
               </div>
-              <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 lg:w-3 lg:h-3 bg-green-500 rounded-full animate-pulse"></div>
             </div>
-            <div className="text-base sm:text-xl lg:text-2xl font-bold text-green-600 mb-1 sm:mb-2 truncate">
+            <div className="text-2xl font-bold text-emerald-600 mb-2">
               {formatCurrency(metrics.totalRevenue || 0)}
             </div>
-            <p className="text-xs sm:text-sm text-gray-600 mb-0.5 sm:mb-1">
+            <p className="text-sm text-gray-600 mb-1">
               Revenue Growth
             </p>
-            <p className="text-xs text-green-600 font-medium">
+            <p className="text-xs text-emerald-600 font-medium">
               Gross Margin: {formatPercentage(metrics.grossMargin || 0)}
             </p>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-pink-600 opacity-10 rounded-lg sm:rounded-xl lg:rounded-2xl"></div>
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-md sm:shadow-xl border border-red-200 hover:shadow-lg sm:hover:shadow-2xl transition-all duration-300">
-            <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-4">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-red-500 to-pink-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md sm:shadow-lg">
-                <TrendingDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-white" />
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                <TrendingDown className="h-4 w-4 text-red-600" />
               </div>
-              <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 lg:w-3 lg:h-3 bg-red-500 rounded-full animate-pulse"></div>
             </div>
-            <div className="text-base sm:text-xl lg:text-2xl font-bold text-red-600 mb-1 sm:mb-2 truncate">
+            <div className="text-2xl font-bold text-red-600 mb-2">
               {formatCurrency(metrics.totalExpenses || 0)}
             </div>
-            <p className="text-xs sm:text-sm text-gray-600 mb-0.5 sm:mb-1">
+            <p className="text-sm text-gray-600 mb-1">
               Expense Ratio
             </p>
             <p className="text-xs text-red-600 font-medium">
               Net Margin: {formatPercentage(metrics.netMargin || 0)}
             </p>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-600 opacity-10 rounded-lg sm:rounded-xl lg:rounded-2xl"></div>
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-md sm:shadow-xl border border-blue-200 hover:shadow-lg sm:hover:shadow-2xl transition-all duration-300">
-            <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-4">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md sm:shadow-lg">
-                <Activity className="h-3.5 w-3.5 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-white" />
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Activity className="h-4 w-4 text-blue-600" />
               </div>
-              <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 lg:w-3 lg:h-3 bg-blue-500 rounded-full animate-pulse"></div>
             </div>
             <div
-              className={`text-base sm:text-xl lg:text-2xl font-bold mb-1 sm:mb-2 truncate ${
+              className={`text-2xl font-bold mb-2 ${
                 (metrics.netProfit || 0) >= 0
-                  ? "text-green-600"
+                ? "text-emerald-600"
                   : "text-red-600"
               }`}
             >
               {formatCurrency(metrics.netProfit || 0)}
             </div>
-            <p className="text-xs sm:text-sm text-gray-600 mb-0.5 sm:mb-1">
+            <p className="text-sm text-gray-600 mb-1">
               Profitability
             </p>
             <p className="text-xs text-blue-600 font-medium">
-              {(metrics.netProfit || 0) >= 0 ? "Positive" : "Negative"} Net
-              Income
+              {(metrics.netProfit || 0) >= 0 ? "Positive" : "Negative"} Net Income
             </p>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-violet-600 opacity-10 rounded-lg sm:rounded-xl lg:rounded-2xl"></div>
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-md sm:shadow-xl border border-purple-200 hover:shadow-lg sm:hover:shadow-2xl transition-all duration-300">
-            <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-4">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-purple-500 to-violet-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md sm:shadow-lg">
-                <BarChart3 className="h-3.5 w-3.5 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-white" />
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                <BarChart3 className="h-4 w-4 text-purple-600" />
               </div>
-              <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 lg:w-3 lg:h-3 bg-purple-500 rounded-full animate-pulse"></div>
             </div>
-            <div className="text-base sm:text-xl lg:text-2xl font-bold text-purple-600 mb-1 sm:mb-2">
+            <div className="text-2xl font-bold text-purple-600 mb-2">
               {metrics.currentRatio?.toFixed(2) || "N/A"}
             </div>
-            <p className="text-xs sm:text-sm text-gray-600 mb-0.5 sm:mb-1">
+            <p className="text-sm text-gray-600 mb-1">
               Financial Health
             </p>
             <p className="text-xs text-purple-600 font-medium">Current Ratio</p>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Enhanced Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
-        {/* Enhanced Trend Analysis */}
-        <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-blue-600 opacity-10 rounded-lg sm:rounded-xl lg:rounded-2xl"></div>
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl shadow-md sm:shadow-xl border border-green-200 hover:shadow-lg sm:hover:shadow-2xl transition-all duration-300">
-            <div className="p-3 sm:p-4 lg:p-6 border-b border-green-100">
-              <div className="flex items-center space-x-2 sm:space-x-3">
-                <div className="w-7 h-7 sm:w-8 sm:h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-green-500 to-blue-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md sm:shadow-lg">
-                  <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-base sm:text-lg font-bold text-gray-900">
-                    Financial Trends Analysis
-                  </h3>
-                  <p className="text-xs sm:text-sm text-gray-600">
-                    Revenue, expenses, and profit trends over time
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="p-3 sm:p-4 lg:p-6">
-              <div className="h-[200px] sm:h-[250px] lg:h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={trendData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" tick={{ fontSize: 10 }} />
-                    <YAxis tick={{ fontSize: 10 }} width={40} />
-                    <Tooltip
-                      formatter={(value) => formatCurrency(Number(value))}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="revenue"
-                      stackId="1"
-                      stroke="#10b981"
-                      fill="#10b981"
-                      fillOpacity={0.3}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="expenses"
-                      stackId="1"
-                      stroke="#ef4444"
-                      fill="#ef4444"
-                      fillOpacity={0.3}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="profit"
-                      stackId="1"
-                      stroke="#3b82f6"
-                      fill="#3b82f6"
-                      fillOpacity={0.3}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Enhanced Composition Analysis */}
-        <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-600 opacity-10 rounded-lg sm:rounded-xl lg:rounded-2xl"></div>
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl shadow-md sm:shadow-xl border border-purple-200 hover:shadow-lg sm:hover:shadow-2xl transition-all duration-300">
-            <div className="p-3 sm:p-4 lg:p-6 border-b border-purple-100">
-              <div className="flex items-center space-x-2 sm:space-x-3">
-                <div className="w-7 h-7 sm:w-8 sm:h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md sm:shadow-lg">
-                  <PieChart className="h-3.5 w-3.5 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-base sm:text-lg font-bold text-gray-900">
-                    Financial Composition
-                  </h3>
-                  <p className="text-xs sm:text-sm text-gray-600">
-                    Breakdown of key financial components
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="p-3 sm:p-4 lg:p-6">
-              <div className="h-[200px] sm:h-[250px] lg:h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RechartsPieChart>
-                    <Pie
-                      data={pieChartData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => {
-                        // Only show name on larger screens
-                        const nameText =
-                          window.innerWidth < 640 ? "" : `${name} `;
-                        return `${nameText}${((percent || 0) * 100).toFixed(
-                          0
-                        )}%`;
-                      }}
-                      outerRadius={
-                        window.innerWidth < 640
-                          ? 60
-                          : window.innerWidth < 1024
-                          ? 70
-                          : 80
-                      }
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {pieChartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(value) => formatCurrency(Number(value))}
-                    />
-                  </RechartsPieChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Enhanced Detailed Analysis */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
-        {/* Enhanced Cash Flow Analysis */}
-        <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-600 opacity-10 rounded-lg sm:rounded-xl lg:rounded-2xl"></div>
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl shadow-md sm:shadow-xl border border-blue-200 hover:shadow-lg sm:hover:shadow-2xl transition-all duration-300">
-            <div className="p-3 sm:p-4 lg:p-6 border-b border-blue-100">
-              <div className="flex items-center space-x-2 sm:space-x-3">
-                <div className="w-7 h-7 sm:w-8 sm:h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md sm:shadow-lg">
-                  <Activity className="h-3.5 w-3.5 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-base sm:text-lg font-bold text-gray-900">
-                    Cash Flow Analysis
-                  </h3>
-                </div>
-              </div>
-            </div>
-            <div className="p-3 sm:p-4 lg:p-6 space-y-2 sm:space-y-3 lg:space-y-4">
-              <div className="flex justify-between items-center p-2 sm:p-3 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg">
-                <span className="text-xs sm:text-sm font-medium text-gray-700">
-                  Operating Cash Flow
-                </span>
-                <Badge
-                  variant={
-                    metrics.cashFlowFromOperations >= 0
-                      ? "default"
-                      : "destructive"
-                  }
-                  className="bg-white border border-blue-200 text-blue-700 text-xs"
-                >
-                  {formatCurrency(metrics.cashFlowFromOperations || 0)}
-                </Badge>
-              </div>
-              <div className="flex justify-between items-center p-2 sm:p-3 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg">
-                <span className="text-xs sm:text-sm font-medium text-gray-700">
-                  Investing Cash Flow
-                </span>
-                <Badge
-                  variant={
-                    metrics.cashFlowFromInvesting >= 0
-                      ? "default"
-                      : "destructive"
-                  }
-                  className="bg-white border border-blue-200 text-blue-700 text-xs"
-                >
-                  {formatCurrency(metrics.cashFlowFromInvesting || 0)}
-                </Badge>
-              </div>
-              <div className="flex justify-between items-center p-2 sm:p-3 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg">
-                <span className="text-xs sm:text-sm font-medium text-gray-700">
-                  Net Cash Flow
-                </span>
-                <Badge
-                  variant={metrics.netCashFlow >= 0 ? "default" : "destructive"}
-                  className="bg-white border border-blue-200 text-blue-700 text-xs"
-                >
-                  {formatCurrency(metrics.netCashFlow || 0)}
-                </Badge>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Enhanced Financial Ratios */}
-        <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-600 opacity-10 rounded-lg sm:rounded-xl lg:rounded-2xl"></div>
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl shadow-md sm:shadow-xl border border-green-200 hover:shadow-lg sm:hover:shadow-2xl transition-all duration-300">
-            <div className="p-3 sm:p-4 lg:p-6 border-b border-green-100">
-              <div className="flex items-center space-x-2 sm:space-x-3">
-                <div className="w-7 h-7 sm:w-8 sm:h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md sm:shadow-lg">
-                  <BarChart3 className="h-3.5 w-3.5 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-base sm:text-lg font-bold text-gray-900">
-                    Financial Ratios
-                  </h3>
-                </div>
-              </div>
-            </div>
-            <div className="p-3 sm:p-4 lg:p-6 space-y-2 sm:space-y-3 lg:space-y-4">
-              <div className="flex justify-between items-center p-2 sm:p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg">
-                <span className="text-xs sm:text-sm font-medium text-gray-700">
-                  Current Ratio
-                </span>
-                <Badge
-                  variant={metrics.currentRatio > 1 ? "default" : "destructive"}
-                  className="bg-white border border-green-200 text-green-700 text-xs"
-                >
-                  {metrics.currentRatio?.toFixed(2) || "N/A"}
-                </Badge>
-              </div>
-              <div className="flex justify-between items-center p-2 sm:p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg">
-                <span className="text-xs sm:text-sm font-medium text-gray-700">
-                  Debt/Equity
-                </span>
-                <Badge
-                  variant={
-                    metrics.debtToEquityRatio < 1 ? "default" : "destructive"
-                  }
-                  className="bg-white border border-green-200 text-green-700 text-xs"
-                >
-                  {metrics.debtToEquityRatio?.toFixed(2) || "N/A"}
-                </Badge>
-              </div>
-              <div className="flex justify-between items-center p-2 sm:p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg">
-                <span className="text-xs sm:text-sm font-medium text-gray-700">
-                  Quick Ratio
-                </span>
-                <Badge
-                  variant={metrics.quickRatio > 1 ? "default" : "destructive"}
-                  className="bg-white border border-green-200 text-green-700 text-xs"
-                >
-                  {metrics.quickRatio?.toFixed(2) || "N/A"}
-                </Badge>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Enhanced Performance Metrics */}
-        <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-yellow-600 opacity-10 rounded-lg sm:rounded-xl lg:rounded-2xl"></div>
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl shadow-md sm:shadow-xl border border-orange-200 hover:shadow-lg sm:hover:shadow-2xl transition-all duration-300">
-            <div className="p-3 sm:p-4 lg:p-6 border-b border-orange-100">
-              <div className="flex items-center space-x-2 sm:space-x-3">
-                <div className="w-7 h-7 sm:w-8 sm:h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-orange-500 to-yellow-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md sm:shadow-lg">
-                  <Target className="h-3.5 w-3.5 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-base sm:text-lg font-bold text-gray-900">
-                    Performance Metrics
-                  </h3>
-                </div>
-              </div>
-            </div>
-            <div className="p-3 sm:p-4 lg:p-6 space-y-2 sm:space-y-3 lg:space-y-4">
-              <div className="flex justify-between items-center p-2 sm:p-3 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg">
-                <span className="text-xs sm:text-sm font-medium text-gray-700">
-                  EBITDA
-                </span>
-                <Badge
-                  variant="default"
-                  className="bg-white border border-orange-200 text-orange-700 text-xs"
-                >
-                  {formatCurrency(metrics.ebitda || 0)}
-                </Badge>
-              </div>
-              <div className="flex justify-between items-center p-2 sm:p-3 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg">
-                <span className="text-xs sm:text-sm font-medium text-gray-700">
-                  AR Days
-                </span>
-                <Badge
-                  variant={metrics.arDays < 30 ? "default" : "destructive"}
-                  className="bg-white border border-orange-200 text-orange-700 text-xs"
-                >
-                  {metrics.arDays || "N/A"}
-                </Badge>
-              </div>
-              <div className="flex justify-between items-center p-2 sm:p-3 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg">
-                <span className="text-xs sm:text-sm font-medium text-gray-700">
-                  AP Days
-                </span>
-                <Badge
-                  variant={metrics.apDays < 45 ? "default" : "destructive"}
-                  className="bg-white border border-orange-200 text-orange-700 text-xs"
-                >
-                  {metrics.apDays || "N/A"}
-                </Badge>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Enhanced AI Insights */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-yellow-500 to-orange-600 opacity-10 rounded-lg sm:rounded-xl lg:rounded-2xl"></div>
-        <div className="relative bg-white/90 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl shadow-md sm:shadow-xl border border-yellow-200 hover:shadow-lg sm:hover:shadow-2xl transition-all duration-300">
-          <div className="p-3 sm:p-4 lg:p-6 border-b border-yellow-100">
-            <div className="flex items-center space-x-2 sm:space-x-3">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md sm:shadow-lg">
-                <Zap className="h-3.5 w-3.5 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-white" />
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Trend Analysis */}
+        <Card>
+          <CardHeader className="border-b border-gray-200">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                <TrendingUp className="h-4 w-4 text-emerald-600" />
               </div>
               <div>
-                <h3 className="text-base sm:text-lg font-bold text-gray-900">
-                  AI-Powered Financial Insights
-                </h3>
-                <p className="text-xs sm:text-sm text-gray-600">
-                  Intelligent analysis and recommendations based on your
-                  financial data
-                </p>
+                <CardTitle className="text-lg">Financial Trends Analysis</CardTitle>
+                <CardDescription>
+                  Revenue, expenses, and profit trends over time
+                </CardDescription>
               </div>
             </div>
-          </div>
-          <div className="p-3 sm:p-4 lg:p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 lg:gap-4">
-              {insights.map((insight, index) => (
-                <div
-                  key={index}
-                  className="relative overflow-hidden rounded-lg sm:rounded-xl border border-yellow-100 hover:shadow-md sm:hover:shadow-lg transition-all duration-300 hover:scale-[1.02] sm:hover:scale-105"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-yellow-50 to-orange-50 opacity-50"></div>
-                  <div className="relative p-2 sm:p-3 lg:p-4">
-                    <div className="flex items-start gap-2 sm:gap-3">
-                      <div className="mt-0.5 sm:mt-1 w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-lg flex items-center justify-center shadow-md">
-                        {getInsightIcon(insight.type)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1 sm:mb-2">
-                          <h4 className="font-medium sm:font-semibold text-xs sm:text-sm text-gray-900">
-                            {insight.title}
-                          </h4>
-                          <Badge
-                            variant={getSeverityColor(insight.severity)}
-                            className="bg-white border border-yellow-200 text-yellow-700 text-xs h-5"
-                          >
-                            {insight.severity}
-                          </Badge>
-                        </div>
-                        <p className="text-xs sm:text-sm text-gray-700 mb-1 sm:mb-2 line-clamp-3">
-                          {insight.description}
-                        </p>
-                        <p className="text-xs sm:text-sm font-medium mb-1 sm:mb-2 line-clamp-2">
-                          <span className="text-blue-600">Impact:</span>{" "}
-                          {insight.impact}
-                        </p>
-                        {insight.suggestion && (
-                          <p className="text-xs sm:text-sm line-clamp-2">
-                            <span className="text-green-600 font-medium">
-                              Suggestion:
-                            </span>{" "}
-                            {insight.suggestion}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={trendData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} width={60} />
+                  <Tooltip
+                    formatter={(value) => formatCurrency(Number(value))}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="revenue"
+                    stackId="1"
+                    stroke="#10b981"
+                    fill="#10b981"
+                    fillOpacity={0.2}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="expenses"
+                    stackId="1"
+                    stroke="#ef4444"
+                    fill="#ef4444"
+                    fillOpacity={0.2}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="profit"
+                    stackId="1"
+                    stroke="#3b82f6"
+                    fill="#3b82f6"
+                    fillOpacity={0.2}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Composition Analysis */}
+        <Card>
+          <CardHeader className="border-b border-gray-200">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                <PieChart className="h-4 w-4 text-purple-600" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Financial Composition</CardTitle>
+                <CardDescription>
+                  Breakdown of key financial components
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <RechartsPieChart>
+                  <Pie
+                    data={pieChartData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) =>
+                      `${name} ${((percent || 0) * 100).toFixed(0)}%`
+                    }
+                    outerRadius={100}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {pieChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value) => formatCurrency(Number(value))}
+                  />
+                </RechartsPieChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Detailed Analysis */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Cash Flow Analysis */}
+        <Card>
+          <CardHeader className="border-b border-gray-200">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Activity className="h-4 w-4 text-blue-600" />
+              </div>
+              <CardTitle className="text-lg">Cash Flow Analysis</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="p-6 space-y-4">
+            <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+              <span className="text-sm font-medium text-gray-700">
+                Operating Cash Flow
+              </span>
+              <Badge
+                variant={
+                  metrics.cashFlowFromOperations >= 0
+                    ? "default"
+                    : "destructive"
+                }
+              >
+                {formatCurrency(metrics.cashFlowFromOperations || 0)}
+              </Badge>
+            </div>
+            <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+              <span className="text-sm font-medium text-gray-700">
+                Investing Cash Flow
+              </span>
+              <Badge
+                variant={
+                  metrics.cashFlowFromInvesting >= 0
+                    ? "default"
+                    : "destructive"
+                }
+              >
+                {formatCurrency(metrics.cashFlowFromInvesting || 0)}
+              </Badge>
+            </div>
+            <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+              <span className="text-sm font-medium text-gray-700">
+                Net Cash Flow
+              </span>
+              <Badge
+                variant={metrics.netCashFlow >= 0 ? "default" : "destructive"}
+              >
+                {formatCurrency(metrics.netCashFlow || 0)}
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Financial Ratios */}
+        <Card>
+          <CardHeader className="border-b border-gray-200">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                <BarChart3 className="h-4 w-4 text-emerald-600" />
+              </div>
+              <CardTitle className="text-lg">Financial Ratios</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="p-6 space-y-4">
+            <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+              <span className="text-sm font-medium text-gray-700">
+                Current Ratio
+              </span>
+              <Badge
+                variant={metrics.currentRatio > 1 ? "default" : "destructive"}
+              >
+                {metrics.currentRatio?.toFixed(2) || "N/A"}
+              </Badge>
+            </div>
+            <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+              <span className="text-sm font-medium text-gray-700">
+                Debt/Equity
+              </span>
+              <Badge
+                variant={
+                  metrics.debtToEquityRatio < 1 ? "default" : "destructive"
+                }
+              >
+                {metrics.debtToEquityRatio?.toFixed(2) || "N/A"}
+              </Badge>
+            </div>
+            <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+              <span className="text-sm font-medium text-gray-700">
+                Quick Ratio
+              </span>
+              <Badge
+                variant={metrics.quickRatio > 1 ? "default" : "destructive"}
+              >
+                {metrics.quickRatio?.toFixed(2) || "N/A"}
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Performance Metrics */}
+        <Card>
+          <CardHeader className="border-b border-gray-200">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                <Target className="h-4 w-4 text-orange-600" />
+              </div>
+              <CardTitle className="text-lg">Performance Metrics</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="p-6 space-y-4">
+            <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+              <span className="text-sm font-medium text-gray-700">
+                EBITDA
+              </span>
+              <Badge variant="default">
+                {formatCurrency(metrics.ebitda || 0)}
+              </Badge>
+            </div>
+            <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+              <span className="text-sm font-medium text-gray-700">
+                AR Days
+              </span>
+              <Badge
+                variant={metrics.arDays < 30 ? "default" : "destructive"}
+              >
+                {metrics.arDays || "N/A"}
+              </Badge>
+            </div>
+            <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+              <span className="text-sm font-medium text-gray-700">
+                AP Days
+              </span>
+              <Badge
+                variant={metrics.apDays < 45 ? "default" : "destructive"}
+              >
+                {metrics.apDays || "N/A"}
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* AI Insights */}
+      <Card>
+        <CardHeader className="border-b border-gray-200">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+              <Zap className="h-4 w-4 text-yellow-600" />
+            </div>
+            <div>
+              <CardTitle className="text-lg">AI-Powered Financial Insights</CardTitle>
+              <CardDescription>
+                Intelligent analysis and recommendations based on your financial data
+              </CardDescription>
             </div>
           </div>
-        </div>
-      </div>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {insights.map((insight, index) => (
+              <div
+                key={index}
+                className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    {getInsightIcon(insight.type)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                      <h4 className="font-semibold text-sm text-gray-900">
+                        {insight.title}
+                      </h4>
+                      <Badge variant={getSeverityColor(insight.severity)}>
+                        {insight.severity}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-gray-700 mb-2 line-clamp-3">
+                      {insight.description}
+                    </p>
+                    <p className="text-sm font-medium mb-2 line-clamp-2">
+                      <span className="text-blue-600">Impact:</span>{" "}
+                      {insight.impact}
+                    </p>
+                    {insight.suggestion && (
+                      <p className="text-sm line-clamp-2">
+                        <span className="text-emerald-600 font-medium">
+                          Suggestion:
+                        </span>{" "}
+                        {insight.suggestion}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Top Accounts Analysis */}
       {/* <Card>
