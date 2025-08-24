@@ -157,7 +157,7 @@ export async function DELETE(request: NextRequest) {
     // Also try to delete from vector database if backend is available
     try {
       const backendResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/document/${encodeURIComponent(documentId)}?user_id=${encodeURIComponent(userId)}`,
+        `${process.env.NEXT_PUBLIC_BASE_URL}/document/${encodeURIComponent(documentId)}?user_id=${encodeURIComponent(userId)}`,
         {
           method: "DELETE",
           headers: {
