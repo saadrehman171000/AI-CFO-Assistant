@@ -346,36 +346,36 @@ export default function AnalyticsContent() {
 
   if (loading) {
     return (
-      <div className="space-y-6 p-6">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-3 sm:space-y-0">
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-10 w-32" />
+          <Skeleton className="h-6 sm:h-8 w-48 sm:w-64" />
+          <Skeleton className="h-8 sm:h-10 w-24 sm:w-32" />
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {[...Array(4)].map((_, i) => (
             <Card key={i}>
-              <CardHeader className="p-4 pb-2">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-8 w-32 mt-2" />
+              <CardHeader className="p-3 sm:p-4 pb-2">
+                <Skeleton className="h-3 sm:h-4 w-20 sm:w-24" />
+                <Skeleton className="h-6 sm:h-8 w-24 sm:w-32 mt-2" />
               </CardHeader>
             </Card>
           ))}
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           <Card>
-            <CardHeader className="p-4">
-              <Skeleton className="h-6 w-48" />
+            <CardHeader className="p-3 sm:p-4">
+              <Skeleton className="h-5 sm:h-6 w-36 sm:w-48" />
             </CardHeader>
-            <CardContent className="p-4">
-              <Skeleton className="h-64 w-full" />
+            <CardContent className="p-3 sm:p-4">
+              <Skeleton className="h-48 sm:h-64 w-full" />
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="p-4">
-              <Skeleton className="h-6 w-48" />
+            <CardHeader className="p-3 sm:p-4">
+              <Skeleton className="h-5 sm:h-6 w-36 sm:w-48" />
             </CardHeader>
-            <CardContent className="p-4">
-              <Skeleton className="h-64 w-full" />
+            <CardContent className="p-3 sm:p-4">
+              <Skeleton className="h-48 sm:h-64 w-full" />
             </CardContent>
           </Card>
         </div>
@@ -385,7 +385,7 @@ export default function AnalyticsContent() {
 
   if (error) {
     return (
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
@@ -398,19 +398,19 @@ export default function AnalyticsContent() {
 
   if (!analyticsData) {
     return (
-      <div className="p-6 text-center">
-        <div className="bg-white rounded-lg border border-gray-200 p-12">
-          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <FileText className="h-8 w-8 text-slate-600" />
+      <div className="p-4 sm:p-6 text-center">
+        <div className="bg-white rounded-lg border border-gray-200 p-8 sm:p-12 max-w-md mx-auto">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+            <FileText className="h-6 w-6 sm:h-8 sm:w-8 text-slate-600" />
           </div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-3">
+          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3">
             No Analytics Data Available
           </h3>
-          <p className="text-gray-600 mb-6 max-w-md mx-auto">
+          <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
             Upload your first financial report to see detailed analytics and
             insights.
           </p>
-          <Button>
+          <Button className="w-full sm:w-auto">
             <FileText className="h-4 w-4 mr-2" />
             Upload Report
           </Button>
@@ -441,19 +441,19 @@ export default function AnalyticsContent() {
   ].filter((item) => item.value > 0);
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
       {/* Header */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
-          <div className="flex items-center space-x-4">
-            <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center">
-              <BarChart3 className="h-5 w-5 text-slate-600" />
+          <div className="flex items-center space-x-3 sm:space-x-4 w-full sm:w-auto">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600" />
             </div>
-            <div>
-              <h1 className="text-2xl font-semibold text-gray-900">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
                 Financial Analytics
               </h1>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-xs sm:text-sm text-gray-600 mt-1">
                 Deep dive into your financial performance with AI-powered insights
               </p>
             </div>
@@ -476,18 +476,18 @@ export default function AnalyticsContent() {
       </div>
 
       {/* Key Performance Indicators */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
-                <TrendingUp className="h-4 w-4 text-emerald-600" />
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-start justify-between mb-3 sm:mb-4">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-emerald-600" />
               </div>
             </div>
-            <div className="text-2xl font-bold text-emerald-600 mb-2">
+            <div className="text-lg sm:text-2xl font-bold text-emerald-600 mb-2 truncate">
               {formatCurrency(metrics.totalRevenue || 0)}
             </div>
-            <p className="text-sm text-gray-600 mb-1">
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">
               Revenue Growth
             </p>
             <p className="text-xs text-emerald-600 font-medium">
@@ -497,16 +497,16 @@ export default function AnalyticsContent() {
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
-                <TrendingDown className="h-4 w-4 text-red-600" />
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-start justify-between mb-3 sm:mb-4">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4 text-red-600" />
               </div>
             </div>
-            <div className="text-2xl font-bold text-red-600 mb-2">
+            <div className="text-lg sm:text-2xl font-bold text-red-600 mb-2 truncate">
               {formatCurrency(metrics.totalExpenses || 0)}
             </div>
-            <p className="text-sm text-gray-600 mb-1">
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">
               Expense Ratio
             </p>
             <p className="text-xs text-red-600 font-medium">
@@ -516,14 +516,14 @@ export default function AnalyticsContent() {
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Activity className="h-4 w-4 text-blue-600" />
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-start justify-between mb-3 sm:mb-4">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Activity className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
               </div>
             </div>
             <div
-              className={`text-2xl font-bold mb-2 ${
+              className={`text-lg sm:text-2xl font-bold mb-2 truncate ${
                 (metrics.netProfit || 0) >= 0
                 ? "text-emerald-600"
                   : "text-red-600"
@@ -531,7 +531,7 @@ export default function AnalyticsContent() {
             >
               {formatCurrency(metrics.netProfit || 0)}
             </div>
-            <p className="text-sm text-gray-600 mb-1">
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">
               Profitability
             </p>
             <p className="text-xs text-blue-600 font-medium">
@@ -541,16 +541,16 @@ export default function AnalyticsContent() {
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                <BarChart3 className="h-4 w-4 text-purple-600" />
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-start justify-between mb-3 sm:mb-4">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 text-purple-600" />
               </div>
             </div>
-            <div className="text-2xl font-bold text-purple-600 mb-2">
+            <div className="text-lg sm:text-2xl font-bold text-purple-600 mb-2 truncate">
               {metrics.currentRatio?.toFixed(2) || "N/A"}
             </div>
-            <p className="text-sm text-gray-600 mb-1">
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">
               Financial Health
             </p>
             <p className="text-xs text-purple-600 font-medium">Current Ratio</p>
@@ -559,29 +559,29 @@ export default function AnalyticsContent() {
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Trend Analysis */}
         <Card>
-          <CardHeader className="border-b border-gray-200">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
-                <TrendingUp className="h-4 w-4 text-emerald-600" />
+          <CardHeader className="border-b border-gray-200 p-4 sm:p-6">
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-emerald-600" />
               </div>
-              <div>
-                <CardTitle className="text-lg">Financial Trends Analysis</CardTitle>
-                <CardDescription>
+              <div className="min-w-0">
+                <CardTitle className="text-base sm:text-lg">Financial Trends Analysis</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">
                   Revenue, expenses, and profit trends over time
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
-          <CardContent className="p-6">
-            <div className="h-[300px]">
+          <CardContent className="p-4 sm:p-6">
+            <div className="h-[250px] sm:h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={trendData}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 12 }} width={60} />
+                  <XAxis dataKey="month" tick={{ fontSize: 10 }} />
+                  <YAxis tick={{ fontSize: 10 }} width={50} />
                   <Tooltip
                     formatter={(value) => formatCurrency(Number(value))}
                   />

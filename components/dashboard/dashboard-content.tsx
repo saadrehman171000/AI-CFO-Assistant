@@ -464,36 +464,36 @@ export default function DashboardContent() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-10 w-32" />
+      <div className="space-y-4 sm:space-y-6 px-4 sm:px-0">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-3 sm:space-y-0">
+          <Skeleton className="h-6 sm:h-8 w-48 sm:w-64" />
+          <Skeleton className="h-8 sm:h-10 w-24 sm:w-32" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {[...Array(4)].map((_, i) => (
             <Card key={i}>
-              <CardHeader className="pb-2">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-8 w-32" />
+              <CardHeader className="p-4 sm:pb-2">
+                <Skeleton className="h-3 sm:h-4 w-20 sm:w-24" />
+                <Skeleton className="h-6 sm:h-8 w-24 sm:w-32" />
               </CardHeader>
             </Card>
           ))}
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           <Card>
-            <CardHeader>
-              <Skeleton className="h-6 w-48" />
+            <CardHeader className="p-4 sm:p-6">
+              <Skeleton className="h-5 sm:h-6 w-32 sm:w-48" />
             </CardHeader>
-            <CardContent>
-              <Skeleton className="h-64 w-full" />
+            <CardContent className="p-4 sm:p-6">
+              <Skeleton className="h-48 sm:h-64 w-full" />
             </CardContent>
           </Card>
           <Card>
-            <CardHeader>
-              <Skeleton className="h-6 w-48" />
+            <CardHeader className="p-4 sm:p-6">
+              <Skeleton className="h-5 sm:h-6 w-32 sm:w-48" />
             </CardHeader>
-            <CardContent>
-              <Skeleton className="h-64 w-full" />
+            <CardContent className="p-4 sm:p-6">
+              <Skeleton className="h-48 sm:h-64 w-full" />
             </CardContent>
           </Card>
         </div>
@@ -639,19 +639,19 @@ export default function DashboardContent() {
     }));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 px-4 sm:px-0">
       {/* Clean Professional Header */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center">
-              <BarChart3 className="h-5 w-5 text-slate-600" />
+      <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
+          <div className="flex items-center space-x-3 sm:space-x-4 w-full sm:w-auto">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600" />
             </div>
-            <div>
-              <h1 className="text-2xl font-semibold text-gray-900">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
                 Financial Dashboard
               </h1>
-              <p className="text-sm text-gray-600">
+              <p className="text-xs sm:text-sm text-gray-600 mt-1">
                 AI-powered insights and analytics for your financial data
               </p>
             </div>
@@ -661,6 +661,7 @@ export default function DashboardContent() {
             disabled={refreshing}
             variant="outline"
             size="sm"
+            className="w-full sm:w-auto"
           >
             <RefreshCw
               className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
@@ -672,21 +673,21 @@ export default function DashboardContent() {
 
       {/* Report Info */}
       {reportInfo && (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
           <div className="flex items-center space-x-3 mb-4">
-            <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center">
-              <FileText className="h-4 w-4 text-slate-600" />
+            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-slate-600" />
             </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">
+            <div className="min-w-0">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900">
                 Latest Report Analysis
               </h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-xs sm:text-sm text-gray-600">
                 Financial document analysis summary
               </p>
             </div>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <div className="text-center p-3 bg-slate-50 rounded-lg border border-slate-200">
               <div
                 className="text-sm font-semibold text-slate-700 truncate"
@@ -719,13 +720,13 @@ export default function DashboardContent() {
       )}
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                <p className="text-2xl font-semibold text-gray-900">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-start justify-between">
+              <div className="min-w-0 flex-1 mr-3">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Total Revenue</p>
+                <p className="text-lg sm:text-2xl font-semibold text-gray-900 truncate">
                   {formatCurrency(summary.totalRevenue || 0)}
                 </p>
                 {summary.grossMargin && (
@@ -734,19 +735,19 @@ export default function DashboardContent() {
                   </p>
                 )}
               </div>
-              <div className="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center">
-                <DollarSign className="h-5 w-5 text-emerald-600" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Expenses</p>
-                <p className="text-2xl font-semibold text-gray-900">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-start justify-between">
+              <div className="min-w-0 flex-1 mr-3">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Total Expenses</p>
+                <p className="text-lg sm:text-2xl font-semibold text-gray-900 truncate">
                   {formatCurrency(Math.abs(summary.totalExpenses || 0))}
                 </p>
                 {summary.netMargin && (
@@ -755,20 +756,20 @@ export default function DashboardContent() {
                   </p>
                 )}
               </div>
-              <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center">
-                <TrendingDown className="h-5 w-5 text-red-600" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-red-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Net Profit</p>
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-start justify-between">
+              <div className="min-w-0 flex-1 mr-3">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Net Profit</p>
                 <p
-                  className={`text-2xl font-semibold ${(summary.netProfit || 0) >= 0
+                  className={`text-lg sm:text-2xl font-semibold truncate ${(summary.netProfit || 0) >= 0
                     ? "text-emerald-600"
                     : "text-red-600"
                     }`}
@@ -779,19 +780,19 @@ export default function DashboardContent() {
                   {(summary.netProfit || 0) >= 0 ? "Profit" : "Loss"}
                 </p>
               </div>
-              <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
-                <Activity className="h-5 w-5 text-blue-600" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Assets</p>
-                <p className="text-2xl font-semibold text-gray-900">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-start justify-between">
+              <div className="min-w-0 flex-1 mr-3">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Total Assets</p>
+                <p className="text-lg sm:text-2xl font-semibold text-gray-900 truncate">
                   {formatCurrency(summary.totalAssets || 0)}
                 </p>
                 {summary.topAccounts && (
@@ -800,8 +801,8 @@ export default function DashboardContent() {
                   </p>
                 )}
               </div>
-              <div className="w-10 h-10 bg-slate-50 rounded-lg flex items-center justify-center">
-                <BarChart3 className="h-5 w-5 text-slate-600" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600" />
               </div>
             </div>
           </CardContent>
@@ -809,26 +810,26 @@ export default function DashboardContent() {
       </div>
 
       {/* Charts and Analytics */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Financial Trends Chart */}
         <Card>
-          <CardHeader>
-            <div className="flex items-center space-x-2">
-              <TrendingUp className="h-5 w-5 text-slate-600" />
-              <div>
-                <CardTitle className="text-lg">Financial Trends</CardTitle>
-                <CardDescription>
+          <CardHeader className="p-4 sm:p-6">
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 flex-shrink-0" />
+              <div className="min-w-0">
+                <CardTitle className="text-base sm:text-lg">Financial Trends</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">
                   Revenue, expenses, and profit over time
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+          <CardContent className="p-4 sm:p-6">
+            <ResponsiveContainer width="100%" height={250}>
               <AreaChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
+                <XAxis dataKey="month" tick={{ fontSize: 10 }} />
+                <YAxis tick={{ fontSize: 10 }} width={50} />
                 <Tooltip
                   formatter={(value) => formatCurrency(Number(value))}
                 />
@@ -863,19 +864,19 @@ export default function DashboardContent() {
 
         {/* Expense Breakdown Pie Chart */}
         <Card>
-          <CardHeader>
-            <div className="flex items-center space-x-2">
-              <PieChart className="h-5 w-5 text-slate-600" />
-              <div>
-                <CardTitle className="text-lg">Expense Breakdown</CardTitle>
-                <CardDescription>
+          <CardHeader className="p-4 sm:p-6">
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <PieChart className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 flex-shrink-0" />
+              <div className="min-w-0">
+                <CardTitle className="text-base sm:text-lg">Expense Breakdown</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">
                   Top expense categories by amount
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+          <CardContent className="p-4 sm:p-6">
+            <ResponsiveContainer width="100%" height={250}>
               <RechartsPieChart>
                 <Pie
                   data={expenseBreakdown}

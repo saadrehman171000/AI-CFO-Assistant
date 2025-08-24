@@ -279,61 +279,61 @@ export default function ComprehensiveFinancialDashboard({
   const COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6"];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 px-4 sm:px-0">
       {/* Header with Executive Summary */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
-          <div className="flex items-center space-x-4">
-            <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center">
-              <BarChart3 className="h-5 w-5 text-slate-600" />
+          <div className="flex items-center space-x-3 sm:space-x-4 w-full sm:w-auto">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600" />
             </div>
-            <div>
-              <h1 className="text-2xl font-semibold text-gray-900">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
                 Financial Analysis Dashboard
               </h1>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-xs sm:text-sm text-gray-600 mt-1">
                 AI-Powered Financial Analysis & Insights
               </p>
-              <p className="text-xs text-gray-500 mt-1 truncate max-w-md">
+              <p className="text-xs text-gray-500 mt-1 truncate">
                 Comprehensive analysis of {analysisData.file_info.filename}
               </p>
             </div>
           </div>
-          <div className="text-center px-6 py-4 rounded-lg bg-emerald-50 border border-emerald-200 self-center sm:self-auto w-full sm:w-auto">
-            <div className="text-2xl font-bold text-emerald-700">
+          <div className="text-center px-4 py-3 sm:px-6 sm:py-4 rounded-lg bg-emerald-50 border border-emerald-200 w-full sm:w-auto">
+            <div className="text-xl sm:text-2xl font-bold text-emerald-700">
               {analysis.executive_summary?.business_health_score || 0}
             </div>
-            <div className="text-sm font-medium text-emerald-600">Health Score</div>
+            <div className="text-xs sm:text-sm font-medium text-emerald-600">Health Score</div>
           </div>
         </div>
       </div>
 
       {/* Key Metrics Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                <p className="text-2xl font-semibold text-emerald-600 truncate">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-start justify-between">
+              <div className="min-w-0 flex-1 mr-3">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Total Revenue</p>
+                <p className="text-lg sm:text-2xl font-semibold text-emerald-600 truncate">
                   {formatCurrency(
                     analysis.profit_and_loss.revenue_analysis?.total_revenue || 0
                   )}
                 </p>
               </div>
-              <div className="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center">
-                <DollarSign className="h-5 w-5 text-emerald-600" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Expenses</p>
-                <p className="text-2xl font-semibold text-red-600 truncate">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-start justify-between">
+              <div className="min-w-0 flex-1 mr-3">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Total Expenses</p>
+                <p className="text-lg sm:text-2xl font-semibold text-red-600 truncate">
                   {formatCurrency(
                     Math.abs(
                       analysis.profit_and_loss.cost_structure?.total_expenses || 0
@@ -341,20 +341,20 @@ export default function ComprehensiveFinancialDashboard({
                   )}
                 </p>
               </div>
-              <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center">
-                <TrendingDown className="h-5 w-5 text-red-600" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-red-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Net Income</p>
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-start justify-between">
+              <div className="min-w-0 flex-1 mr-3">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Net Income</p>
                 <p
-                  className={`text-2xl font-semibold truncate ${analysis.profit_and_loss?.profitability_metrics?.net_income >= 0
+                  className={`text-lg sm:text-2xl font-semibold truncate ${analysis.profit_and_loss?.profitability_metrics?.net_income >= 0
                     ? "text-emerald-600"
                     : "text-red-600"
                     }`}
@@ -364,27 +364,27 @@ export default function ComprehensiveFinancialDashboard({
                   )}
                 </p>
               </div>
-              <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
-                <Activity className="h-5 w-5 text-blue-600" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Net Margin</p>
-                <p className="text-2xl font-semibold text-slate-700">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-start justify-between">
+              <div className="min-w-0 flex-1 mr-3">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Net Margin</p>
+                <p className="text-lg sm:text-2xl font-semibold text-slate-700">
                   {formatPercentage(
                     analysis.profit_and_loss.profitability_metrics?.margins
                       ?.net_margin || 0
                   )}
                 </p>
               </div>
-              <div className="w-10 h-10 bg-slate-50 rounded-lg flex items-center justify-center">
-                <Target className="h-5 w-5 text-slate-600" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Target className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600" />
               </div>
             </div>
           </CardContent>
@@ -415,9 +415,9 @@ export default function ComprehensiveFinancialDashboard({
       {/* Main Content Tabs */}
       <div className="bg-white rounded-lg border border-gray-200">
         <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-          <div className="border-b border-gray-200 px-6 pt-6">
+          <div className="border-b border-gray-200 px-4 sm:px-6 pt-4 sm:pt-6">
             <div className="overflow-x-auto">
-              <TabsList className="grid w-full grid-cols-4 md:grid-cols-7">
+              <TabsList className="grid w-full grid-cols-4 md:grid-cols-7 min-w-[320px] md:min-w-0">
                 {[
                   { value: "overview", label: "Overview" },
                   { value: "profitability", label: "P&L" },
@@ -455,7 +455,7 @@ export default function ComprehensiveFinancialDashboard({
                     key={tab.value}
                     value={tab.value}
                     disabled={tab.disabled}
-                    className="text-xs sm:text-sm"
+                    className="text-xs sm:text-sm px-2 sm:px-3"
                   >
                     <span className="hidden md:inline">{tab.label}</span>
                     <span className="inline md:hidden">
@@ -470,7 +470,7 @@ export default function ComprehensiveFinancialDashboard({
           {/* Overview Tab */}
           <TabsContent
             value="overview"
-            className="space-y-6 p-6"
+            className="space-y-4 sm:space-y-6 p-4 sm:p-6"
           >
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 {/* Revenue Breakdown */}
@@ -695,26 +695,26 @@ export default function ComprehensiveFinancialDashboard({
             </TabsContent>
 
           {/* Profitability Tab */}
-          <TabsContent value="profitability" className="space-y-6 p-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <TabsContent value="profitability" className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 <Card>
-                  <CardHeader>
-                    <CardTitle>Profitability Metrics</CardTitle>
+                <CardHeader className="p-4 sm:p-6">
+                  <CardTitle className="text-base sm:text-lg">Profitability Metrics</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span>Gross Profit:</span>
-                      <span className="font-bold text-green-600">
+                <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
+                  <div className="flex justify-between items-center p-2 sm:p-3 bg-slate-50 rounded-lg">
+                    <span className="text-xs sm:text-sm font-medium">Gross Profit:</span>
+                    <span className="font-bold text-green-600 text-xs sm:text-sm">
                         {formatCurrency(
                           analysis.profit_and_loss?.profitability_metrics
                             ?.gross_profit || 0
                         )}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span>Operating Profit:</span>
+                  <div className="flex justify-between items-center p-2 sm:p-3 bg-slate-50 rounded-lg">
+                    <span className="text-xs sm:text-sm font-medium">Operating Profit:</span>
                       <span
-                        className={`font-bold ${
+                      className={`font-bold text-xs sm:text-sm ${
                           analysis.profit_and_loss?.profitability_metrics
                             ?.operating_profit >= 0
                             ? "text-green-600"
@@ -727,10 +727,10 @@ export default function ComprehensiveFinancialDashboard({
                         )}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span>EBITDA:</span>
+                  <div className="flex justify-between items-center p-2 sm:p-3 bg-slate-50 rounded-lg">
+                    <span className="text-xs sm:text-sm font-medium">EBITDA:</span>
                       <span
-                        className={`font-bold ${
+                      className={`font-bold text-xs sm:text-sm ${
                           analysis.profit_and_loss?.profitability_metrics
                             ?.ebitda >= 0
                             ? "text-green-600"
@@ -743,10 +743,10 @@ export default function ComprehensiveFinancialDashboard({
                         )}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span>Net Income:</span>
+                  <div className="flex justify-between items-center p-2 sm:p-3 bg-slate-50 rounded-lg">
+                    <span className="text-xs sm:text-sm font-medium">Net Income:</span>
                       <span
-                        className={`font-bold ${
+                      className={`font-bold text-xs sm:text-sm ${
                           analysis.profit_and_loss?.profitability_metrics
                             ?.net_income >= 0
                             ? "text-green-600"
@@ -763,13 +763,13 @@ export default function ComprehensiveFinancialDashboard({
                 </Card>
 
                 <Card>
-                  <CardHeader>
-                    <CardTitle>Margin Analysis</CardTitle>
+                <CardHeader className="p-4 sm:p-6">
+                  <CardTitle className="text-base sm:text-lg">Margin Analysis</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-3">
+                <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
+                  <div className="space-y-3 sm:space-y-4">
                       <div>
-                        <div className="flex justify-between text-sm">
+                      <div className="flex justify-between text-xs sm:text-sm">
                           <span>Gross Margin</span>
                           <span>
                             {formatPercentage(
@@ -784,12 +784,12 @@ export default function ComprehensiveFinancialDashboard({
                             analysis.profit_and_loss?.profitability_metrics
                               ?.margins?.gross_margin || 0 * 100
                           )}
-                          className="h-2"
+                        className="h-1.5 sm:h-2 mt-1 sm:mt-2"
                         />
                       </div>
 
                       <div>
-                        <div className="flex justify-between text-sm">
+                      <div className="flex justify-between text-xs sm:text-sm">
                           <span>Operating Margin</span>
                           <span>
                             {formatPercentage(
@@ -804,12 +804,12 @@ export default function ComprehensiveFinancialDashboard({
                             analysis.profit_and_loss?.profitability_metrics
                               ?.margins?.operating_margin || 0 * 100
                           )}
-                          className="h-2"
+                        className="h-1.5 sm:h-2 mt-1 sm:mt-2"
                         />
                       </div>
 
                       <div>
-                        <div className="flex justify-between text-sm">
+                      <div className="flex justify-between text-xs sm:text-sm">
                           <span>EBITDA Margin</span>
                           <span>
                             {formatPercentage(
@@ -824,12 +824,12 @@ export default function ComprehensiveFinancialDashboard({
                             analysis.profit_and_loss?.profitability_metrics
                               ?.margins?.ebitda_margin || 0 * 100
                           )}
-                          className="h-2"
+                        className="h-1.5 sm:h-2 mt-1 sm:mt-2"
                         />
                       </div>
 
                       <div>
-                        <div className="flex justify-between text-sm">
+                      <div className="flex justify-between text-xs sm:text-sm">
                           <span>Net Margin</span>
                           <span>
                             {formatPercentage(
@@ -844,7 +844,7 @@ export default function ComprehensiveFinancialDashboard({
                             analysis.profit_and_loss?.profitability_metrics
                               ?.margins?.net_margin || 0 * 100
                           )}
-                          className="h-2"
+                        className="h-1.5 sm:h-2 mt-1 sm:mt-2"
                         />
                       </div>
                     </div>
@@ -854,19 +854,19 @@ export default function ComprehensiveFinancialDashboard({
             </TabsContent>
 
           {/* Balance Sheet Tab */}
-          <TabsContent value="balance-sheet" className="space-y-6 p-6">
+          <TabsContent value="balance-sheet" className="space-y-4 sm:space-y-6 p-4 sm:p-6">
               {analysis.balance_sheet?.assets?.total_assets ||
               analysis.balance_sheet?.liabilities?.total_liabilities ||
               analysis.balance_sheet?.equity?.total_equity ? (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
                   <Card>
-                    <CardHeader>
-                      <CardTitle>Assets</CardTitle>
+                    <CardHeader className="p-4 sm:p-6">
+                      <CardTitle className="text-base sm:text-lg">Assets</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-3">
+                    <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
                       <div className="flex justify-between">
-                        <span>Current Assets:</span>
-                        <span className="font-semibold">
+                        <span className="text-xs sm:text-sm">Current Assets:</span>
+                        <span className="font-semibold text-xs sm:text-sm">
                           {formatCurrency(
                             analysis.balance_sheet?.assets?.current_assets
                               ?.total_current || 0
@@ -874,15 +874,15 @@ export default function ComprehensiveFinancialDashboard({
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Non-Current Assets:</span>
-                        <span className="font-semibold">
+                        <span className="text-xs sm:text-sm">Non-Current Assets:</span>
+                        <span className="font-semibold text-xs sm:text-sm">
                           {formatCurrency(
                             analysis.balance_sheet?.assets?.non_current_assets
                               ?.total_non_current || 0
                           )}
                         </span>
                       </div>
-                      <div className="flex justify-between font-bold text-lg border-t pt-3">
+                      <div className="flex justify-between font-bold text-sm sm:text-lg border-t pt-2 sm:pt-3">
                         <span>Total Assets:</span>
                         <span>
                           {formatCurrency(
@@ -894,13 +894,13 @@ export default function ComprehensiveFinancialDashboard({
                   </Card>
 
                   <Card>
-                    <CardHeader>
-                      <CardTitle>Liabilities</CardTitle>
+                    <CardHeader className="p-4 sm:p-6">
+                      <CardTitle className="text-base sm:text-lg">Liabilities</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-3">
+                    <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
                       <div className="flex justify-between">
-                        <span>Current Liabilities:</span>
-                        <span className="font-semibold">
+                        <span className="text-xs sm:text-sm">Current Liabilities:</span>
+                        <span className="font-semibold text-xs sm:text-sm">
                           {formatCurrency(
                             analysis.balance_sheet?.liabilities
                               ?.current_liabilities?.total_current || 0
@@ -908,15 +908,15 @@ export default function ComprehensiveFinancialDashboard({
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Long-term Liabilities:</span>
-                        <span className="font-semibold">
+                        <span className="text-xs sm:text-sm">Long-term Liabilities:</span>
+                        <span className="font-semibold text-xs sm:text-sm">
                           {formatCurrency(
                             analysis.balance_sheet?.liabilities
                               ?.long_term_liabilities?.total_long_term || 0
                           )}
                         </span>
                       </div>
-                      <div className="flex justify-between font-bold text-lg border-t pt-3">
+                      <div className="flex justify-between font-bold text-sm sm:text-lg border-t pt-2 sm:pt-3">
                         <span>Total Liabilities:</span>
                         <span>
                           {formatCurrency(
@@ -929,28 +929,28 @@ export default function ComprehensiveFinancialDashboard({
                   </Card>
 
                   <Card>
-                    <CardHeader>
-                      <CardTitle>Equity</CardTitle>
+                    <CardHeader className="p-4 sm:p-6">
+                      <CardTitle className="text-base sm:text-lg">Equity</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-3">
+                    <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
                       <div className="flex justify-between">
-                        <span>Owner Equity:</span>
-                        <span className="font-semibold">
+                        <span className="text-xs sm:text-sm">Owner Equity:</span>
+                        <span className="font-semibold text-xs sm:text-sm">
                           {formatCurrency(
                             analysis.balance_sheet?.equity?.owner_equity || 0
                           )}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Retained Earnings:</span>
-                        <span className="font-semibold">
+                        <span className="text-xs sm:text-sm">Retained Earnings:</span>
+                        <span className="font-semibold text-xs sm:text-sm">
                           {formatCurrency(
                             analysis.balance_sheet?.equity?.retained_earnings ||
                               0
                           )}
                         </span>
                       </div>
-                      <div className="flex justify-between font-bold text-lg border-t pt-3">
+                      <div className="flex justify-between font-bold text-sm sm:text-lg border-t pt-2 sm:pt-3">
                         <span>Total Equity:</span>
                         <span>
                           {formatCurrency(
@@ -963,12 +963,12 @@ export default function ComprehensiveFinancialDashboard({
                 </div>
               ) : (
                 <Card>
-                  <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                    <BarChart3 className="h-16 w-16 text-gray-300 mb-4" />
-                    <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                  <CardContent className="flex flex-col items-center justify-center py-8 sm:py-12 text-center p-4 sm:p-6">
+                    <BarChart3 className="h-12 w-12 sm:h-16 sm:w-16 text-gray-300 mb-3 sm:mb-4" />
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-700 mb-1 sm:mb-2">
                       No Balance Sheet Data Available
                     </h3>
-                    <p className="text-gray-500 max-w-md mx-auto">
+                    <p className="text-sm sm:text-base text-gray-500 max-w-md mx-auto">
                       The uploaded financial document does not contain balance
                       sheet information or all values are zero. This could be
                       because the document is a Profit & Loss statement only.
@@ -979,17 +979,17 @@ export default function ComprehensiveFinancialDashboard({
             </TabsContent>
 
           {/* Cash Flow Tab */}
-          <TabsContent value="cash-flow" className="space-y-6 p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <TabsContent value="cash-flow" className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
                 <Card>
-                  <CardHeader>
-                    <CardTitle>Operating Activities</CardTitle>
+                <CardHeader className="p-4 sm:p-6">
+                  <CardTitle className="text-base sm:text-lg">Operating Activities</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3">
+                <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
                     <div className="flex justify-between">
-                      <span>Net Cash from Operations:</span>
+                    <span className="text-xs sm:text-sm">Net Cash from Operations:</span>
                       <span
-                        className={`font-semibold ${
+                      className={`font-semibold text-xs sm:text-sm ${
                           analysis.cash_flow_analysis?.operating_activities
                             ?.net_cash_from_operations >= 0
                             ? "text-green-600"
@@ -1003,8 +1003,8 @@ export default function ComprehensiveFinancialDashboard({
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Cash Conversion Efficiency:</span>
-                      <span className="font-semibold">
+                    <span className="text-xs sm:text-sm">Cash Conversion Efficiency:</span>
+                    <span className="font-semibold text-xs sm:text-sm">
                         {formatPercentage(
                           analysis.cash_flow_analysis?.operating_activities
                             ?.cash_conversion_efficiency || 0
@@ -1012,8 +1012,8 @@ export default function ComprehensiveFinancialDashboard({
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Operating Cash Margin:</span>
-                      <span className="font-semibold">
+                    <span className="text-xs sm:text-sm">Operating Cash Margin:</span>
+                    <span className="font-semibold text-xs sm:text-sm">
                         {formatPercentage(
                           analysis.cash_flow_analysis?.operating_activities
                             ?.operating_cash_margin || 0
@@ -1024,13 +1024,13 @@ export default function ComprehensiveFinancialDashboard({
                 </Card>
 
                 <Card>
-                  <CardHeader>
-                    <CardTitle>Investing Activities</CardTitle>
+                <CardHeader className="p-4 sm:p-6">
+                  <CardTitle className="text-base sm:text-lg">Investing Activities</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3">
+                <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
                     <div className="flex justify-between">
-                      <span>Capital Expenditures:</span>
-                      <span className="font-semibold">
+                    <span className="text-xs sm:text-sm">Capital Expenditures:</span>
+                    <span className="font-semibold text-xs sm:text-sm">
                         {formatCurrency(
                           analysis.cash_flow_analysis?.investing_activities
                             ?.capital_expenditures || 0
@@ -1038,8 +1038,8 @@ export default function ComprehensiveFinancialDashboard({
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Asset Disposals:</span>
-                      <span className="font-semibold">
+                    <span className="text-xs sm:text-sm">Asset Disposals:</span>
+                    <span className="font-semibold text-xs sm:text-sm">
                         {formatCurrency(
                           analysis.cash_flow_analysis?.investing_activities
                             ?.asset_disposals || 0
@@ -1047,9 +1047,9 @@ export default function ComprehensiveFinancialDashboard({
                       </span>
                     </div>
                     <div className="flex justify-between font-bold">
-                      <span>Net Investing Cash Flow:</span>
+                    <span className="text-xs sm:text-sm">Net Investing Cash Flow:</span>
                       <span
-                        className={`${
+                      className={`text-xs sm:text-sm ${
                           analysis.cash_flow_analysis?.investing_activities
                             ?.net_investing_cash_flow >= 0
                             ? "text-green-600"
@@ -1066,13 +1066,13 @@ export default function ComprehensiveFinancialDashboard({
                 </Card>
 
                 <Card>
-                  <CardHeader>
-                    <CardTitle>Cash Position</CardTitle>
+                <CardHeader className="p-4 sm:p-6">
+                  <CardTitle className="text-base sm:text-lg">Cash Position</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3">
+                <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
                     <div className="flex justify-between">
-                      <span>Beginning Cash:</span>
-                      <span className="font-semibold">
+                    <span className="text-xs sm:text-sm">Beginning Cash:</span>
+                    <span className="font-semibold text-xs sm:text-sm">
                         {formatCurrency(
                           analysis.cash_flow_analysis?.cash_position
                             ?.beginning_cash || 0
@@ -1080,15 +1080,15 @@ export default function ComprehensiveFinancialDashboard({
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Ending Cash:</span>
-                      <span className="font-semibold">
+                    <span className="text-xs sm:text-sm">Ending Cash:</span>
+                    <span className="font-semibold text-xs sm:text-sm">
                         {formatCurrency(
                           analysis.cash_flow_analysis?.cash_position
                             ?.ending_cash || 0
                         )}
                       </span>
                     </div>
-                    <div className="flex justify-between font-bold text-lg border-t pt-3">
+                  <div className="flex justify-between font-bold text-sm sm:text-lg border-t pt-2 sm:pt-3">
                       <span>Free Cash Flow:</span>
                       <span
                         className={`${
@@ -1110,25 +1110,25 @@ export default function ComprehensiveFinancialDashboard({
             </TabsContent>
 
           {/* AI Insights Tab */}
-          <TabsContent value="insights" className="space-y-6 p-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <TabsContent value="insights" className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 {/* Trend Analysis */}
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <TrendingUp className="h-5 w-5 text-blue-500" />
+                <CardHeader className="p-4 sm:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                    <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
                       Trend Analysis
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
                     {analysis.ai_powered_insights?.trend_analysis?.map(
                       (trend, index) => (
-                        <div key={index} className="p-4 border rounded-lg">
+                        <div key={index} className="p-3 sm:p-4 border rounded-lg">
                           <div className="flex items-center justify-between mb-2">
-                            <span className="font-semibold">
+                            <span className="font-semibold text-xs sm:text-sm">
                               {trend.metric.replace("_", " ").toUpperCase()}
                             </span>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1 sm:gap-2">
                               {getTrendIcon(trend.trend_direction)}
                               <Badge
                                 className={getSeverityColor(
@@ -1139,7 +1139,7 @@ export default function ComprehensiveFinancialDashboard({
                               </Badge>
                             </div>
                           </div>
-                          <p className="text-sm text-gray-600 mb-2">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-2">
                             Forecast:{" "}
                             {formatCurrency(trend.forecast_next_period)}
                           </p>
@@ -1155,18 +1155,18 @@ export default function ComprehensiveFinancialDashboard({
 
                 {/* Anomaly Detection */}
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <AlertTriangle className="h-5 w-5 text-red-500" />
+                <CardHeader className="p-4 sm:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                    <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-red-500" />
                       Anomaly Detection
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
                     {analysis.ai_powered_insights?.anomaly_detection?.map(
                       (anomaly, index) => (
-                        <div key={index} className="p-4 border rounded-lg">
+                        <div key={index} className="p-3 sm:p-4 border rounded-lg">
                           <div className="flex items-center justify-between mb-2">
-                            <span className="font-semibold">
+                            <span className="font-semibold text-xs sm:text-sm">
                               {anomaly.metric.replace("_", " ").toUpperCase()}
                             </span>
                             <Badge
@@ -1175,7 +1175,7 @@ export default function ComprehensiveFinancialDashboard({
                               {anomaly.severity}
                             </Badge>
                           </div>
-                          <p className="text-sm text-gray-600 mb-2">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-2">
                             {anomaly.root_cause_hypothesis}
                           </p>
                           <div className="text-xs text-blue-600">
@@ -1193,19 +1193,19 @@ export default function ComprehensiveFinancialDashboard({
 
               {/* Predictive Alerts */}
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Zap className="h-5 w-5 text-yellow-500" />
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                  <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500" />
                     Predictive Alerts
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <CardContent className="p-4 sm:p-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
                     {analysis.ai_powered_insights?.predictive_alerts?.map(
                       (alert, index) => (
-                        <div key={index} className="p-4 border rounded-lg">
+                        <div key={index} className="p-3 sm:p-4 border rounded-lg">
                           <div className="flex items-center justify-between mb-2">
-                            <span className="font-semibold">
+                            <span className="font-semibold text-xs sm:text-sm">
                               {alert.alert_type.replace("_", " ").toUpperCase()}
                             </span>
                             <Badge
@@ -1214,7 +1214,7 @@ export default function ComprehensiveFinancialDashboard({
                               {alert.alert_level}
                             </Badge>
                           </div>
-                          <div className="space-y-2 text-sm">
+                          <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
                             <div>
                               Forecast:{" "}
                               {alert.forecast_horizon.replace("_", " ")}
@@ -1239,19 +1239,19 @@ export default function ComprehensiveFinancialDashboard({
             </TabsContent>
 
           {/* Scenarios Tab */}
-          <TabsContent value="scenarios" className="space-y-6 p-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <TabsContent value="scenarios" className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 {/* Revenue Impact Analysis */}
                 <Card>
-                  <CardHeader>
-                    <CardTitle>Revenue Impact Scenarios</CardTitle>
+                <CardHeader className="p-4 sm:p-6">
+                  <CardTitle className="text-base sm:text-lg">Revenue Impact Scenarios</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="p-3 bg-blue-50 rounded-lg">
-                      <div className="font-semibold mb-2">
+                <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
+                  <div className="p-2 sm:p-3 bg-blue-50 rounded-lg">
+                    <div className="font-semibold mb-2 text-sm sm:text-base">
                         Baseline Scenario
                       </div>
-                      <div className="text-sm space-y-1">
+                    <div className="text-xs sm:text-sm space-y-1">
                         <div>
                           Revenue:{" "}
                           {formatCurrency(
@@ -1276,11 +1276,11 @@ export default function ComprehensiveFinancialDashboard({
                       </div>
                     </div>
 
-                    <div className="p-3 bg-red-50 rounded-lg">
-                      <div className="font-semibold mb-2">
+                  <div className="p-2 sm:p-3 bg-red-50 rounded-lg">
+                    <div className="font-semibold mb-2 text-sm sm:text-base">
                         Revenue Decrease 20%
                       </div>
-                      <div className="text-sm space-y-1">
+                    <div className="text-xs sm:text-sm space-y-1">
                         <div>
                           Revenue:{" "}
                           {formatCurrency(
@@ -1306,11 +1306,11 @@ export default function ComprehensiveFinancialDashboard({
                       </div>
                     </div>
 
-                    <div className="p-3 bg-green-50 rounded-lg">
-                      <div className="font-semibold mb-2">
+                  <div className="p-2 sm:p-3 bg-green-50 rounded-lg">
+                    <div className="font-semibold mb-2 text-sm sm:text-base">
                         Revenue Increase 20%
                       </div>
-                      <div className="text-sm space-y-1">
+                    <div className="text-xs sm:text-sm space-y-1">
                         <div>
                           Revenue:{" "}
                           {formatCurrency(
@@ -1339,15 +1339,15 @@ export default function ComprehensiveFinancialDashboard({
 
                 {/* Cost Optimization Scenarios */}
                 <Card>
-                  <CardHeader>
-                    <CardTitle>Cost Optimization Scenarios</CardTitle>
+                <CardHeader className="p-4 sm:p-6">
+                  <CardTitle className="text-base sm:text-lg">Cost Optimization Scenarios</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="p-3 bg-green-50 rounded-lg">
-                      <div className="font-semibold mb-2">
+                <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
+                  <div className="p-2 sm:p-3 bg-green-50 rounded-lg">
+                    <div className="font-semibold mb-2 text-sm sm:text-base">
                         Fixed Cost Reduction 15%
                       </div>
-                      <div className="text-sm space-y-1">
+                    <div className="text-xs sm:text-sm space-y-1">
                         <div>
                           Cost Savings:{" "}
                           {formatCurrency(
@@ -1413,11 +1413,11 @@ export default function ComprehensiveFinancialDashboard({
                       </div>
                     </div>
 
-                    <div className="p-3 bg-yellow-50 rounded-lg">
-                      <div className="font-semibold mb-2">
+                  <div className="p-2 sm:p-3 bg-yellow-50 rounded-lg">
+                    <div className="font-semibold mb-2 text-sm sm:text-base">
                         Break-even Analysis
                       </div>
-                      <div className="text-sm space-y-1">
+                    <div className="text-xs sm:text-sm space-y-1">
                         <div>
                           Break-even Revenue:{" "}
                           {formatCurrency(
@@ -1446,25 +1446,25 @@ export default function ComprehensiveFinancialDashboard({
             </TabsContent>
 
           {/* Recommendations Tab */}
-          <TabsContent value="recommendations" className="space-y-6 p-6">
-              <div className="grid grid-cols-1 gap-6">
+          <TabsContent value="recommendations" className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+            <div className="grid grid-cols-1 gap-4 sm:gap-6">
                 {/* Immediate Actions */}
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <AlertTriangle className="h-5 w-5 text-red-500" />
+                <CardHeader className="p-4 sm:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                    <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-red-500" />
                       Immediate Actions (0-30 Days)
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="space-y-3 sm:space-y-4">
                       {analysis.strategic_recommendations?.immediate_actions_0_30_days?.map(
                         (action, index) => (
-                          <div key={index} className="p-4 border rounded-lg">
+                          <div key={index} className="p-3 sm:p-4 border rounded-lg">
                             <div className="flex items-start justify-between mb-2">
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-1 sm:gap-2">
                                 {getPriorityIcon(action.priority)}
-                                <span className="font-semibold">
+                                <span className="font-semibold text-xs sm:text-sm">
                                   {action.action}
                                 </span>
                               </div>
@@ -1474,7 +1474,7 @@ export default function ComprehensiveFinancialDashboard({
                                 {action.priority}
                               </Badge>
                             </div>
-                            <div className="text-sm space-y-1">
+                            <div className="text-xs sm:text-sm space-y-1">
                               <div>
                                 Expected Impact:{" "}
                                 {formatCurrency(action.expected_impact)}

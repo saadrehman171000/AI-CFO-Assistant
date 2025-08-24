@@ -500,36 +500,36 @@ export default function ForecastingContent() {
 
   if (loading) {
     return (
-      <div className="space-y-6 p-6">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-10 w-32" />
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-3 sm:space-y-0">
+          <Skeleton className="h-6 sm:h-8 w-48 sm:w-64" />
+          <Skeleton className="h-8 sm:h-10 w-24 sm:w-32" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {[...Array(4)].map((_, i) => (
             <Card key={i}>
-              <CardHeader className="pb-2">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-8 w-32" />
+              <CardHeader className="p-3 sm:p-4 pb-2">
+                <Skeleton className="h-3 sm:h-4 w-20 sm:w-24" />
+                <Skeleton className="h-6 sm:h-8 w-24 sm:w-32" />
               </CardHeader>
             </Card>
           ))}
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           <Card>
-            <CardHeader>
-              <Skeleton className="h-6 w-48" />
+            <CardHeader className="p-3 sm:p-4">
+              <Skeleton className="h-5 sm:h-6 w-36 sm:w-48" />
             </CardHeader>
-            <CardContent>
-              <Skeleton className="h-64 w-full" />
+            <CardContent className="p-3 sm:p-4">
+              <Skeleton className="h-48 sm:h-64 w-full" />
             </CardContent>
           </Card>
           <Card>
-            <CardHeader>
-              <Skeleton className="h-6 w-48" />
+            <CardHeader className="p-3 sm:p-4">
+              <Skeleton className="h-5 sm:h-6 w-36 sm:w-48" />
             </CardHeader>
-            <CardContent>
-              <Skeleton className="h-64 w-full" />
+            <CardContent className="p-3 sm:p-4">
+              <Skeleton className="h-48 sm:h-64 w-full" />
             </CardContent>
           </Card>
         </div>
@@ -539,7 +539,7 @@ export default function ForecastingContent() {
 
   if (error) {
     return (
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <Alert variant="destructive">
           <AlertDescription>
             {error}. Please try refreshing the page.
@@ -551,19 +551,19 @@ export default function ForecastingContent() {
 
   if (!forecastData) {
     return (
-      <div className="p-6 text-center">
-        <div className="bg-white rounded-lg border border-gray-200 p-12">
-          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Calculator className="h-8 w-8 text-slate-600" />
+      <div className="p-4 sm:p-6 text-center">
+        <div className="bg-white rounded-lg border border-gray-200 p-8 sm:p-12 max-w-md mx-auto">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+            <Calculator className="h-6 w-6 sm:h-8 sm:w-8 text-slate-600" />
           </div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-3">
+          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3">
             No Forecast Data Available
           </h3>
-          <p className="text-gray-600 mb-6 max-w-md mx-auto">
+          <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
             Upload financial reports to generate cash flow forecasts and
             scenario analysis.
           </p>
-          <Button asChild>
+          <Button asChild className="w-full sm:w-auto">
             <a href="/upload">Upload Report</a>
           </Button>
         </div>
@@ -588,26 +588,26 @@ export default function ForecastingContent() {
   }));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 px-4 sm:px-0">
       {/* Header */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
-          <div className="flex items-center space-x-4">
-            <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center">
-              <Calculator className="h-5 w-5 text-slate-600" />
+          <div className="flex items-center space-x-3 sm:space-x-4 w-full sm:w-auto">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Calculator className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600" />
             </div>
-            <div>
-              <h1 className="text-2xl font-semibold text-gray-900">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
                 Financial Forecasting
               </h1>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-xs sm:text-sm text-gray-600 mt-1">
                 Project future cash flows and analyze different business scenarios
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
             <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-              <SelectTrigger className="flex-1 sm:flex-none w-full sm:w-32">
+              <SelectTrigger className="w-full sm:w-32">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -622,7 +622,7 @@ export default function ForecastingContent() {
               disabled={loading}
               variant="outline"
               size="sm"
-              className="flex-1 sm:flex-none"
+              className="w-full sm:w-auto"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
@@ -632,18 +632,18 @@ export default function ForecastingContent() {
       </div>
 
       {/* Key Forecast Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Target className="h-4 w-4 text-blue-600" />
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-start justify-between mb-3 sm:mb-4">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Target className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
               </div>
             </div>
-            <div className="text-2xl font-bold text-blue-600 mb-2">
+            <div className="text-lg sm:text-2xl font-bold text-blue-600 mb-2 truncate">
               {formatPercentage(metrics.breakEvenPoint)}
             </div>
-            <div className="text-sm text-gray-600 mb-1">
+            <div className="text-xs sm:text-sm text-gray-600 mb-1">
               Break-Even Point
             </div>
             <p className="text-xs text-blue-600 font-medium">

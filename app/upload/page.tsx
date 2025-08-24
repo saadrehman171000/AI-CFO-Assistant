@@ -28,13 +28,26 @@ export default function UploadPage() {
             </div>
 
             {/* Info Banner */}
-            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
-              <div className="flex items-start space-x-3">
-                <Info className="h-5 w-5 text-slate-600 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="text-sm text-slate-700">
-                    <span className="font-medium">New Feature:</span> Uploaded documents are automatically stored for the AI chatbot, allowing you to ask questions about your financial data!
-                  </p>
+            <div className="space-y-3">
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                <div className="flex items-start space-x-3">
+                  <Info className="h-5 w-5 text-slate-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm text-slate-700">
+                      <span className="font-medium">New Feature:</span> Uploaded documents are automatically stored for the AI chatbot, allowing you to ask questions about your financial data!
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <div className="flex items-start space-x-3">
+                  <Info className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm text-amber-700">
+                      <span className="font-medium">Performance Note:</span> First upload may take a few extra seconds as the server starts up. Subsequent uploads will be faster. If upload fails, please try again - the system includes automatic retry logic.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
