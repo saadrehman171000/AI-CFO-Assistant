@@ -5,7 +5,7 @@ import { parseFinancialReport } from '@/lib/parsers'
 import { AIFinancialAnalyzer } from '@/lib/ai-financial-analyzer'
 import { ReportType, ParsedFinancialData } from '@prisma/client'
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000"
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL
 
 export async function DELETE(request: NextRequest) {
   try {
