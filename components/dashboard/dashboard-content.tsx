@@ -588,6 +588,8 @@ export default function DashboardContent() {
         title="Select Data Source"
         description="Choose a branch and financial analysis to view dashboard data"
         showAllBranchesOption={true}
+        initialBranchId={selectedBranchId}
+        initialAnalysisId={selectedAnalysisId}
       />
 
       {/* Clean Professional Header */}

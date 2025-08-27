@@ -47,6 +47,28 @@ export function ReportsContent() {
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
   const [selectedAnalysisId, setSelectedAnalysisId] = useState<string | null>(null);
   const itemsPerPage = 10;
+  
+  // Helper to get the correct analysis object from potentially nested structure
+  const getAnalysisObj = () => {
+    try {
+      if (!financialData) return null;
+      
+      // Try different possible paths
+      if (financialData.analysisData?.analysis?.analysis) {
+        return financialData.analysisData.analysis.analysis;
+      } else if (financialData.analysisData?.analysis) {
+        return financialData.analysisData.analysis;
+      } else if (financialData.analysis?.analysis) {
+        return financialData.analysis.analysis;
+      } else if (financialData.analysis) {
+        return financialData.analysis;
+      }
+    } catch (error) {
+      console.error('Error in getAnalysisObj:', error);
+    }
+    
+    return null;
+  };
 
   // Helper function to safely access nested properties
   const safeGet = (obj: any, path: string, defaultValue: any = 0): any => {
@@ -128,12 +150,13 @@ export function ReportsContent() {
 
   // Generate table data based on active tab with null safety
   const getTableData = (): TableRow[] => {
-    if (!financialData?.analysis) return [];
+    const analysisObj = getAnalysisObj();
+    if (!analysisObj) return [];
 
     try {
       switch (activeTab) {
         case 0: // P&L
-          const plData = financialData.analysis.profit_and_loss;
+          const plData = analysisObj.profit_and_loss;
           if (!plData) return [{ account: "No P&L data available", amount: 0 }];
 
           const plRows: TableRow[] = [
@@ -203,7 +226,7 @@ export function ReportsContent() {
           return plRows;
 
         case 1: // Balance Sheet
-          const bsData = financialData.analysis.balance_sheet;
+          const bsData = analysisObj.balance_sheet;
           if (!bsData || (
             safeNumber(safeGet(bsData, 'assets.total_assets')) === 0 &&
             safeNumber(safeGet(bsData, 'liabilities.total_liabilities')) === 0 &&
@@ -325,7 +348,7 @@ export function ReportsContent() {
           return bsRows;
 
         case 2: // Cash Flow
-          const cfData = financialData.analysis.cash_flow_analysis;
+          const cfData = analysisObj.cash_flow_analysis;
           if (!cfData || (
             safeNumber(safeGet(cfData, 'operating_activities.net_cash_from_operations')) === 0 &&
             safeNumber(safeGet(cfData, 'investing_activities.net_investing_cash_flow')) === 0 &&
@@ -473,8 +496,11 @@ export function ReportsContent() {
           }
         }
 
-        // Validate analysisData structure before setting
-        if (analysisData && typeof analysisData === 'object' && analysisData.analysis) {
+        // Validate analysisData structure before setting - handle deeper nested structure
+        if (analysisData && typeof analysisData === 'object' && 
+            (analysisData.analysis || 
+             (analysisData.analysisData && analysisData.analysisData.analysis) ||
+             (analysisData.analysisData && analysisData.analysisData.analysis && analysisData.analysisData.analysis.analysis))) {
           setFinancialData(analysisData);
         } else {
           setFinancialData(null);
@@ -541,6 +567,8 @@ export function ReportsContent() {
         title="Select Reports Data Source"
         description="Choose a branch and financial analysis to view detailed reports"
         showAllBranchesOption={true}
+        initialBranchId={selectedBranchId}
+        initialAnalysisId={selectedAnalysisId}
       />
 
       {/* Header */}
@@ -682,7 +710,9 @@ export function ReportsContent() {
                         {tabs[activeTab]}
                       </div>
                       <div className="text-xs sm:text-sm text-gray-500 font-normal truncate">
-                        {financialData?.file_info?.filename || 'No file selected'}
+                        {financialData?.analysisData?.file_info?.filename || 
+                         financialData?.analysisData?.analysis?.file_info?.filename || 
+                         financialData?.metadata?.fileName || 'No file selected'}
                       </div>
                     </div>
                   </CardTitle>
@@ -827,9 +857,11 @@ export function ReportsContent() {
                     </p>
                     <p
                       className="text-xs sm:text-sm font-semibold text-gray-900 truncate"
-                      title={financialData.file_info.filename}
+                      title={financialData.analysisData?.file_info?.filename || 
+                             financialData.analysisData?.analysis?.file_info?.filename || ""}
                     >
-                      {financialData.file_info.filename}
+                      {financialData.analysisData?.file_info?.filename || 
+                       financialData.analysisData?.analysis?.file_info?.filename || "Unknown"}
                     </p>
                   </div>
                   <div className="p-3 sm:p-4 bg-slate-50 rounded-lg border border-slate-200">
@@ -837,7 +869,8 @@ export function ReportsContent() {
                       File Type
                     </p>
                     <p className="text-xs sm:text-sm font-semibold text-gray-900 capitalize">
-                      {financialData.file_info.file_type}
+                      {financialData.analysisData?.file_info?.file_type || 
+                       financialData.analysisData?.analysis?.file_info?.file_type || "Unknown"}
                     </p>
                   </div>
                   <div className="p-3 sm:p-4 bg-slate-50 rounded-lg border border-slate-200">
@@ -845,7 +878,8 @@ export function ReportsContent() {
                       File Size
                     </p>
                     <p className="text-xs sm:text-sm font-semibold text-gray-900">
-                      {financialData.file_info.file_size_mb.toFixed(2)} MB
+                      {(financialData.analysisData?.file_info?.file_size_mb || 
+                        financialData.analysisData?.analysis?.file_info?.file_size_mb || 0).toFixed(2)} MB
                     </p>
                   </div>
                 </div>
@@ -863,7 +897,7 @@ export function ReportsContent() {
                         </p>
                         <p className="text-lg font-bold text-emerald-600">
                           {formatCurrency(
-                            safeGet(financialData, 'analysis.profit_and_loss.revenue_analysis.total_revenue', 0)
+                            safeGet(getAnalysisObj(), 'profit_and_loss.revenue_analysis.total_revenue', 0)
                           )}
                         </p>
                       </div>
@@ -873,12 +907,12 @@ export function ReportsContent() {
                         </p>
                         <p className="text-lg font-bold text-red-600">
                           {formatCurrency(
-                            Math.abs(safeGet(financialData, 'analysis.profit_and_loss.cost_structure.total_expenses', 0))
+                            Math.abs(safeGet(getAnalysisObj(), 'profit_and_loss.cost_structure.total_expenses', 0))
                           )}
                         </p>
                       </div>
                       <div
-                        className={`p-4 rounded-lg border ${safeNumber(safeGet(financialData, 'analysis.profit_and_loss.profitability_metrics.net_income', 0)) >= 0
+                        className={`p-4 rounded-lg border ${safeNumber(safeGet(getAnalysisObj(), 'profit_and_loss.profitability_metrics.net_income', 0)) >= 0
                           ? "bg-blue-50 border-blue-200"
                           : "bg-orange-50 border-orange-200"
                           }`}
@@ -887,15 +921,15 @@ export function ReportsContent() {
                           Net Income
                         </p>
                         <p
-                          className={`text-lg font-bold ${safeNumber(safeGet(financialData, 'analysis.profit_and_loss.profitability_metrics.net_income', 0)) >= 0
+                          className={`text-lg font-bold ${safeNumber(safeGet(getAnalysisObj(), 'profit_and_loss.profitability_metrics.net_income', 0)) >= 0
                             ? "text-blue-600"
                             : "text-orange-600"
                             }`}
                         >
                           {formatCurrency(
-                            Math.abs(safeGet(financialData, 'analysis.profit_and_loss.profitability_metrics.net_income', 0))
+                            Math.abs(safeGet(getAnalysisObj(), 'profit_and_loss.profitability_metrics.net_income', 0))
                           )}
-                          {safeNumber(safeGet(financialData, 'analysis.profit_and_loss.profitability_metrics.net_income', 0)) < 0
+                          {safeNumber(safeGet(getAnalysisObj(), 'profit_and_loss.profitability_metrics.net_income', 0)) < 0
                             ? " (Loss)"
                             : ""}
                         </p>
@@ -916,7 +950,7 @@ export function ReportsContent() {
                         </p>
                         <p className="text-lg font-bold text-blue-600">
                           {formatCurrency(
-                            safeGet(financialData, 'analysis.balance_sheet.assets.total_assets', 0)
+                            safeGet(getAnalysisObj(), 'balance_sheet.assets.total_assets', 0)
                           )}
                         </p>
                       </div>
@@ -926,7 +960,7 @@ export function ReportsContent() {
                         </p>
                         <p className="text-lg font-bold text-orange-600">
                           {formatCurrency(
-                            safeGet(financialData, 'analysis.balance_sheet.liabilities.total_liabilities', 0)
+                            safeGet(getAnalysisObj(), 'balance_sheet.liabilities.total_liabilities', 0)
                           )}
                         </p>
                       </div>
@@ -936,7 +970,7 @@ export function ReportsContent() {
                         </p>
                         <p className="text-lg font-bold text-purple-600">
                           {formatCurrency(
-                            safeGet(financialData, 'analysis.balance_sheet.equity.total_equity', 0)
+                            safeGet(getAnalysisObj(), 'balance_sheet.equity.total_equity', 0)
                           )}
                         </p>
                       </div>
@@ -951,7 +985,7 @@ export function ReportsContent() {
                     </h4>
                     <div className="space-y-3">
                       <div
-                        className={`p-4 rounded-lg border ${safeNumber(safeGet(financialData, 'analysis.cash_flow_analysis.operating_activities.net_cash_from_operations', 0)) >= 0
+                        className={`p-4 rounded-lg border ${safeNumber(safeGet(getAnalysisObj(), 'cash_flow_analysis.operating_activities.net_cash_from_operations', 0)) >= 0
                           ? "bg-emerald-50 border-emerald-200"
                           : "bg-red-50 border-red-200"
                           }`}
@@ -960,18 +994,18 @@ export function ReportsContent() {
                           Operating Cash Flow
                         </p>
                         <p
-                          className={`text-lg font-bold ${safeNumber(safeGet(financialData, 'analysis.cash_flow_analysis.operating_activities.net_cash_from_operations', 0)) >= 0
+                          className={`text-lg font-bold ${safeNumber(safeGet(getAnalysisObj(), 'cash_flow_analysis.operating_activities.net_cash_from_operations', 0)) >= 0
                             ? "text-emerald-600"
                             : "text-red-600"
                             }`}
                         >
                           {formatCurrency(
-                            Math.abs(safeGet(financialData, 'analysis.cash_flow_analysis.operating_activities.net_cash_from_operations', 0))
+                            Math.abs(safeGet(getAnalysisObj(), 'cash_flow_analysis.operating_activities.net_cash_from_operations', 0))
                           )}
                         </p>
                       </div>
                       <div
-                        className={`p-4 rounded-lg border ${safeNumber(safeGet(financialData, 'analysis.cash_flow_analysis.cash_position.free_cash_flow', 0)) >= 0
+                        className={`p-4 rounded-lg border ${safeNumber(safeGet(getAnalysisObj(), 'cash_flow_analysis.cash_position.free_cash_flow', 0)) >= 0
                           ? "bg-blue-50 border-blue-200"
                           : "bg-orange-50 border-orange-200"
                           }`}
@@ -980,13 +1014,13 @@ export function ReportsContent() {
                           Free Cash Flow
                         </p>
                         <p
-                          className={`text-lg font-bold ${safeNumber(safeGet(financialData, 'analysis.cash_flow_analysis.cash_position.free_cash_flow', 0)) >= 0
+                          className={`text-lg font-bold ${safeNumber(safeGet(getAnalysisObj(), 'cash_flow_analysis.cash_position.free_cash_flow', 0)) >= 0
                             ? "text-blue-600"
                             : "text-orange-600"
                             }`}
                         >
                           {formatCurrency(
-                            Math.abs(safeGet(financialData, 'analysis.cash_flow_analysis.cash_position.free_cash_flow', 0))
+                            Math.abs(safeGet(getAnalysisObj(), 'cash_flow_analysis.cash_position.free_cash_flow', 0))
                           )}
                         </p>
                       </div>

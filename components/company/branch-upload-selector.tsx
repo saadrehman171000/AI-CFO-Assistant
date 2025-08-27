@@ -72,10 +72,32 @@ export default function BranchUploadSelector({
     if (selectedBranchId) {
       fetchAnalyses(selectedBranchId);
     } else {
-      setAnalyses([]);
-      setSelectedAnalysisId(null);
+      // If we have an initialAnalysisId but no branch, we might still want to use it
+      if (initialAnalysisId) {
+        fetchAnalysisDetails(initialAnalysisId);
+      } else {
+        setAnalyses([]);
+        setSelectedAnalysisId(null);
+      }
     }
   }, [selectedBranchId]);
+  
+  // Fetch individual analysis details if we have an ID but no branch
+  const fetchAnalysisDetails = async (analysisId: string) => {
+    try {
+      const response = await fetch(`/api/financial-analyses/${analysisId}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.analysis) {
+          // If we got the analysis details, create a minimal analyses array with it
+          setAnalyses([data.analysis]);
+          setSelectedAnalysisId(analysisId);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching analysis details:", error);
+    }
+  };
 
   // Note: onSelectionChange is now called directly in the onValueChange handlers to prevent multiple calls
 
@@ -98,11 +120,16 @@ export default function BranchUploadSelector({
       if (response.ok) {
         const data = await response.json();
         setAnalyses(data.analyses || []);
-        // Auto-select the latest analysis if available
-        if (data.analyses && data.analyses.length > 0) {
+        // Auto-select the latest analysis if available or keep initialAnalysisId if valid
+        if (initialAnalysisId && data.analyses?.some((a: FinancialAnalysis) => a.id === initialAnalysisId)) {
+          setSelectedAnalysisId(initialAnalysisId);
+          console.log('Branch selector: Using initial analysisId:', initialAnalysisId);
+        } else if (data.analyses && data.analyses.length > 0) {
           setSelectedAnalysisId(data.analyses[0].id);
+          console.log('Branch selector: Auto-selecting first analysis:', data.analyses[0].id);
         } else {
           setSelectedAnalysisId(null);
+          console.log('Branch selector: No analyses available');
         }
       }
     } catch (error) {

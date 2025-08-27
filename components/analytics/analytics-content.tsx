@@ -249,7 +249,15 @@ export default function AnalyticsContent() {
         }
       }
 
-      // Check if we have the Flask backend format (file_info and analysis structure)
+              // Check if we have the Flask backend format (file_info and analysis structure)
+      // Debug the structure
+      console.log("API response structure:", {
+        hasFileInfo: !!analysisResult?.file_info,
+        hasAnalysis: !!analysisResult?.analysis,
+        hasNestedAnalysis: !!analysisResult?.analysis?.analysis,
+        structure: JSON.stringify(analysisResult).substring(0, 200) + '...'
+      });
+      
       if (
         analysisResult?.file_info &&
         analysisResult?.analysis
@@ -258,63 +266,63 @@ export default function AnalyticsContent() {
         const transformedData: AnalyticsData = {
           metrics: {
             totalRevenue: safeNumber(
-              safeGet(analysisResult, 'analysis.profit_and_loss.revenue_analysis.total_revenue')
+              safeGet(analysisResult, 'analysis.analysis.profit_and_loss.revenue_analysis.total_revenue')
             ),
             totalExpenses: safeNumber(
-              safeGet(analysisResult, 'analysis.profit_and_loss.cost_structure.total_expenses')
+              safeGet(analysisResult, 'analysis.analysis.profit_and_loss.cost_structure.total_expenses')
             ),
             netProfit: safeNumber(
-              safeGet(analysisResult, 'analysis.profit_and_loss.profitability_metrics.net_income')
+              safeGet(analysisResult, 'analysis.analysis.profit_and_loss.profitability_metrics.net_income')
             ),
             grossMargin: safeNumber(
-              safeGet(analysisResult, 'analysis.profit_and_loss.profitability_metrics.margins.gross_margin')
+              safeGet(analysisResult, 'analysis.analysis.profit_and_loss.profitability_metrics.margins.gross_margin')
             ),
             netMargin: safeNumber(
-              safeGet(analysisResult, 'analysis.profit_and_loss.profitability_metrics.margins.net_margin')
+              safeGet(analysisResult, 'analysis.analysis.profit_and_loss.profitability_metrics.margins.net_margin')
             ),
             totalAssets: safeNumber(
-              safeGet(analysisResult, 'analysis.balance_sheet.assets.total_assets')
+              safeGet(analysisResult, 'analysis.analysis.balance_sheet.assets.total_assets')
             ),
             totalLiabilities: safeNumber(
-              safeGet(analysisResult, 'analysis.balance_sheet.liabilities.total_liabilities')
+              safeGet(analysisResult, 'analysis.analysis.balance_sheet.liabilities.total_liabilities')
             ),
             totalEquity: safeNumber(
-              safeGet(analysisResult, 'analysis.balance_sheet.equity.total_equity')
+              safeGet(analysisResult, 'analysis.analysis.balance_sheet.equity.total_equity')
             ),
             cashFlowFromOperations: safeNumber(
-              safeGet(analysisResult, 'analysis.cash_flow_analysis.operating_activities.net_cash_from_operations')
+              safeGet(analysisResult, 'analysis.analysis.cash_flow_analysis.operating_activities.net_cash_from_operations')
             ),
             cashFlowFromInvesting: safeNumber(
-              safeGet(analysisResult, 'analysis.cash_flow_analysis.investing_activities.net_investing_cash_flow')
+              safeGet(analysisResult, 'analysis.analysis.cash_flow_analysis.investing_activities.net_investing_cash_flow')
             ),
             cashFlowFromFinancing: safeNumber(
-              safeGet(analysisResult, 'analysis.cash_flow_analysis.financing_activities.net_financing_cash_flow')
+              safeGet(analysisResult, 'analysis.analysis.cash_flow_analysis.financing_activities.net_financing_cash_flow')
             ),
             netCashFlow: safeNumber(
-              safeGet(analysisResult, 'analysis.cash_flow_analysis.cash_position.net_change_in_cash')
+              safeGet(analysisResult, 'analysis.analysis.cash_flow_analysis.cash_position.net_change_in_cash')
             ),
             arDays: safeNumber(
-              safeGet(analysisResult, 'analysis.working_capital_management.cash_conversion_cycle.days_sales_outstanding')
+              safeGet(analysisResult, 'analysis.analysis.working_capital_management.cash_conversion_cycle.days_sales_outstanding')
             ),
             apDays: safeNumber(
-              safeGet(analysisResult, 'analysis.working_capital_management.cash_conversion_cycle.days_payable_outstanding')
+              safeGet(analysisResult, 'analysis.analysis.working_capital_management.cash_conversion_cycle.days_payable_outstanding')
             ),
             ebitda: safeNumber(
-              safeGet(analysisResult, 'analysis.profit_and_loss.profitability_metrics.ebitda')
+              safeGet(analysisResult, 'analysis.analysis.profit_and_loss.profitability_metrics.ebitda')
             ),
             currentRatio: safeNumber(
-              safeGet(analysisResult, 'analysis.financial_ratios.liquidity_ratios.current_ratio')
+              safeGet(analysisResult, 'analysis.analysis.financial_ratios.liquidity_ratios.current_ratio')
             ),
             quickRatio: safeNumber(
-              safeGet(analysisResult, 'analysis.financial_ratios.liquidity_ratios.quick_ratio')
+              safeGet(analysisResult, 'analysis.analysis.financial_ratios.liquidity_ratios.quick_ratio')
             ),
             debtToEquityRatio: safeNumber(
-              safeGet(analysisResult, 'analysis.financial_ratios.leverage_ratios.debt_to_equity')
+              safeGet(analysisResult, 'analysis.analysis.financial_ratios.leverage_ratios.debt_to_equity')
             ),
           },
           // Transform insights from key_insights_summary with null safety
           insights: safeArray(
-            safeGet(analysisResult, 'analysis.key_insights_summary', [])
+            safeGet(analysisResult, 'analysis.analysis.key_insights_summary', [])
           ).map((insight: any, index: number) => ({
             type: (index % 4 === 0
               ? "trend"
@@ -333,9 +341,9 @@ export default function AnalyticsContent() {
           })),
           // Generate trends data from available metrics with null safety
           trends: {
-            revenue: [safeNumber(safeGet(analysisResult, 'analysis.profit_and_loss.revenue_analysis.total_revenue'), 0)],
-            expenses: [safeNumber(safeGet(analysisResult, 'analysis.profit_and_loss.cost_structure.total_expenses'), 0)],
-            profit: [safeNumber(safeGet(analysisResult, 'analysis.profit_and_loss.profitability_metrics.net_income'), 0)],
+            revenue: [safeNumber(safeGet(analysisResult, 'analysis.analysis.profit_and_loss.revenue_analysis.total_revenue'), 0)],
+            expenses: [safeNumber(safeGet(analysisResult, 'analysis.analysis.profit_and_loss.cost_structure.total_expenses'), 0)],
+            profit: [safeNumber(safeGet(analysisResult, 'analysis.analysis.profit_and_loss.profitability_metrics.net_income'), 0)],
             months: ["Current"],
           },
           // Create empty top accounts since we don't have them in the same format
@@ -354,12 +362,12 @@ export default function AnalyticsContent() {
               month: new Date().getMonth() + 1,
               uploadDate: new Date().toISOString(),
               totalRecords: safeArray(
-                safeGet(analysisResult, 'analysis.key_insights_summary', [])
+                safeGet(analysisResult, 'analysis.analysis.key_insights_summary', [])
               ).length,
             },
             totalReports: 1,
             totalRecords: safeArray(
-              safeGet(analysisResult, 'analysis.key_insights_summary', [])
+              safeGet(analysisResult, 'analysis.analysis.key_insights_summary', [])
             ).length,
           },
         };
@@ -556,6 +564,8 @@ export default function AnalyticsContent() {
         title="Select Analytics Data Source"
         description="Choose a branch and financial analysis to view detailed analytics"
         showAllBranchesOption={true}
+        initialBranchId={selectedBranchId}
+        initialAnalysisId={selectedAnalysisId}
       />
 
       {/* Header */}
