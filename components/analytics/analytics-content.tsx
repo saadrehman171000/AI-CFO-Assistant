@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useActiveFile } from "@/components/contexts/active-file-context";
+
 import {
   Card,
   CardContent,
@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
+import BranchUploadSelector from "@/components/company/branch-upload-selector";
 import {
   TrendingUp,
   TrendingDown,
@@ -136,7 +137,6 @@ interface AnalyticsData {
 }
 
 export default function AnalyticsContent() {
-  const { activeFileData, activeFile } = useActiveFile();
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(
     null
   );
@@ -145,22 +145,52 @@ export default function AnalyticsContent() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState("current");
   const [selectedReportType, setSelectedReportType] = useState("all");
+  const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
+  const [selectedAnalysisId, setSelectedAnalysisId] = useState<string | null>(null);
 
   const fetchAnalyticsData = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Use active file data if available, otherwise fetch latest
-      let analysisResult;
-      if (activeFileData) {
-        analysisResult = activeFileData;
-      } else {
-        const response = await fetch("/api/financial-analysis?latest=true");
-        if (!response.ok) {
-          throw new Error("Failed to fetch analytics data");
+      let analysisResult = null;
+
+      // If a specific analysis is selected, fetch that data
+      if (selectedAnalysisId) {
+        const analysisResponse = await fetch(
+          `/api/analysis-data?analysisId=${selectedAnalysisId}`
+        );
+
+        if (analysisResponse.ok) {
+          const result = await analysisResponse.json();
+          if (result.success && result.analysisData) {
+            analysisResult = result.analysisData;
+          }
         }
-        analysisResult = await response.json();
+      }
+      // If no specific analysis selected, fetch latest for the branch or company
+      else {
+        const endpoint = selectedBranchId
+          ? `/api/financial-analyses?branchId=${selectedBranchId}&latest=true`
+          : "/api/financial-analyses?latest=true";
+
+        const analysisResponse = await fetch(endpoint);
+
+        if (analysisResponse.ok) {
+          const result = await analysisResponse.json();
+          if (result.success && result.analysis) {
+            // Now fetch the actual analysis data
+            const dataResponse = await fetch(
+              `/api/analysis-data?analysisId=${result.analysis.id}`
+            );
+            if (dataResponse.ok) {
+              const dataResult = await dataResponse.json();
+              if (dataResult.success && dataResult.analysisData) {
+                analysisResult = dataResult.analysisData;
+              }
+            }
+          }
+        }
       }
 
       // Check if we have the Flask backend format (file_info and analysis structure)
@@ -300,8 +330,20 @@ export default function AnalyticsContent() {
   };
 
   useEffect(() => {
-    fetchAnalyticsData();
-  }, [activeFileData]); // Re-fetch when active file changes
+    // Only fetch if we have valid selection or if it's the initial load
+    if (selectedBranchId !== null || selectedAnalysisId !== null || analyticsData === null) {
+      fetchAnalyticsData();
+    }
+  }, [selectedBranchId, selectedAnalysisId]); // Re-fetch when selection changes
+
+  const handleSelectionChange = (branchId: string | null, analysisId: string | null) => {
+    // Prevent unnecessary re-renders if values haven't changed
+    if (selectedBranchId !== branchId || selectedAnalysisId !== analysisId) {
+      console.log('Analytics: Selection changed:', { branchId, analysisId });
+      setSelectedBranchId(branchId);
+      setSelectedAnalysisId(analysisId);
+    }
+  };
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -442,6 +484,14 @@ export default function AnalyticsContent() {
 
   return (
     <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+      {/* Branch & Upload Selector */}
+      <BranchUploadSelector
+        onSelectionChange={handleSelectionChange}
+        title="Select Analytics Data Source"
+        description="Choose a branch and financial analysis to view detailed analytics"
+        showAllBranchesOption={true}
+      />
+
       {/* Header */}
       <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">

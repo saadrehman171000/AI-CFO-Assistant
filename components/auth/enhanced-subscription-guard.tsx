@@ -21,7 +21,7 @@ interface UserSetupStatus {
   companyId: string | null;
 }
 
-export default function SubscriptionGuard({ children, fallback }: SubscriptionGuardProps) {
+export default function EnhancedSubscriptionGuard({ children, fallback }: SubscriptionGuardProps) {
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
   const [userSetupStatus, setUserSetupStatus] = useState<UserSetupStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,7 +34,7 @@ export default function SubscriptionGuard({ children, fallback }: SubscriptionGu
   const checkStatus = async () => {
     try {
       const startTime = Date.now();
-
+      
       // Check both subscription and setup status
       const [subscriptionResponse, setupResponse] = await Promise.all([
         fetch('/api/subscription/status'),
@@ -131,7 +131,7 @@ export default function SubscriptionGuard({ children, fallback }: SubscriptionGu
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Welcome to AI CFO Pro! Let's set up your company profile and branches
+              Welcome to AI CFO Pro! Let's set up your company profile and branches 
               to unlock the full power of multi-branch financial management.
             </p>
             <Button onClick={handleCompleteSetup} className="w-full">

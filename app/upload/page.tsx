@@ -1,8 +1,6 @@
 import { MainLayout } from "@/components/layout/main-layout";
-import SimpleFileUpload from "@/components/upload/simple-file-upload";
-import MultiFileUpload from "@/components/upload/multi-file-upload";
+import EnhancedFileUpload from "@/components/upload/enhanced-file-upload";
 import SubscriptionGuard from "@/components/auth/subscription-guard";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Upload, FileText, Info } from "lucide-react";
 
@@ -53,34 +51,8 @@ export default function UploadPage() {
             </div>
           </div>
 
-          {/* Upload Options */}
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-2 mb-6">
-                <FileText className="h-5 w-5 text-slate-600" />
-                <h2 className="text-lg font-semibold text-gray-900">Choose Upload Method</h2>
-              </div>
-
-              <Tabs defaultValue="single" className="w-full">
-                <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-6">
-                  <TabsTrigger value="single">
-                    Single File
-                  </TabsTrigger>
-                  <TabsTrigger value="multiple">
-                    Multiple Files
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="single" className="space-y-4">
-                  <SimpleFileUpload />
-                </TabsContent>
-
-                <TabsContent value="multiple" className="space-y-4">
-                  <MultiFileUpload />
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
+          {/* Enhanced Upload Component */}
+          <EnhancedFileUpload />
         </div>
       </SubscriptionGuard>
     </MainLayout>

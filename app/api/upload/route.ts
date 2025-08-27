@@ -57,6 +57,10 @@ export async function POST(request: NextRequest) {
     const year = parseInt(formData.get('year') as string)
     const month = parseInt(formData.get('month') as string)
 
+    // NEW: Branch and company assignment
+    const branchId = formData.get('branchId') as string || null
+    const companyId = formData.get('companyId') as string || null
+
     if (!file || !reportType || !year || !month) {
       return NextResponse.json({
         error: 'Missing required fields: file, reportType, year, month'
@@ -114,7 +118,9 @@ export async function POST(request: NextRequest) {
         year,
         month,
         fileSize: file.size,
-        status: 'COMPLETED'
+        status: 'COMPLETED',
+        companyId: companyId,
+        branchId: branchId
       }
     })
 
@@ -168,7 +174,7 @@ export async function POST(request: NextRequest) {
       backendFormData.append('file', backendFile);
 
       const backendResponse = await fetch(
-        `${BACKEND_URL}/upload-financial-document?user_id=${encodeURIComponent(clerkUser.id)}&store_in_vector_db=true`,
+        `${BACKEND_URL}/upload-financial-document?user_id=${encodeURIComponent(clerkUser.id)}&store_in_vector_db=true&company_id=${encodeURIComponent(companyId || '')}&branch_id=${encodeURIComponent(branchId || '')}`,
         {
           method: 'POST',
           body: backendFormData,

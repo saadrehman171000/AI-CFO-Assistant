@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
+import BranchUploadSelector from "@/components/company/branch-upload-selector";
 import {
   TrendingUp,
   TrendingDown,
@@ -130,17 +131,37 @@ interface FinancialAnalysisData {
 }
 
 interface ComprehensiveFinancialDashboardProps {
-  analysisData: FinancialAnalysisData;
+  analysisData?: FinancialAnalysisData;
+  showSelector?: boolean;
+  selectedBranchId?: string | null;
+  selectedAnalysisId?: string | null;
+  onSelectionChange?: (branchId: string | null, analysisId: string | null) => void;
 }
 
 export default function ComprehensiveFinancialDashboard({
   analysisData,
+  showSelector = false,
+  selectedBranchId,
+  selectedAnalysisId,
+  onSelectionChange,
 }: ComprehensiveFinancialDashboardProps) {
   const [selectedTab, setSelectedTab] = useState("overview");
-  const { analysis } = analysisData;
+  const [loading, setLoading] = useState(false);
+
+  // Use analysisData directly from props
+  const currentAnalysisData = analysisData;
+
+  const analysis = currentAnalysisData?.analysis;
+
+  const handleSelectionChange = (branchId: string | null, analysisId: string | null) => {
+    // Use the parent's onSelectionChange if provided, otherwise handle locally
+    if (onSelectionChange) {
+      onSelectionChange(branchId, analysisId);
+    }
+  };
 
   // Add error handling for potentially missing data
-  if (!analysis) {
+  if (!currentAnalysisData && !showSelector) {
     return (
       <div className="space-y-6">
         <Alert>
@@ -221,7 +242,7 @@ export default function ComprehensiveFinancialDashboard({
   };
 
   // Prepare chart data for revenue trends
-  const revenueData = [
+  const revenueData = analysis ? [
     {
       name: "Primary",
       value:
@@ -246,10 +267,10 @@ export default function ComprehensiveFinancialDashboard({
         analysis.profit_and_loss.revenue_analysis?.revenue_streams
           ?.one_time_revenue || 0,
     },
-  ].filter((item) => item.value > 0);
+  ].filter((item) => item.value > 0) : [];
 
   // Prepare expense breakdown data
-  const expenseData = [
+  const expenseData = analysis ? [
     {
       name: "Direct Costs",
       value:
@@ -274,14 +295,61 @@ export default function ComprehensiveFinancialDashboard({
         analysis.profit_and_loss.cost_structure?.cost_categories
           ?.financing_costs || 0,
     },
-  ].filter((item) => item.value > 0);
+  ].filter((item) => item.value > 0) : [];
 
   const COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6"];
 
+  // If no analysis data and selector is not shown, show error
+  if (!currentAnalysisData && !showSelector) {
+    return (
+      <div className="space-y-6">
+        <Alert>
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Unable to load financial analysis data. Please select an analysis or upload a file.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4 sm:space-y-6 px-4 sm:px-0">
-      {/* Header with Executive Summary */}
-      <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
+      {showSelector && (
+        <BranchUploadSelector
+          onSelectionChange={handleSelectionChange}
+          title="Select Data Source"
+          description="Choose a branch and financial analysis to view dashboard data"
+          showAllBranchesOption={true}
+          initialBranchId={selectedBranchId}
+          initialAnalysisId={selectedAnalysisId}
+        />
+      )}
+
+      {loading && !currentAnalysisData && (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading financial analysis...</p>
+          </div>
+        </div>
+      )}
+
+      {showSelector && !currentAnalysisData && !loading && (
+        <div className="text-center py-8">
+          <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            No Analysis Selected
+          </h3>
+          <p className="text-muted-foreground">
+            Please select a branch and financial analysis to view the dashboard.
+          </p>
+        </div>
+      )}
+
+      {currentAnalysisData && analysis && (
+        <div>
+          <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
           <div className="flex items-center space-x-3 sm:space-x-4 w-full sm:w-auto">
             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -295,7 +363,7 @@ export default function ComprehensiveFinancialDashboard({
                 AI-Powered Financial Analysis & Insights
               </p>
               <p className="text-xs text-gray-500 mt-1 truncate">
-                Comprehensive analysis of {analysisData.file_info.filename}
+                    Comprehensive analysis of {currentAnalysisData?.file_info.filename}
               </p>
             </div>
           </div>
@@ -308,7 +376,6 @@ export default function ComprehensiveFinancialDashboard({
         </div>
       </div>
 
-      {/* Key Metrics Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <Card>
           <CardContent className="p-4 sm:p-6">
@@ -390,9 +457,11 @@ export default function ComprehensiveFinancialDashboard({
           </CardContent>
         </Card>
       </div>
+        </div>
+      )}
 
       {/* Critical Alerts */}
-      {analysis.executive_summary?.critical_alerts?.length > 0 && (
+      {currentAnalysisData && analysis && analysis.executive_summary?.critical_alerts?.length > 0 && (
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
@@ -412,7 +481,7 @@ export default function ComprehensiveFinancialDashboard({
         </Alert>
       )}
 
-      {/* Main Content Tabs */}
+      {currentAnalysisData && analysis && (
       <div className="bg-white rounded-lg border border-gray-200">
         <Tabs value={selectedTab} onValueChange={setSelectedTab}>
           <div className="border-b border-gray-200 px-4 sm:px-6 pt-4 sm:pt-6">
@@ -430,25 +499,25 @@ export default function ComprehensiveFinancialDashboard({
                     value: "cash-flow",
                     label: "Cash Flow",
                     short: "Cash",
-                    disabled: !analysis.cash_flow_analysis,
+                    disabled: !analysis?.cash_flow_analysis,
                   },
                   {
                     value: "insights",
                     label: "AI Insights",
                     short: "AI",
-                    disabled: !analysis.ai_powered_insights,
+                    disabled: !analysis?.ai_powered_insights,
                   },
                   {
                     value: "scenarios",
                     label: "Scenarios",
                     short: "Scenarios",
-                    disabled: !analysis.what_if_scenarios,
+                    disabled: !analysis?.what_if_scenarios,
                   },
                   {
                     value: "recommendations",
                     label: "Actions",
                     short: "Actions",
-                    disabled: !analysis.strategic_recommendations,
+                    disabled: !analysis?.strategic_recommendations,
                   },
                 ].map((tab) => (
                   <TabsTrigger
@@ -1586,7 +1655,9 @@ export default function ComprehensiveFinancialDashboard({
               </div>
             </TabsContent>
           </Tabs>
-      </div>
+        </div>
+      )}
+
     </div>
   );
 }

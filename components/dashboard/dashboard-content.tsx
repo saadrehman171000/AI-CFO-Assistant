@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useActiveFile } from "@/components/contexts/active-file-context";
 import {
   Card,
   CardContent,
@@ -15,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import ComprehensiveFinancialDashboard from "./comprehensive-financial-dashboard";
+import BranchUploadSelector from "@/components/company/branch-upload-selector";
 import {
   TrendingUp,
   TrendingDown,
@@ -197,7 +197,6 @@ interface DashboardData {
 }
 
 export default function DashboardContent() {
-  const { activeFileData, activeFile, loading: activeFileLoading } = useActiveFile();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(
     null
   );
@@ -205,93 +204,72 @@ export default function DashboardContent() {
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedInsightType, setSelectedInsightType] = useState<string>("all");
+  const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
+  const [selectedAnalysisId, setSelectedAnalysisId] = useState<string | null>(null);
+  const [currentAnalysisData, setCurrentAnalysisData] = useState<any>(null);
 
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Use active file data if available, otherwise fetch latest
-      let analysisData = activeFileData;
+      let analysisData = null;
       let analysisHistory = [];
-      let isMultiFileAnalysis = false;
-      let multiFileAnalysisGroupId = null;
 
-      // If no active file data is available, fetch the latest analysis
-      if (!analysisData) {
+      // If a specific analysis is selected, fetch that data
+      if (selectedAnalysisId) {
         const analysisResponse = await fetch(
-          "/api/financial-analysis?latest=true"
+          `/api/analysis-data?analysisId=${selectedAnalysisId}`
         );
 
         if (analysisResponse.ok) {
           const analysisResult = await analysisResponse.json();
-          // Direct response without success wrapper
-          if (analysisResult.file_info && analysisResult.analysis) {
-            analysisData = analysisResult;
-            // Check if this is a multi-file analysis
-            if (
-              analysisResult.isMultiFileAnalysis &&
-              analysisResult.multiFileAnalysisGroupId
-            ) {
-              isMultiFileAnalysis = true;
-              multiFileAnalysisGroupId = analysisResult.multiFileAnalysisGroupId;
-            }
-          } else if (analysisResult.success && analysisResult.data) {
-            // Backward compatibility with wrapped response
-            analysisData = analysisResult.data;
-            // Check if this is a multi-file analysis
-            if (
-              analysisResult.data.isMultiFileAnalysis &&
-              analysisResult.data.multiFileAnalysisGroupId
-            ) {
-              isMultiFileAnalysis = true;
-              multiFileAnalysisGroupId =
-                analysisResult.data.multiFileAnalysisGroupId;
+          if (analysisResult.success && analysisResult.analysisData) {
+            analysisData = analysisResult.analysisData;
+            setCurrentAnalysisData(analysisResult.analysisData);
+          }
+        }
+      }
+      // If no specific analysis selected, fetch latest for the branch or company
+      else {
+        const endpoint = selectedBranchId
+          ? `/api/financial-analyses?branchId=${selectedBranchId}&latest=true`
+          : "/api/financial-analyses?latest=true";
+
+        const analysisResponse = await fetch(endpoint);
+
+        if (analysisResponse.ok) {
+          const analysisResult = await analysisResponse.json();
+          if (analysisResult.success && analysisResult.analysis) {
+            // Now fetch the actual analysis data
+            const dataResponse = await fetch(
+              `/api/analysis-data?analysisId=${analysisResult.analysis.id}`
+            );
+            if (dataResponse.ok) {
+              const dataResult = await dataResponse.json();
+              if (dataResult.success && dataResult.analysisData) {
+                analysisData = dataResult.analysisData;
+                setCurrentAnalysisData(dataResult.analysisData);
+              }
             }
           }
         }
       }
 
-      // Handle multi-file analysis or fetch history
-      if (isMultiFileAnalysis && multiFileAnalysisGroupId) {
-        try {
-          const groupAnalysisResponse = await fetch(
-            `/api/financial-analysis?groupId=${multiFileAnalysisGroupId}`
-          );
-
-          if (groupAnalysisResponse.ok) {
-            const groupResult = await groupAnalysisResponse.json();
-            if (Array.isArray(groupResult)) {
-              analysisHistory = groupResult;
-            } else if (groupResult.data && Array.isArray(groupResult.data)) {
-              analysisHistory = groupResult.data;
-            }
-          }
-        } catch (groupError) {
-          console.error(
-            "Error fetching multi-file analysis group:",
-            groupError
-          );
-        }
-      } else {
-        // If not a multi-file analysis, fetch regular history
+      // Fetch analysis history for the selected branch
+      if (selectedBranchId) {
         try {
           const historyResponse = await fetch(
-            "/api/financial-analysis?all=true"
+            `/api/financial-analyses?branchId=${selectedBranchId}`
           );
           if (historyResponse.ok) {
             const historyResult = await historyResponse.json();
-            if (Array.isArray(historyResult)) {
-              // Direct array response from the all=true parameter
-              analysisHistory = historyResult;
-            } else if (historyResult.data) {
-              // Handle wrapped data response
-              analysisHistory = historyResult.data;
+            if (historyResult.success && historyResult.analyses) {
+              analysisHistory = historyResult.analyses;
             }
           }
         } catch (historyError) {
-          console.error("Error fetching history:", historyError);
-          // Non-critical, can continue without history
+          console.error("Error fetching analysis history:", historyError);
         }
       }
 
@@ -303,43 +281,43 @@ export default function DashboardContent() {
           sheetType: "",
           summary: {
             totalRevenue:
-              analysisData.analysis.profit_and_loss.revenue_analysis
+              analysisData?.analysis?.profit_and_loss?.revenue_analysis
                 ?.total_revenue || 0,
             totalExpenses:
-              analysisData.analysis.profit_and_loss.cost_structure
+              analysisData?.analysis?.profit_and_loss?.cost_structure
                 ?.total_expenses || 0,
             netProfit:
-              analysisData.analysis.profit_and_loss.profitability_metrics
+              analysisData?.analysis?.profit_and_loss?.profitability_metrics
                 ?.net_income || 0,
             grossMargin:
-              analysisData.analysis.profit_and_loss.profitability_metrics
+              analysisData?.analysis?.profit_and_loss?.profitability_metrics
                 ?.margins?.gross_margin || 0,
             netMargin:
-              analysisData.analysis.profit_and_loss.profitability_metrics
+              analysisData?.analysis?.profit_and_loss?.profitability_metrics
                 ?.margins?.net_margin || 0,
             totalAssets:
-              analysisData.analysis.balance_sheet?.assets?.total_assets || 0,
+              analysisData?.analysis?.balance_sheet?.assets?.total_assets || 0,
             totalLiabilities:
-              analysisData.analysis.balance_sheet?.liabilities
+              analysisData?.analysis?.balance_sheet?.liabilities
                 ?.total_liabilities || 0,
             totalEquity:
-              analysisData.analysis.balance_sheet?.equity?.total_equity || 0,
+              analysisData?.analysis?.balance_sheet?.equity?.total_equity || 0,
             cashFlowOperating:
-              analysisData.analysis.cash_flow_analysis?.operating_activities
+              analysisData?.analysis?.cash_flow_analysis?.operating_activities
                 ?.net_cash_from_operations || 0,
             cashFlowInvesting:
-              analysisData.analysis.cash_flow_analysis?.investing_activities
+              analysisData?.analysis?.cash_flow_analysis?.investing_activities
                 ?.net_investing_cash_flow || 0,
             cashFlowFinancing:
-              analysisData.analysis.cash_flow_analysis?.financing_activities
+              analysisData?.analysis?.cash_flow_analysis?.financing_activities
                 ?.net_financing_cash_flow || 0,
             netCashFlow:
-              analysisData.analysis.cash_flow_analysis?.cash_position
+              analysisData?.analysis?.cash_flow_analysis?.cash_position
                 ?.net_change_in_cash || 0,
           },
           accounts: [],
           insights:
-            analysisData.analysis.key_insights_summary?.map(
+            analysisData?.analysis?.key_insights_summary?.map(
               (insight: any, index: number) => ({
                 type:
                   index % 4 === 0
@@ -374,10 +352,10 @@ export default function DashboardContent() {
           },
           reportInfo: {
             latestReport: {
-              fileName: analysisData.file_info?.filename || "Budget_March.xlsx",
+              fileName: analysisData?.file_info?.filename || "Budget_March.xlsx",
               reportType: "PROFIT_LOSS",
               totalRecords:
-                analysisData.analysis.key_insights_summary?.length || 0,
+                analysisData?.analysis?.key_insights_summary?.length || 0,
             },
             totalReports: 1,
           },
@@ -404,7 +382,14 @@ export default function DashboardContent() {
 
   useEffect(() => {
     fetchDashboardData();
-  }, [activeFileData]); // Re-fetch when active file changes
+  }, [selectedBranchId, selectedAnalysisId]); // Re-fetch when selection changes
+
+  const handleSelectionChange = (branchId: string | null, analysisId: string | null) => {
+    // Clear current data immediately to prevent glitching
+    setCurrentAnalysisData(null);
+    setSelectedBranchId(branchId);
+    setSelectedAnalysisId(analysisId);
+  };
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -543,68 +528,25 @@ export default function DashboardContent() {
     );
   }
 
-  // Check if we have comprehensive analysis data
-  if (dashboardData.analysisData) {
-    // Check if this is a multi-file analysis
-    if ((dashboardData.analysisData as any).isMultiFileAnalysis) {
-      return (
-        <div className="space-y-6">
-          {/* Multi-file analysis header */}
-          <div className="relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 opacity-10 rounded-3xl"></div>
-            <div className="relative bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/20">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="relative">
-                    <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl transform rotate-3 hover:rotate-0 transition-all duration-300">
-                      <BarChart3 className="h-8 w-8 text-white" />
-                    </div>
-                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-pink-500 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
-                      <Sparkles className="h-3 w-3 text-white" />
-                    </div>
-                  </div>
-                  <div>
-                    <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
-                      Multi-File Financial Analysis
-                    </h1>
-                    <p className="text-gray-600 mt-1">
-                      Combined analysis of{" "}
-                      {dashboardData.analysisHistory.length} financial documents
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Individual file analysis */}
-          {dashboardData.analysisHistory.map((analysis, index) => (
-            <div key={index} className="mb-8">
-              <h2 className="text-xl font-bold mb-4 px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-lg">
-                {analysis.file_info.filename}
-              </h2>
-              <ComprehensiveFinancialDashboard analysisData={analysis} />
-              <div className="border-b border-gray-200 my-8"></div>
-            </div>
-          ))}
-        </div>
-      );
-    } else {
-      // Single file analysis
-      return (
-        <div className="space-y-6">
-          {/* Render the comprehensive financial dashboard without duplicate header */}
-          <ComprehensiveFinancialDashboard
-            analysisData={dashboardData.analysisData}
-          />
-        </div>
-      );
-    }
+  // Check if we have comprehensive analysis data - show it with the comprehensive dashboard
+  if (dashboardData?.analysisData) {
+    return (
+      <div className="space-y-6">
+        {/* Render the comprehensive financial dashboard with shared state */}
+        <ComprehensiveFinancialDashboard
+          analysisData={currentAnalysisData}
+          showSelector={true}
+          selectedBranchId={selectedBranchId}
+          selectedAnalysisId={selectedAnalysisId}
+          onSelectionChange={handleSelectionChange}
+        />
+      </div>
+    );
   }
 
   // Legacy dashboard rendering
   const { summary, insights, trends, accounts, reportInfo, topAccounts } =
-    dashboardData;
+    dashboardData || {};
 
   // Define default values for potentially missing properties
   const extendedSummary = {
@@ -621,25 +563,33 @@ export default function DashboardContent() {
   };
 
   // Prepare chart data
-  const chartData = trends.months.map((month: string, index: number) => ({
+  const chartData = trends?.months?.map((month: string, index: number) => ({
     month,
-    revenue: trends.revenue[index] || 0,
-    expenses: trends.expenses[index] || 0,
-    profit: trends.profit[index] || 0,
-  }));
+    revenue: trends?.revenue?.[index] || 0,
+    expenses: trends?.expenses?.[index] || 0,
+    profit: trends?.profit?.[index] || 0,
+  })) || [];
 
   // Prepare pie chart data for expense breakdown
   const expenseBreakdown = accounts
-    .filter((account) => account.category === "EXPENSE")
-    .slice(0, 5)
-    .map((account, index) => ({
-      name: account.name,
-      value: Math.abs(account.amount || 0),
+    ?.filter((account) => account?.category === "EXPENSE")
+    ?.slice(0, 5)
+    ?.map((account, index) => ({
+      name: account?.name || `Account ${index + 1}`,
+      value: Math.abs(account?.amount || 0),
       color: ["#ef4444", "#f97316", "#eab308", "#84cc16", "#22c55e"][index % 5],
-    }));
+    })) || [];
 
   return (
     <div className="space-y-4 sm:space-y-6 px-4 sm:px-0">
+      {/* Branch & Upload Selector */}
+      <BranchUploadSelector
+        onSelectionChange={handleSelectionChange}
+        title="Select Data Source"
+        description="Choose a branch and financial analysis to view dashboard data"
+        showAllBranchesOption={true}
+      />
+
       {/* Clean Professional Header */}
       <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
@@ -691,27 +641,27 @@ export default function DashboardContent() {
             <div className="text-center p-3 bg-slate-50 rounded-lg border border-slate-200">
               <div
                 className="text-sm font-semibold text-slate-700 truncate"
-                title={reportInfo.latestReport.fileName}
+                title={reportInfo?.latestReport?.fileName}
               >
-                {reportInfo.latestReport.fileName}
+                {reportInfo?.latestReport?.fileName || 'Unknown File'}
               </div>
               <div className="text-xs text-gray-500 mt-1">File Name</div>
             </div>
             <div className="text-center p-3 bg-slate-50 rounded-lg border border-slate-200">
               <div className="text-sm font-semibold text-slate-700">
-                {reportInfo.latestReport.reportType.replace("_", " ")}
+                {reportInfo?.latestReport?.reportType?.replace("_", " ") || 'Unknown Type'}
               </div>
               <div className="text-xs text-gray-500 mt-1">Report Type</div>
             </div>
             <div className="text-center p-3 bg-slate-50 rounded-lg border border-slate-200">
               <div className="text-sm font-semibold text-slate-700">
-                {reportInfo.latestReport.totalRecords}
+                {reportInfo?.latestReport?.totalRecords || 0}
               </div>
               <div className="text-xs text-gray-500 mt-1">Records Parsed</div>
             </div>
             <div className="text-center p-3 bg-slate-50 rounded-lg border border-slate-200">
               <div className="text-sm font-semibold text-slate-700">
-                {reportInfo.totalReports}
+                {reportInfo?.totalReports || 0}
               </div>
               <div className="text-xs text-gray-500 mt-1">Total Reports</div>
             </div>
@@ -727,9 +677,9 @@ export default function DashboardContent() {
               <div className="min-w-0 flex-1 mr-3">
                 <p className="text-xs sm:text-sm font-medium text-gray-600">Total Revenue</p>
                 <p className="text-lg sm:text-2xl font-semibold text-gray-900 truncate">
-                  {formatCurrency(summary.totalRevenue || 0)}
+                  {formatCurrency(summary?.totalRevenue || 0)}
                 </p>
-                {summary.grossMargin && (
+                {summary?.grossMargin && (
                   <p className="text-xs text-emerald-600 mt-1">
                     Gross Margin: {formatPercentage(summary.grossMargin)}
                   </p>
@@ -748,9 +698,9 @@ export default function DashboardContent() {
               <div className="min-w-0 flex-1 mr-3">
                 <p className="text-xs sm:text-sm font-medium text-gray-600">Total Expenses</p>
                 <p className="text-lg sm:text-2xl font-semibold text-gray-900 truncate">
-                  {formatCurrency(Math.abs(summary.totalExpenses || 0))}
+                  {formatCurrency(Math.abs(summary?.totalExpenses || 0))}
                 </p>
-                {summary.netMargin && (
+                {summary?.netMargin && (
                   <p className="text-xs text-red-600 mt-1">
                     Net Margin: {formatPercentage(summary.netMargin)}
                   </p>
@@ -769,15 +719,15 @@ export default function DashboardContent() {
               <div className="min-w-0 flex-1 mr-3">
                 <p className="text-xs sm:text-sm font-medium text-gray-600">Net Profit</p>
                 <p
-                  className={`text-lg sm:text-2xl font-semibold truncate ${(summary.netProfit || 0) >= 0
+                  className={`text-lg sm:text-2xl font-semibold truncate ${(summary?.netProfit || 0) >= 0
                     ? "text-emerald-600"
                     : "text-red-600"
                     }`}
                 >
-                  {formatCurrency(summary.netProfit || 0)}
+                  {formatCurrency(summary?.netProfit || 0)}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
-                  {(summary.netProfit || 0) >= 0 ? "Profit" : "Loss"}
+                  {(summary?.netProfit || 0) >= 0 ? "Profit" : "Loss"}
                 </p>
               </div>
               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -793,9 +743,9 @@ export default function DashboardContent() {
               <div className="min-w-0 flex-1 mr-3">
                 <p className="text-xs sm:text-sm font-medium text-gray-600">Total Assets</p>
                 <p className="text-lg sm:text-2xl font-semibold text-gray-900 truncate">
-                  {formatCurrency(summary.totalAssets || 0)}
+                  {formatCurrency(summary?.totalAssets || 0)}
                 </p>
-                {summary.topAccounts && (
+                {summary?.topAccounts && (
                   <p className="text-xs text-slate-600 mt-1">
                     {summary.topAccounts.length} Accounts
                   </p>
@@ -926,67 +876,67 @@ export default function DashboardContent() {
             </TabsList>
 
             <TabsContent value="revenue" className="space-y-2 mt-4">
-              {topAccounts.revenue.map((account: any, index: number) => (
+              {topAccounts?.revenue?.map((account: any, index: number) => (
                 <div
                   key={index}
                   className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200"
                 >
                   <span className="font-medium text-gray-700">
-                    {account.accountName}
+                    {account?.accountName || 'Unknown Account'}
                   </span>
                   <span className="text-emerald-600 font-semibold">
-                    {formatCurrency(Number(account.amount))}
+                    {formatCurrency(Number(account?.amount || 0))}
                   </span>
                 </div>
-              ))}
+              )) || []}
             </TabsContent>
 
             <TabsContent value="expenses" className="space-y-2 mt-4">
-              {topAccounts.expenses.map((account: any, index: number) => (
+              {topAccounts?.expenses?.map((account: any, index: number) => (
                 <div
                   key={index}
                   className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200"
                 >
                   <span className="font-medium text-gray-700">
-                    {account.accountName}
+                    {account?.accountName || 'Unknown Account'}
                   </span>
                   <span className="text-red-600 font-semibold">
-                    {formatCurrency(Number(account.amount))}
+                    {formatCurrency(Number(account?.amount || 0))}
                   </span>
                 </div>
-              ))}
+              )) || []}
             </TabsContent>
 
             <TabsContent value="assets" className="space-y-2 mt-4">
-              {topAccounts.assets.map((account: any, index: number) => (
+              {topAccounts?.assets?.map((account: any, index: number) => (
                 <div
                   key={index}
                   className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200"
                 >
                   <span className="font-medium text-gray-700">
-                    {account.accountName}
+                    {account?.accountName || 'Unknown Account'}
                   </span>
                   <span className="text-blue-600 font-semibold">
-                    {formatCurrency(Number(account.amount))}
+                    {formatCurrency(Number(account?.amount || 0))}
                   </span>
                 </div>
-              ))}
+              )) || []}
             </TabsContent>
 
             <TabsContent value="liabilities" className="space-y-2 mt-4">
-              {topAccounts.liabilities.map((account: any, index: number) => (
+              {topAccounts?.liabilities?.map((account: any, index: number) => (
                 <div
                   key={index}
                   className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200"
                 >
                   <span className="font-medium text-gray-700">
-                    {account.accountName}
+                    {account?.accountName || 'Unknown Account'}
                   </span>
                   <span className="text-orange-600 font-semibold">
-                    {formatCurrency(Number(account.amount))}
+                    {formatCurrency(Number(account?.amount || 0))}
                   </span>
                 </div>
-              ))}
+              )) || []}
             </TabsContent>
           </Tabs>
         </CardContent>
@@ -1012,28 +962,28 @@ export default function DashboardContent() {
               size="sm"
               onClick={() => setSelectedInsightType("all")}
             >
-              All ({insights.length})
+              All ({insights?.length || 0})
             </Button>
             <Button
               variant={selectedInsightType === "trend" ? "default" : "outline"}
               size="sm"
               onClick={() => setSelectedInsightType("trend")}
             >
-              Trends ({insights.filter((i) => i.type === "trend").length})
+              Trends ({insights?.filter((i) => i.type === "trend")?.length || 0})
             </Button>
             <Button
               variant={selectedInsightType === "anomaly" ? "default" : "outline"}
               size="sm"
               onClick={() => setSelectedInsightType("anomaly")}
             >
-              Anomalies ({insights.filter((i) => i.type === "anomaly").length})
+              Anomalies ({insights?.filter((i) => i.type === "anomaly")?.length || 0})
             </Button>
             <Button
               variant={selectedInsightType === "recommendation" ? "default" : "outline"}
               size="sm"
               onClick={() => setSelectedInsightType("recommendation")}
             >
-              Recommendations ({insights.filter((i) => i.type === "recommendation").length})
+              Recommendations ({insights?.filter((i) => i.type === "recommendation")?.length || 0})
             </Button>
           </div>
         </CardHeader>
@@ -1045,24 +995,24 @@ export default function DashboardContent() {
                 className="p-4 border border-gray-200 rounded-lg bg-slate-50"
               >
                 <div className="flex items-start gap-3">
-                  <div className="mt-1">{getInsightIcon(insight.type)}</div>
+                  <div className="mt-1">{getInsightIcon(insight?.type || 'summary')}</div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <h4 className="font-semibold text-gray-900">
-                        {insight.title}
+                        {insight?.title || 'Insight'}
                       </h4>
-                      <Badge variant={getSeverityColor(insight.severity)}>
-                        {insight.severity}
+                      <Badge variant={getSeverityColor(insight?.severity || 'low')}>
+                        {insight?.severity || 'low'}
                       </Badge>
                     </div>
                     <p className="text-sm text-gray-600 mb-2">
-                      {insight.description}
+                      {insight?.description || 'No description available'}
                     </p>
                     <p className="text-sm font-medium mb-2">
                       <span className="text-slate-700">Impact:</span>{" "}
-                      {insight.impact}
+                      {insight?.impact || 'No impact data available'}
                     </p>
-                    {insight.suggestion && (
+                    {insight?.suggestion && (
                       <p className="text-sm">
                         <span className="text-slate-700 font-medium">
                           Suggestion:
@@ -1098,12 +1048,12 @@ export default function DashboardContent() {
                 Operations:
               </span>
               <span
-                className={`font-semibold ${(summary.cashFlowOperating || 0) >= 0
+                className={`font-semibold ${(summary?.cashFlowOperating || 0) >= 0
                   ? "text-green-600"
                   : "text-red-600"
                   }`}
               >
-                {formatCurrency(summary.cashFlowOperating || 0)}
+                {formatCurrency(summary?.cashFlowOperating || 0)}
               </span>
             </div>
             <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200">
@@ -1111,12 +1061,12 @@ export default function DashboardContent() {
                 Investing:
               </span>
               <span
-                className={`font-semibold ${(summary.cashFlowInvesting || 0) >= 0
+                className={`font-semibold ${(summary?.cashFlowInvesting || 0) >= 0
                   ? "text-green-600"
                   : "text-red-600"
                   }`}
               >
-                {formatCurrency(summary.cashFlowInvesting || 0)}
+                {formatCurrency(summary?.cashFlowInvesting || 0)}
               </span>
             </div>
             <div className="flex justify-between items-center p-3 bg-slate-100 rounded-lg border border-slate-300">
@@ -1124,12 +1074,12 @@ export default function DashboardContent() {
                 Net Cash Flow:
               </span>
               <span
-                className={`font-bold text-lg ${(summary.netCashFlow || 0) >= 0
+                className={`font-bold text-lg ${(summary?.netCashFlow || 0) >= 0
                   ? "text-green-600"
                   : "text-red-600"
                   }`}
               >
-                {formatCurrency(summary.netCashFlow || 0)}
+                {formatCurrency(summary?.netCashFlow || 0)}
               </span>
             </div>
           </CardContent>
@@ -1153,7 +1103,7 @@ export default function DashboardContent() {
                 Current Ratio:
               </span>
               <span className="font-semibold text-emerald-600">
-                {extendedSummary.currentRatio?.toFixed(2) || "N/A"}
+                {extendedSummary?.currentRatio?.toFixed(2) || "N/A"}
               </span>
             </div>
             <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200">
@@ -1161,7 +1111,7 @@ export default function DashboardContent() {
                 Debt/Equity:
               </span>
               <span className="font-semibold text-red-600">
-                {extendedSummary.debtToEquityRatio?.toFixed(2) || "N/A"}
+                {extendedSummary?.debtToEquityRatio?.toFixed(2) || "N/A"}
               </span>
             </div>
             <div className="flex justify-between items-center p-3 bg-slate-100 rounded-lg border border-slate-300">
@@ -1169,7 +1119,7 @@ export default function DashboardContent() {
                 Quick Ratio:
               </span>
               <span className="font-bold text-lg text-blue-600">
-                {extendedSummary.quickRatio?.toFixed(2) || "N/A"}
+                {extendedSummary?.quickRatio?.toFixed(2) || "N/A"}
               </span>
             </div>
           </CardContent>
@@ -1193,7 +1143,7 @@ export default function DashboardContent() {
                 EBITDA:
               </span>
               <span className="font-semibold text-slate-700">
-                {formatCurrency(extendedSummary.ebitda || 0)}
+                {formatCurrency(extendedSummary?.ebitda || 0)}
               </span>
             </div>
             <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200">
@@ -1201,7 +1151,7 @@ export default function DashboardContent() {
                 AR Days:
               </span>
               <span className="font-semibold text-slate-700">
-                {extendedSummary.arDays || "N/A"}
+                {extendedSummary?.arDays || "N/A"}
               </span>
             </div>
             <div className="flex justify-between items-center p-3 bg-slate-100 rounded-lg border border-slate-300">
@@ -1209,7 +1159,7 @@ export default function DashboardContent() {
                 AP Days:
               </span>
               <span className="font-bold text-lg text-slate-700">
-                {extendedSummary.apDays || "N/A"}
+                {extendedSummary?.apDays || "N/A"}
               </span>
             </div>
           </CardContent>

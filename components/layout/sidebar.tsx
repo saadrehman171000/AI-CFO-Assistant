@@ -19,6 +19,10 @@ import {
   Eye,
   Bot,
   MessageCircle,
+  Building2,
+  GitCompare,
+  Users,
+  MapPin,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -29,7 +33,17 @@ interface SubscriptionStatus {
   subscription: any;
 }
 
-const navigation = [
+interface CompanyData {
+  company: {
+    id: string;
+    name: string;
+    branches: any[];
+  } | null;
+  isCompanyAdmin: boolean;
+}
+
+// Individual user navigation
+const individualNavigation = [
   {
     name: "Dashboard",
     href: "/dashboard",
@@ -89,12 +103,96 @@ const navigation = [
   },
 ];
 
+// Company user navigation
+const companyNavigation = [
+  {
+    name: "Dashboard",
+    href: "/dashboard",
+    icon: Building2,
+    requiresSubscription: true,
+    color: "bg-blue-600",
+  },
+
+  {
+    name: "Branches",
+    href: "/branches",
+    icon: MapPin,
+    requiresSubscription: true,
+    color: "bg-green-600",
+  },
+  {
+    name: "Upload",
+    href: "/upload",
+    icon: Upload,
+    requiresSubscription: true,
+    color: "bg-emerald-600",
+  },
+  {
+    name: "Branch Comparison",
+    href: "/comparison",
+    icon: GitCompare,
+    requiresSubscription: true,
+    color: "bg-purple-600",
+    featured: true,
+  },
+  {
+    name: "AI Bot",
+    href: "/chatbot",
+    icon: Bot,
+    requiresSubscription: true,
+    color: "bg-purple-600",
+  },
+  {
+    name: "Reports",
+    href: "/reports",
+    icon: FileText,
+    requiresSubscription: true,
+    color: "bg-indigo-600",
+  },
+  {
+    name: "Analytics",
+    href: "/analytics",
+    icon: TrendingUp,
+    requiresSubscription: true,
+    color: "bg-orange-600",
+  },
+  {
+    name: "Forecasting",
+    href: "/forecasting",
+    icon: TrendingUp,
+    requiresSubscription: true,
+    color: "bg-cyan-600",
+  },
+  {
+    name: "Company Settings",
+    href: "/company-settings",
+    icon: Building2,
+    requiresSubscription: true,
+    color: "bg-slate-600",
+  },
+  {
+    name: "Profile",
+    href: "/profile",
+    icon: User,
+    requiresSubscription: false,
+    color: "bg-gray-600",
+  },
+  {
+    name: "Subscription",
+    href: "/subscription",
+    icon: CreditCard,
+    requiresSubscription: false,
+    color: "bg-amber-600",
+  },
+];
+
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] =
     useState<SubscriptionStatus | null>(null);
+  const [companyData, setCompanyData] = useState<CompanyData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Close mobile menu when path changes
@@ -104,6 +202,7 @@ export function Sidebar() {
 
   useEffect(() => {
     checkSubscriptionStatus();
+    checkCompanyData();
   }, []);
 
   const checkSubscriptionStatus = async () => {
@@ -129,6 +228,22 @@ export function Sidebar() {
       setIsLoading(false);
     }
   };
+
+  const checkCompanyData = async () => {
+    try {
+      const response = await fetch("/api/company");
+      if (response.ok) {
+        const data = await response.json();
+        setCompanyData(data);
+      }
+    } catch (error) {
+      console.error("Error checking company data:", error);
+    }
+  };
+
+  // Determine which navigation to use
+  const navigation = companyData?.company ? companyNavigation : individualNavigation;
+  const isCompanyMode = !!companyData?.company;
 
   return (
     <>
@@ -178,7 +293,11 @@ export function Sidebar() {
               >
                 <div className="relative">
                   <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-200 transform group-hover:scale-105">
-                    <TrendingUp className="h-5 w-5 text-white" />
+                    {isCompanyMode ? (
+                      <Building2 className="h-5 w-5 text-white" />
+                    ) : (
+                        <TrendingUp className="h-5 w-5 text-white" />
+                    )}
                   </div>
                   {/* Subtle modern accent */}
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-400 rounded-full opacity-80"></div>
@@ -188,7 +307,7 @@ export function Sidebar() {
                     AI CFO
                   </span>
                   <div className="text-xs text-gray-500 font-medium">
-                    Assistant
+                    {isCompanyMode ? 'Company' : 'Assistant'}
                   </div>
                 </div>
               </Link>
@@ -204,6 +323,30 @@ export function Sidebar() {
                 </Button>
               </div>
             </div>
+
+            {/* Company Info Section */}
+            {isCompanyMode && companyData?.company && (
+              <div className="px-4 py-3 border-b border-gray-200 bg-blue-50">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Building2 className="h-4 w-4 text-blue-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {companyData.company.name}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {companyData.company.branches.length} branch{companyData.company.branches.length !== 1 ? 'es' : ''}
+                    </p>
+                  </div>
+                  {companyData.isCompanyAdmin && (
+                    <Badge variant="secondary" className="text-xs">
+                      Admin
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Enhanced 3D Subscription Status */}
             {isLoading ? (
@@ -304,8 +447,10 @@ export function Sidebar() {
                             isLocked
                               ? "Upgrade to Pro to access this feature"
                               : item.featured
-                                ? "Chat with AI about your financial data"
-                              : undefined
+                                ? isCompanyMode
+                                  ? "Compare performance across branches"
+                                  : "Chat with AI about your financial data"
+                                : undefined
                           }
                         >
                           <div
@@ -327,7 +472,7 @@ export function Sidebar() {
                           <span className="font-medium">{item.name}</span>
                           {item.featured && !isLocked && (
                             <Badge className="ml-auto text-xs bg-purple-600 text-white border-0 px-2 py-0.5">
-                              NEW
+                              {isCompanyMode ? "COMPARE" : "NEW"}
                             </Badge>
                           )}
                           {isLocked && (

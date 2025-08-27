@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useActiveFile } from "@/components/contexts/active-file-context";
+
 import {
   Card,
   CardContent,
@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
+import BranchUploadSelector from "@/components/company/branch-upload-selector";
 import {
   TrendingUp,
   TrendingDown,
@@ -102,7 +103,6 @@ interface ForecastData {
 }
 
 export default function ForecastingContent() {
-  const { activeFileData, activeFile } = useActiveFile();
   const [forecastData, setForecastData] = useState<ForecastData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -112,22 +112,52 @@ export default function ForecastingContent() {
     expenseChange: 0,
     cashFlowChange: 0,
   });
+  const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
+  const [selectedAnalysisId, setSelectedAnalysisId] = useState<string | null>(null);
 
   const generateForecast = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Use active file data if available, otherwise fetch latest
-      let analysisData;
-      if (activeFileData) {
-        analysisData = activeFileData;
-      } else {
-        const response = await fetch("/api/financial-analysis?latest=true");
-        if (!response.ok) {
-          throw new Error("Failed to fetch financial data");
+      let analysisData = null;
+
+      // If a specific analysis is selected, fetch that data
+      if (selectedAnalysisId) {
+        const analysisResponse = await fetch(
+          `/api/analysis-data?analysisId=${selectedAnalysisId}`
+        );
+
+        if (analysisResponse.ok) {
+          const result = await analysisResponse.json();
+          if (result.success && result.analysisData) {
+            analysisData = result.analysisData;
+          }
         }
-        analysisData = await response.json();
+      }
+      // If no specific analysis selected, fetch latest for the branch or company
+      else {
+        const endpoint = selectedBranchId
+          ? `/api/financial-analyses?branchId=${selectedBranchId}&latest=true`
+          : "/api/financial-analyses?latest=true";
+
+        const analysisResponse = await fetch(endpoint);
+
+        if (analysisResponse.ok) {
+          const result = await analysisResponse.json();
+          if (result.success && result.analysis) {
+            // Now fetch the actual analysis data
+            const dataResponse = await fetch(
+              `/api/analysis-data?analysisId=${result.analysis.id}`
+            );
+            if (dataResponse.ok) {
+              const dataResult = await dataResponse.json();
+              if (dataResult.success && dataResult.analysisData) {
+                analysisData = dataResult.analysisData;
+              }
+            }
+          }
+        }
       }
 
       if (analysisData && analysisData.analysis) {
@@ -262,10 +292,22 @@ export default function ForecastingContent() {
     };
   };
 
-  // Auto-generate forecast when component mounts or active file changes
+  // Auto-generate forecast when component mounts or selection changes
   useEffect(() => {
-    generateForecast();
-  }, [activeFileData]);
+    // Only generate forecast if we have valid selection or if it's the initial load
+    if (selectedBranchId !== null || selectedAnalysisId !== null || forecastData === null) {
+      generateForecast();
+    }
+  }, [selectedBranchId, selectedAnalysisId]);
+
+  const handleSelectionChange = (branchId: string | null, analysisId: string | null) => {
+    // Prevent unnecessary re-renders if values haven't changed
+    if (selectedBranchId !== branchId || selectedAnalysisId !== analysisId) {
+      console.log('Forecasting: Selection changed:', { branchId, analysisId });
+      setSelectedBranchId(branchId);
+      setSelectedAnalysisId(analysisId);
+    }
+  };
 
   // Generate forecast from what-if scenarios data
   const generateForecastFromScenarios = (
@@ -589,6 +631,14 @@ export default function ForecastingContent() {
 
   return (
     <div className="space-y-4 sm:space-y-6 px-4 sm:px-0">
+      {/* Branch & Upload Selector */}
+      <BranchUploadSelector
+        onSelectionChange={handleSelectionChange}
+        title="Select Forecasting Data Source"
+        description="Choose a branch and financial analysis to generate forecasts"
+        showAllBranchesOption={true}
+      />
+
       {/* Header */}
       <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">

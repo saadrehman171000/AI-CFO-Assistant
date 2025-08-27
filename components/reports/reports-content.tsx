@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useActiveFile } from "@/components/contexts/active-file-context";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +25,7 @@ import {
   exportToCSV,
   prepareDataForExport,
 } from "@/lib/export-utils";
+import BranchUploadSelector from "@/components/company/branch-upload-selector";
 
 const tabs = ["P&L Statement", "Balance Sheet", "Cash Flow"];
 
@@ -36,7 +37,6 @@ interface TableRow {
 }
 
 export function ReportsContent() {
-  const { activeFileData, activeFile } = useActiveFile();
   const [activeTab, setActiveTab] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -44,6 +44,8 @@ export function ReportsContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
+  const [selectedAnalysisId, setSelectedAnalysisId] = useState<string | null>(null);
   const itemsPerPage = 10;
 
   // Enhanced export functions
@@ -377,17 +379,47 @@ export function ReportsContent() {
       setLoading(true);
       setError(null);
       try {
-        // Use active file data if available, otherwise fetch latest
-        if (activeFileData) {
-          setFinancialData(activeFileData);
-        } else {
-          const response = await fetch("/api/financial-analysis?latest=true");
-          if (!response.ok) {
-            throw new Error("Failed to fetch financial data");
+        let analysisData = null;
+
+        // If a specific analysis is selected, fetch that data
+        if (selectedAnalysisId) {
+          const analysisResponse = await fetch(
+            `/api/analysis-data?analysisId=${selectedAnalysisId}`
+          );
+
+          if (analysisResponse.ok) {
+            const result = await analysisResponse.json();
+            if (result.success && result.analysisData) {
+              analysisData = result.analysisData;
+            }
           }
-          const data = await response.json();
-          setFinancialData(data);
         }
+        // If no specific analysis selected, fetch latest for the branch or company
+        else {
+          const endpoint = selectedBranchId
+            ? `/api/financial-analyses?branchId=${selectedBranchId}&latest=true`
+            : "/api/financial-analyses?latest=true";
+
+          const analysisResponse = await fetch(endpoint);
+
+          if (analysisResponse.ok) {
+            const result = await analysisResponse.json();
+            if (result.success && result.analysis) {
+              // Now fetch the actual analysis data
+              const dataResponse = await fetch(
+                `/api/analysis-data?analysisId=${result.analysis.id}`
+              );
+              if (dataResponse.ok) {
+                const dataResult = await dataResponse.json();
+                if (dataResult.success && dataResult.analysisData) {
+                  analysisData = dataResult.analysisData;
+                }
+              }
+            }
+          }
+        }
+
+        setFinancialData(analysisData);
       } catch (err) {
         console.error("Error fetching financial data:", err);
         setError(err instanceof Error ? err.message : "An error occurred");
@@ -397,7 +429,15 @@ export function ReportsContent() {
     };
 
     fetchFinancialData();
-  }, [activeFileData]); // Re-fetch when active file changes
+  }, [selectedBranchId, selectedAnalysisId]); // Re-fetch when selection changes
+
+  const handleSelectionChange = (branchId: string | null, analysisId: string | null) => {
+    // Prevent unnecessary re-renders if values haven't changed
+    if (selectedBranchId !== branchId || selectedAnalysisId !== analysisId) {
+      setSelectedBranchId(branchId);
+      setSelectedAnalysisId(analysisId);
+    }
+  };
 
   // Reset page when tab changes
   useEffect(() => {
@@ -427,6 +467,14 @@ export function ReportsContent() {
 
   return (
     <div className="space-y-4 sm:space-y-6 px-4 sm:px-0">
+      {/* Branch & Upload Selector */}
+      <BranchUploadSelector
+        onSelectionChange={handleSelectionChange}
+        title="Select Reports Data Source"
+        description="Choose a branch and financial analysis to view detailed reports"
+        showAllBranchesOption={true}
+      />
+
       {/* Header */}
       <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
@@ -566,7 +614,7 @@ export function ReportsContent() {
                         {tabs[activeTab]}
                       </div>
                       <div className="text-xs sm:text-sm text-gray-500 font-normal truncate">
-                        {financialData.file_info.filename}
+                        {financialData?.file_info?.filename || 'No file selected'}
                       </div>
                     </div>
                   </CardTitle>

@@ -16,12 +16,59 @@ model User {
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
   stripeCustomerId    String?
+  
+  // Company relationship
+  companyId           String?
+  company             Company?              @relation(fields: [companyId], references: [id])
+  isCompanyAdmin      Boolean               @default(false)
+  hasCompletedSetup   Boolean               @default(false)
+  
   financialReports    FinancialReport[]
   parsedData          ParsedFinancialData[]
   subscriptions       Subscription[]
   financialAnalyses   FinancialAnalysis[]
 
   @@map("users")
+}
+
+model Company {
+  id                  String                @id @default(cuid())
+  name                String
+  description         String?
+  industry            String?
+  website             String?
+  phone               String?
+  address             String?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  
+  // Relationships
+  users               User[]
+  branches            Branch[]
+  financialReports    FinancialReport[]
+  financialAnalyses   FinancialAnalysis[]
+
+  @@map("companies")
+}
+
+model Branch {
+  id                  String                @id @default(cuid())
+  name                String
+  location            String?
+  address             String?
+  phone               String?
+  description         String?
+  isActive            Boolean               @default(true)
+  companyId           String
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  
+  // Relationships
+  company             Company               @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  financialReports    FinancialReport[]
+  financialAnalyses   FinancialAnalysis[]
+
+  @@map("branches")
 }
 
 model FinancialReport {
@@ -36,7 +83,14 @@ model FinancialReport {
   uploadDate   DateTime              @default(now())
   status       UploadStatus          @default(PROCESSING)
   errorMessage String?
+  
+  // Company and Branch relationships
+  companyId    String?
+  branchId     String?
+  
   user         User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company      Company?              @relation(fields: [companyId], references: [id])
+  branch       Branch?               @relation(fields: [branchId], references: [id])
   parsedData   ParsedFinancialData[]
 
   @@map("financial_reports")
@@ -122,6 +176,13 @@ model FinancialAnalysis {
   analysisData           Json      // Store the complete analysis JSON response
   isMultiFileAnalysis    Boolean   @default(false)
   multiFileAnalysisGroupId String?
+  
+  // Company and Branch relationships
+  companyId              String?
+  branchId               String?
+  company                Company?  @relation(fields: [companyId], references: [id])
+  branch                 Branch?   @relation(fields: [branchId], references: [id])
+  
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 
