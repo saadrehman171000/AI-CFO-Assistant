@@ -159,16 +159,33 @@ export default function ComprehensiveFinancialDashboard({
   // Helper function to safely access nested properties
   const safeGet = (obj: any, path: string, defaultValue: any = 0): any => {
     try {
+      if (!obj || typeof obj !== 'object') return defaultValue;
       const keys = path.split('.');
       let result = obj;
       for (const key of keys) {
-        if (result === undefined || result === null) return defaultValue;
+        if (result === undefined || result === null || typeof result !== 'object') return defaultValue;
         result = result[key];
       }
       return result === undefined || result === null ? defaultValue : result;
     } catch (e) {
       return defaultValue;
     }
+  };
+
+  // Helper function to safely check if an array exists and has items
+  const safeArray = (arr: any): any[] => {
+    return Array.isArray(arr) ? arr : [];
+  };
+
+  // Helper function to safely get string values
+  const safeString = (value: any, defaultValue: string = ''): string => {
+    return value != null && typeof value === 'string' ? value : defaultValue;
+  };
+
+  // Helper function to safely get number values
+  const safeNumber = (value: any, defaultValue: number = 0): number => {
+    const num = Number(value);
+    return !isNaN(num) && isFinite(num) ? num : defaultValue;
   };
 
   // Component state for selections (additional to props)
@@ -211,29 +228,33 @@ export default function ComprehensiveFinancialDashboard({
     );
   }
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | null | undefined) => {
+    const safeAmount = safeNumber(amount, 0);
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(amount);
+    }).format(safeAmount);
   };
 
-  const formatPercentage = (value: number) => {
-    if (typeof value !== "number") return "N/A";
-    return `${(value * 100).toFixed(1)}%`;
+  const formatPercentage = (value: number | null | undefined) => {
+    const safeValue = safeNumber(value);
+    if (safeValue === 0 && value == null) return "N/A";
+    return `${(safeValue * 100).toFixed(1)}%`;
   };
 
-  const getHealthScoreColor = (score: number) => {
-    if (score >= 80) return "text-green-600 bg-green-100";
-    if (score >= 60) return "text-yellow-600 bg-yellow-100";
-    if (score >= 40) return "text-orange-600 bg-orange-100";
+  const getHealthScoreColor = (score: number | null | undefined) => {
+    const safeScore = safeNumber(score, 0);
+    if (safeScore >= 80) return "text-green-600 bg-green-100";
+    if (safeScore >= 60) return "text-yellow-600 bg-yellow-100";
+    if (safeScore >= 40) return "text-orange-600 bg-orange-100";
     return "text-red-600 bg-red-100";
   };
 
-  const getSeverityColor = (severity: string) => {
-    switch (severity?.toLowerCase()) {
+  const getSeverityColor = (severity: string | null | undefined) => {
+    const safeSeverity = safeString(severity).toLowerCase();
+    switch (safeSeverity) {
       case "critical":
         return "bg-red-100 text-red-800";
       case "high":
@@ -247,8 +268,9 @@ export default function ComprehensiveFinancialDashboard({
     }
   };
 
-  const getTrendIcon = (direction: string) => {
-    switch (direction?.toLowerCase()) {
+  const getTrendIcon = (direction: string | null | undefined) => {
+    const safeDirection = safeString(direction).toLowerCase();
+    switch (safeDirection) {
       case "increasing":
       case "improving":
       case "positive":
@@ -262,8 +284,9 @@ export default function ComprehensiveFinancialDashboard({
     }
   };
 
-  const getPriorityIcon = (priority: string) => {
-    switch (priority?.toLowerCase()) {
+  const getPriorityIcon = (priority: string | null | undefined) => {
+    const safePriority = safeString(priority).toLowerCase();
+    switch (safePriority) {
       case "critical":
         return <AlertTriangle className="h-4 w-4 text-red-500" />;
       case "high":
@@ -295,7 +318,7 @@ export default function ComprehensiveFinancialDashboard({
       name: "One-time",
       value: safeGet(analysis, 'profit_and_loss.revenue_analysis.revenue_streams.one_time_revenue', 0),
     },
-  ].filter((item) => item.value > 0) : [];
+  ].filter((item) => safeNumber(item?.value, 0) > 0) : [];
 
   // Prepare expense breakdown data
   const expenseData = analysis ? [
@@ -315,7 +338,7 @@ export default function ComprehensiveFinancialDashboard({
       name: "Financing",
       value: safeGet(analysis, 'profit_and_loss.cost_structure.cost_categories.financing_costs', 0),
     },
-  ].filter((item) => item.value > 0) : [];
+  ].filter((item) => safeNumber(item?.value, 0) > 0) : [];
 
   const COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6"];
 
@@ -383,13 +406,13 @@ export default function ComprehensiveFinancialDashboard({
                 AI-Powered Financial Analysis & Insights
               </p>
               <p className="text-xs text-gray-500 mt-1 truncate">
-                    Comprehensive analysis of {currentAnalysisData?.file_info.filename}
+                    Comprehensive analysis of {safeString(currentAnalysisData?.file_info?.filename, 'Unknown File')}
               </p>
             </div>
           </div>
           <div className="text-center px-4 py-3 sm:px-6 sm:py-4 rounded-lg bg-emerald-50 border border-emerald-200 w-full sm:w-auto">
             <div className="text-xl sm:text-2xl font-bold text-emerald-700">
-              {analysis.executive_summary?.business_health_score || 0}
+                  {safeNumber(analysis?.executive_summary?.business_health_score, 0)}
             </div>
             <div className="text-xs sm:text-sm font-medium text-emerald-600">Health Score</div>
           </div>
@@ -441,7 +464,7 @@ export default function ComprehensiveFinancialDashboard({
               <div className="min-w-0 flex-1 mr-3">
                 <p className="text-xs sm:text-sm font-medium text-gray-600">Net Income</p>
                 <p
-                  className={`text-lg sm:text-2xl font-semibold truncate ${safeGet(analysis, 'profit_and_loss.profitability_metrics.net_income', 0) >= 0
+                      className={`text-lg sm:text-2xl font-semibold truncate ${safeNumber(safeGet(analysis, 'profit_and_loss.profitability_metrics.net_income', 0)) >= 0
                     ? "text-emerald-600"
                     : "text-red-600"
                     }`}
@@ -480,7 +503,7 @@ export default function ComprehensiveFinancialDashboard({
       )}
 
       {/* Critical Alerts */}
-      {currentAnalysisData && analysis && analysis.executive_summary?.critical_alerts?.length > 0 && (
+      {currentAnalysisData && analysis && safeArray(analysis?.executive_summary?.critical_alerts).length > 0 && (
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
@@ -488,10 +511,10 @@ export default function ComprehensiveFinancialDashboard({
               Critical Alerts Requiring Immediate Attention:
             </div>
             <ul className="list-disc list-inside space-y-1">
-              {analysis.executive_summary?.critical_alerts?.map(
+              {safeArray(analysis?.executive_summary?.critical_alerts).map(
                 (alert: any, index: number) => (
                   <li key={index} className="text-sm">
-                    {alert}
+                    {safeString(alert, 'Alert information unavailable')}
                   </li>
                 )
               )}
@@ -742,7 +765,7 @@ export default function ComprehensiveFinancialDashboard({
                         </p>
                                                   <p
                           className={`text-base sm:text-xl lg:text-2xl font-bold ${
-                            safeGet(analysis, 'profit_and_loss.profitability_metrics.margins.operating_margin', 0) >= 0
+                            safeNumber(safeGet(analysis, 'profit_and_loss.profitability_metrics.margins.operating_margin', 0)) >= 0
                               ? "text-green-600"
                               : "text-red-600"
                           }`}
@@ -766,15 +789,14 @@ export default function ComprehensiveFinancialDashboard({
                         </p>
                         <p
                           className={`text-base sm:text-xl lg:text-2xl font-bold truncate max-w-[140px] sm:max-w-full ${
-                            analysis.cash_flow_analysis?.operating_activities
-                              ?.net_cash_from_operations >= 0
+                            safeNumber(analysis?.cash_flow_analysis?.operating_activities
+                              ?.net_cash_from_operations, 0) >= 0
                               ? "text-green-600"
                               : "text-red-600"
                           }`}
                         >
                           {formatCurrency(
-                            analysis.cash_flow_analysis?.operating_activities
-                              ?.net_cash_from_operations || 0
+                            safeGet(analysis, 'cash_flow_analysis.operating_activities.net_cash_from_operations', 0)
                           )}
                         </p>
                       </div>
@@ -806,7 +828,7 @@ export default function ComprehensiveFinancialDashboard({
                     <span className="text-xs sm:text-sm font-medium">Operating Profit:</span>
                                                 <span
                       className={`font-bold text-xs sm:text-sm ${
-                          safeGet(analysis, 'profit_and_loss.profitability_metrics.operating_profit', 0) >= 0
+                          safeNumber(safeGet(analysis, 'profit_and_loss.profitability_metrics.operating_profit', 0)) >= 0
                             ? "text-green-600"
                             : "text-red-600"
                         }`}
@@ -820,7 +842,7 @@ export default function ComprehensiveFinancialDashboard({
                     <span className="text-xs sm:text-sm font-medium">EBITDA:</span>
                       <span
                       className={`font-bold text-xs sm:text-sm ${
-                          safeGet(analysis, 'profit_and_loss.profitability_metrics.ebitda', 0) >= 0
+                          safeNumber(safeGet(analysis, 'profit_and_loss.profitability_metrics.ebitda', 0)) >= 0
                             ? "text-green-600"
                             : "text-red-600"
                         }`}
@@ -834,7 +856,7 @@ export default function ComprehensiveFinancialDashboard({
                     <span className="text-xs sm:text-sm font-medium">Net Income:</span>
                       <span
                       className={`font-bold text-xs sm:text-sm ${
-                          safeGet(analysis, 'profit_and_loss.profitability_metrics.net_income', 0) >= 0
+                          safeNumber(safeGet(analysis, 'profit_and_loss.profitability_metrics.net_income', 0)) >= 0
                             ? "text-green-600"
                             : "text-red-600"
                         }`}
@@ -865,7 +887,7 @@ export default function ComprehensiveFinancialDashboard({
                         <Progress
                           value={Math.max(
                             0,
-                            safeGet(analysis, 'profit_and_loss.profitability_metrics.margins.gross_margin', 0) * 100
+                            safeNumber(safeGet(analysis, 'profit_and_loss.profitability_metrics.margins.gross_margin', 0)) * 100
                           )}
                         className="h-1.5 sm:h-2 mt-1 sm:mt-2"
                         />
@@ -883,7 +905,7 @@ export default function ComprehensiveFinancialDashboard({
                         <Progress
                           value={Math.max(
                             0,
-                            safeGet(analysis, 'profit_and_loss.profitability_metrics.margins.operating_margin', 0) * 100
+                            safeNumber(safeGet(analysis, 'profit_and_loss.profitability_metrics.margins.operating_margin', 0)) * 100
                           )}
                         className="h-1.5 sm:h-2 mt-1 sm:mt-2"
                         />
@@ -901,7 +923,7 @@ export default function ComprehensiveFinancialDashboard({
                         <Progress
                           value={Math.max(
                             0,
-                            safeGet(analysis, 'profit_and_loss.profitability_metrics.margins.ebitda_margin', 0) * 100
+                            safeNumber(safeGet(analysis, 'profit_and_loss.profitability_metrics.margins.ebitda_margin', 0)) * 100
                           )}
                         className="h-1.5 sm:h-2 mt-1 sm:mt-2"
                         />
@@ -919,7 +941,7 @@ export default function ComprehensiveFinancialDashboard({
                         <Progress
                           value={Math.max(
                             0,
-                            safeGet(analysis, 'profit_and_loss.profitability_metrics.margins.net_margin', 0) * 100
+                            safeNumber(safeGet(analysis, 'profit_and_loss.profitability_metrics.margins.net_margin', 0)) * 100
                           )}
                         className="h-1.5 sm:h-2 mt-1 sm:mt-2"
                         />
@@ -932,9 +954,9 @@ export default function ComprehensiveFinancialDashboard({
 
           {/* Balance Sheet Tab */}
           <TabsContent value="balance-sheet" className="space-y-4 sm:space-y-6 p-4 sm:p-6">
-              {analysis.balance_sheet?.assets?.total_assets ||
-              analysis.balance_sheet?.liabilities?.total_liabilities ||
-              analysis.balance_sheet?.equity?.total_equity ? (
+              {(safeNumber(analysis?.balance_sheet?.assets?.total_assets, 0) > 0 ||
+                safeNumber(analysis?.balance_sheet?.liabilities?.total_liabilities, 0) > 0 ||
+                safeNumber(analysis?.balance_sheet?.equity?.total_equity, 0) > 0) ? (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
                   <Card>
                     <CardHeader className="p-4 sm:p-6">
@@ -945,8 +967,7 @@ export default function ComprehensiveFinancialDashboard({
                         <span className="text-xs sm:text-sm">Current Assets:</span>
                         <span className="font-semibold text-xs sm:text-sm">
                           {formatCurrency(
-                            analysis.balance_sheet?.assets?.current_assets
-                              ?.total_current || 0
+                            safeGet(analysis, 'balance_sheet.assets.current_assets.total_current', 0)
                           )}
                         </span>
                       </div>
@@ -954,8 +975,7 @@ export default function ComprehensiveFinancialDashboard({
                         <span className="text-xs sm:text-sm">Non-Current Assets:</span>
                         <span className="font-semibold text-xs sm:text-sm">
                           {formatCurrency(
-                            analysis.balance_sheet?.assets?.non_current_assets
-                              ?.total_non_current || 0
+                            safeGet(analysis, 'balance_sheet.assets.non_current_assets.total_non_current', 0)
                           )}
                         </span>
                       </div>
@@ -963,7 +983,7 @@ export default function ComprehensiveFinancialDashboard({
                         <span>Total Assets:</span>
                         <span>
                           {formatCurrency(
-                            analysis.balance_sheet?.assets?.total_assets || 0
+                            safeGet(analysis, 'balance_sheet.assets.total_assets', 0)
                           )}
                         </span>
                       </div>
@@ -979,8 +999,7 @@ export default function ComprehensiveFinancialDashboard({
                         <span className="text-xs sm:text-sm">Current Liabilities:</span>
                         <span className="font-semibold text-xs sm:text-sm">
                           {formatCurrency(
-                            analysis.balance_sheet?.liabilities
-                              ?.current_liabilities?.total_current || 0
+                            safeGet(analysis, 'balance_sheet.liabilities.current_liabilities.total_current', 0)
                           )}
                         </span>
                       </div>
@@ -988,8 +1007,7 @@ export default function ComprehensiveFinancialDashboard({
                         <span className="text-xs sm:text-sm">Long-term Liabilities:</span>
                         <span className="font-semibold text-xs sm:text-sm">
                           {formatCurrency(
-                            analysis.balance_sheet?.liabilities
-                              ?.long_term_liabilities?.total_long_term || 0
+                            safeGet(analysis, 'balance_sheet.liabilities.long_term_liabilities.total_long_term', 0)
                           )}
                         </span>
                       </div>
@@ -997,8 +1015,7 @@ export default function ComprehensiveFinancialDashboard({
                         <span>Total Liabilities:</span>
                         <span>
                           {formatCurrency(
-                            analysis.balance_sheet?.liabilities
-                              ?.total_liabilities || 0
+                            safeGet(analysis, 'balance_sheet.liabilities.total_liabilities', 0)
                           )}
                         </span>
                       </div>
@@ -1014,7 +1031,7 @@ export default function ComprehensiveFinancialDashboard({
                         <span className="text-xs sm:text-sm">Owner Equity:</span>
                         <span className="font-semibold text-xs sm:text-sm">
                           {formatCurrency(
-                            analysis.balance_sheet?.equity?.owner_equity || 0
+                            safeGet(analysis, 'balance_sheet.equity.owner_equity', 0)
                           )}
                         </span>
                       </div>
@@ -1022,8 +1039,7 @@ export default function ComprehensiveFinancialDashboard({
                         <span className="text-xs sm:text-sm">Retained Earnings:</span>
                         <span className="font-semibold text-xs sm:text-sm">
                           {formatCurrency(
-                            analysis.balance_sheet?.equity?.retained_earnings ||
-                              0
+                            safeGet(analysis, 'balance_sheet.equity.retained_earnings', 0)
                           )}
                         </span>
                       </div>
@@ -1031,7 +1047,7 @@ export default function ComprehensiveFinancialDashboard({
                         <span>Total Equity:</span>
                         <span>
                           {formatCurrency(
-                            analysis.balance_sheet?.equity?.total_equity || 0
+                            safeGet(analysis, 'balance_sheet.equity.total_equity', 0)
                           )}
                         </span>
                       </div>
@@ -1057,14 +1073,14 @@ export default function ComprehensiveFinancialDashboard({
 
           {/* Monthly Analysis Tab */}
           <TabsContent value="monthly" className="space-y-4 sm:space-y-6 p-4 sm:p-6">
-            {analysis?.monthly_analysis && analysis?.monthly_analysis?.months_detected?.length > 0 ? (
+              {analysis?.monthly_analysis && safeArray(analysis?.monthly_analysis?.months_detected).length > 0 ? (
               <div className="space-y-6">
                 {/* Monthly Overview */}
                 <Card>
                   <CardHeader className="p-4 sm:p-6">
                     <CardTitle className="text-base sm:text-lg">Monthly Overview</CardTitle>
                     <CardDescription>
-                      Monthly financial data for {analysis.monthly_analysis.per_month_metrics?.length || 0} of {analysis.monthly_analysis.months_detected?.length || 0} periods
+                        Monthly financial data for {safeArray(analysis?.monthly_analysis?.per_month_metrics).length} of {safeArray(analysis?.monthly_analysis?.months_detected).length} periods
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="p-0">
@@ -1080,23 +1096,23 @@ export default function ComprehensiveFinancialDashboard({
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-200">
-                          {analysis.monthly_analysis.per_month_metrics?.map((month: any, index: number) => (
+                            {safeArray(analysis?.monthly_analysis?.per_month_metrics).map((month: any, index: number) => (
                             <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
-                              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-slate-900">{month.month}</td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-slate-900">{safeString(month?.month, 'Unknown Month')}</td>
                               <td className="px-4 py-3 whitespace-nowrap text-sm text-right text-slate-900">
-                                {formatCurrency(month.revenue || 0)}
+                                  {formatCurrency(safeNumber(month?.revenue, 0))}
                               </td>
                               <td className="px-4 py-3 whitespace-nowrap text-sm text-right text-slate-900">
-                                {formatCurrency(month.expenses || 0)}
+                                  {formatCurrency(safeNumber(month?.expenses, 0))}
                               </td>
                               <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-medium">
-                                <span className={month.net_income >= 0 ? 'text-green-600' : 'text-red-600'}>
-                                  {formatCurrency(month.net_income || 0)}
+                                  <span className={safeNumber(month?.net_income, 0) >= 0 ? 'text-green-600' : 'text-red-600'}>
+                                    {formatCurrency(safeNumber(month?.net_income, 0))}
                                 </span>
                               </td>
                               <td className="px-4 py-3 whitespace-nowrap text-sm text-right">
-                                <span className={month.key_ratios?.net_margin >= 0 ? 'text-green-600' : 'text-red-600'}>
-                                  {formatPercentage(month.key_ratios?.net_margin || 0)}
+                                  <span className={safeNumber(month?.key_ratios?.net_margin, 0) >= 0 ? 'text-green-600' : 'text-red-600'}>
+                                    {formatPercentage(safeNumber(month?.key_ratios?.net_margin, 0))}
                                 </span>
                               </td>
                             </tr>
@@ -1104,11 +1120,11 @@ export default function ComprehensiveFinancialDashboard({
                         </tbody>
                       </table>
                     </div>
-                    {analysis.monthly_analysis.per_month_metrics?.length < analysis.monthly_analysis.months_detected?.length && (
+                      {safeArray(analysis?.monthly_analysis?.per_month_metrics).length < safeArray(analysis?.monthly_analysis?.months_detected).length && (
                       <div className="px-4 py-3 text-sm bg-blue-50 text-blue-700 border-t border-blue-100">
                         <p className="flex items-center">
                           <AlertTriangle className="h-4 w-4 mr-2 text-blue-500" />
-                          Note: Data is only available for {analysis.monthly_analysis.per_month_metrics?.length || 0} of {analysis.monthly_analysis.months_detected?.length || 0} detected months.
+                            Note: Data is only available for {safeArray(analysis?.monthly_analysis?.per_month_metrics).length} of {safeArray(analysis?.monthly_analysis?.months_detected).length} detected months.
                         </p>
                       </div>
                     )}
@@ -1116,52 +1132,52 @@ export default function ComprehensiveFinancialDashboard({
                 </Card>
                 
                 {/* Monthly Analysis Details */}
-                {analysis.monthly_analysis.per_month_metrics?.length > 0 && (
+                  {safeArray(analysis?.monthly_analysis?.per_month_metrics).length > 0 && (
                   <Card>
                     <CardHeader className="p-4 sm:p-6">
                       <CardTitle className="text-base sm:text-lg">Monthly Details</CardTitle>
                     </CardHeader>
                     <CardContent className="p-4 sm:p-6 space-y-4">
-                      {analysis.monthly_analysis.per_month_metrics?.map((month: any, index: number) => (
+                        {safeArray(analysis?.monthly_analysis?.per_month_metrics).map((month: any, index: number) => (
                         <div key={index} className="border rounded-lg p-4 bg-white">
                           <div className="flex flex-wrap justify-between items-center mb-3">
-                            <h3 className="text-lg font-medium text-slate-800">{month.month}</h3>
+                              <h3 className="text-lg font-medium text-slate-800">{safeString(month?.month, 'Unknown Month')}</h3>
                             <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">
-                              Net Margin: {formatPercentage(month.key_ratios?.net_margin || 0)}
+                                Net Margin: {formatPercentage(safeNumber(month?.key_ratios?.net_margin, 0))}
                             </Badge>
                           </div>
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-3">
                             <div className="flex flex-col p-3 bg-slate-50 rounded-md">
                               <span className="text-sm text-slate-600">Revenue</span>
-                              <span className="text-lg font-semibold text-emerald-600">{formatCurrency(month.revenue || 0)}</span>
+                                <span className="text-lg font-semibold text-emerald-600">{formatCurrency(safeNumber(month?.revenue, 0))}</span>
                             </div>
                             <div className="flex flex-col p-3 bg-slate-50 rounded-md">
                               <span className="text-sm text-slate-600">Expenses</span>
-                              <span className="text-lg font-semibold text-red-600">{formatCurrency(month.expenses || 0)}</span>
+                                <span className="text-lg font-semibold text-red-600">{formatCurrency(safeNumber(month?.expenses, 0))}</span>
                             </div>
                             <div className="flex flex-col p-3 bg-slate-50 rounded-md">
                               <span className="text-sm text-slate-600">Net Income</span>
-                              <span className={`text-lg font-semibold ${month.net_income >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-                                {formatCurrency(month.net_income || 0)}
+                                <span className={`text-lg font-semibold ${safeNumber(month?.net_income, 0) >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                                  {formatCurrency(safeNumber(month?.net_income, 0))}
                               </span>
                             </div>
                           </div>
-                          {month.anomalies_detected && month.anomalies_detected.length > 0 && (
+                            {safeArray(month?.anomalies_detected).length > 0 && (
                             <div className="mt-3">
                               <h4 className="text-sm font-medium text-slate-800 mb-1">Anomalies Detected:</h4>
                               <ul className="list-disc list-inside space-y-1">
-                                {month.anomalies_detected.map((anomaly: string, i: number) => (
-                                  <li key={i} className="text-sm text-slate-600">{anomaly}</li>
+                                  {safeArray(month?.anomalies_detected).map((anomaly: string, i: number) => (
+                                    <li key={i} className="text-sm text-slate-600">{safeString(anomaly, 'Unknown anomaly')}</li>
                                 ))}
                               </ul>
                             </div>
                           )}
-                          {month.month_specific_recommendations && month.month_specific_recommendations.length > 0 && (
+                            {safeArray(month?.month_specific_recommendations).length > 0 && (
                             <div className="mt-3">
                               <h4 className="text-sm font-medium text-slate-800 mb-1">Recommendations:</h4>
                               <ul className="list-disc list-inside space-y-1">
-                                {month.month_specific_recommendations.map((rec: string, i: number) => (
-                                  <li key={i} className="text-sm text-blue-600">{rec}</li>
+                                  {safeArray(month?.month_specific_recommendations).map((rec: string, i: number) => (
+                                    <li key={i} className="text-sm text-blue-600">{safeString(rec, 'No recommendation available')}</li>
                                 ))}
                               </ul>
                             </div>
@@ -1177,28 +1193,28 @@ export default function ComprehensiveFinancialDashboard({
                   <CardHeader className="p-4 sm:p-6">
                     <CardTitle className="text-base sm:text-lg">Monthly Revenue Trend</CardTitle>
                     {analysis.monthly_analysis.per_month_metrics?.length === 1 && (
-                      <CardDescription>
-                        Showing data for {analysis.monthly_analysis.per_month_metrics[0].month}
-                      </CardDescription>
+                        <CardDescription>
+                          Showing data for {safeString(safeArray(analysis?.monthly_analysis?.per_month_metrics)[0]?.month, 'Unknown Month')}
+                        </CardDescription>
                     )}
                   </CardHeader>
                   <CardContent className="p-4 sm:p-6">
-                    {analysis.monthly_analysis.per_month_metrics?.length > 0 ? (
+                      {safeArray(analysis?.monthly_analysis?.per_month_metrics).length > 0 ? (
                       <div className="h-[300px]">
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart 
-                            data={analysis.monthly_analysis.per_month_metrics?.map((month: any) => ({
-                              name: month.month.split(' ')[0], // Just get the month name
-                              revenue: month.revenue || 0,
-                              expenses: month.expenses || 0
+                              data={safeArray(analysis?.monthly_analysis?.per_month_metrics).map((month: any) => ({
+                                name: safeString(month?.month, 'Unknown').split(' ')[0], // Just get the month name
+                                revenue: safeNumber(month?.revenue, 0),
+                                expenses: safeNumber(month?.expenses, 0)
                             }))}
                             margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
                           >
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis 
                               dataKey="name" 
-                              angle={analysis.monthly_analysis.per_month_metrics?.length > 6 ? -45 : 0}
-                              textAnchor={analysis.monthly_analysis.per_month_metrics?.length > 6 ? "end" : "middle"}
+                                angle={safeArray(analysis?.monthly_analysis?.per_month_metrics).length > 6 ? -45 : 0}
+                                textAnchor={safeArray(analysis?.monthly_analysis?.per_month_metrics).length > 6 ? "end" : "middle"}
                               tick={{ fontSize: 12 }}
                               height={60}
                             />
@@ -1225,8 +1241,7 @@ export default function ComprehensiveFinancialDashboard({
                 </Card>
                 
                 {/* Seasonal Patterns */}
-                {analysis.monthly_analysis.seasonal_patterns && 
-                 analysis.monthly_analysis.seasonal_patterns.length > 0 && (
+                  {safeArray(analysis?.monthly_analysis?.seasonal_patterns).length > 0 && (
                   <Card>
                     <CardHeader className="p-4 sm:p-6">
                       <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
@@ -1235,19 +1250,19 @@ export default function ComprehensiveFinancialDashboard({
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
-                      {analysis.monthly_analysis.seasonal_patterns.map((pattern: any, index: number) => (
+                        {safeArray(analysis?.monthly_analysis?.seasonal_patterns).map((pattern: any, index: number) => (
                         <div key={index} className="p-3 bg-slate-50 rounded-lg">
                           <div className="flex items-center justify-between mb-2">
-                            <span className="font-semibold text-sm">{pattern.description}</span>
-                            <Badge variant={pattern.pattern_type === "revenue" ? "default" : "destructive"}>
-                              {pattern.pattern_type}
+                              <span className="font-semibold text-sm">{safeString(pattern?.description, 'No description available')}</span>
+                              <Badge variant={safeString(pattern?.pattern_type) === "revenue" ? "default" : "destructive"}>
+                                {safeString(pattern?.pattern_type, 'Unknown')}
                             </Badge>
                           </div>
                           <div className="text-xs text-gray-600 mb-2">
-                            Affected Months: {pattern.affected_months?.join(", ")}
+                              Affected Months: {safeArray(pattern?.affected_months).join(", ") || 'None specified'}
                           </div>
                           <div className="text-sm text-blue-600">
-                            Recommendation: {pattern.recommendation}
+                              Recommendation: {safeString(pattern?.recommendation, 'No recommendation available')}
                           </div>
                         </div>
                       ))}
@@ -1256,8 +1271,7 @@ export default function ComprehensiveFinancialDashboard({
                 )}
                 
                 {/* Month-over-Month Changes */}
-                {analysis.monthly_analysis.month_over_month_comparison && 
-                 analysis.monthly_analysis.month_over_month_comparison.length > 0 && (
+                  {safeArray(analysis?.monthly_analysis?.month_over_month_comparison).length > 0 && (
                   <Card>
                     <CardHeader className="p-4 sm:p-6">
                       <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
@@ -1266,37 +1280,37 @@ export default function ComprehensiveFinancialDashboard({
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
-                      {analysis.monthly_analysis.month_over_month_comparison.map((comparison: any, index: number) => (
+                        {safeArray(analysis?.monthly_analysis?.month_over_month_comparison).map((comparison: any, index: number) => (
                         <div key={index} className="p-3 border rounded-lg">
                           <div className="flex items-center justify-between mb-1">
                             <span className="font-semibold text-sm">
-                              {comparison.current_month} vs {comparison.previous_month}
+                                {safeString(comparison?.current_month, 'Unknown')} vs {safeString(comparison?.previous_month, 'Unknown')}
                             </span>
                             <div className="flex items-center">
-                              {comparison.trend === "increasing" ? (
+                                {safeString(comparison?.trend) === "increasing" ? (
                                 <TrendingUp className="h-4 w-4 text-green-500" />
-                              ) : comparison.trend === "decreasing" ? (
+                                ) : safeString(comparison?.trend) === "decreasing" ? (
                                 <TrendingDown className="h-4 w-4 text-red-500" />
                               ) : (
                                 <MinusIcon className="h-4 w-4 text-gray-500" />
                               )}
                               <Badge 
-                                className={comparison.trend === "increasing" ? "bg-green-100 text-green-800" : 
-                                  comparison.trend === "decreasing" ? "bg-red-100 text-red-800" : 
+                                  className={safeString(comparison?.trend) === "increasing" ? "bg-green-100 text-green-800" :
+                                    safeString(comparison?.trend) === "decreasing" ? "bg-red-100 text-red-800" : 
                                   "bg-gray-100 text-gray-800"}
                               >
-                                {comparison.change_percentage}%
+                                  {safeNumber(comparison?.change_percentage, 0)}%
                               </Badge>
                             </div>
                           </div>
                           <div className="text-xs text-gray-600 mb-1">
-                            Metric: {comparison.metric.toUpperCase()}
+                              Metric: {safeString(comparison?.metric, 'unknown').toUpperCase()}
                           </div>
                           <div className="text-xs text-gray-600 mb-1">
-                            Change: {formatCurrency(comparison.change_amount)}
+                              Change: {formatCurrency(safeNumber(comparison?.change_amount, 0))}
                           </div>
                           <div className="text-sm text-blue-600">
-                            {comparison.insight}
+                              {safeString(comparison?.insight, 'No insight available')}
                           </div>
                         </div>
                       ))}
@@ -1332,15 +1346,14 @@ export default function ComprehensiveFinancialDashboard({
                     <span className="text-xs sm:text-sm">Net Cash from Operations:</span>
                       <span
                       className={`font-semibold text-xs sm:text-sm ${
-                          analysis.cash_flow_analysis?.operating_activities
-                            ?.net_cash_from_operations >= 0
+                          safeNumber(analysis?.cash_flow_analysis?.operating_activities
+                            ?.net_cash_from_operations, 0) >= 0
                             ? "text-green-600"
                             : "text-red-600"
                         }`}
                       >
                         {formatCurrency(
-                          analysis.cash_flow_analysis?.operating_activities
-                            ?.net_cash_from_operations || 0
+                          safeGet(analysis, 'cash_flow_analysis.operating_activities.net_cash_from_operations', 0)
                         )}
                       </span>
                     </div>
@@ -1348,8 +1361,7 @@ export default function ComprehensiveFinancialDashboard({
                     <span className="text-xs sm:text-sm">Cash Conversion Efficiency:</span>
                     <span className="font-semibold text-xs sm:text-sm">
                         {formatPercentage(
-                          analysis.cash_flow_analysis?.operating_activities
-                            ?.cash_conversion_efficiency || 0
+                          safeGet(analysis, 'cash_flow_analysis.operating_activities.cash_conversion_efficiency', 0)
                         )}
                       </span>
                     </div>
@@ -1357,8 +1369,7 @@ export default function ComprehensiveFinancialDashboard({
                     <span className="text-xs sm:text-sm">Operating Cash Margin:</span>
                     <span className="font-semibold text-xs sm:text-sm">
                         {formatPercentage(
-                          analysis.cash_flow_analysis?.operating_activities
-                            ?.operating_cash_margin || 0
+                          safeGet(analysis, 'cash_flow_analysis.operating_activities.operating_cash_margin', 0)
                         )}
                       </span>
                     </div>
@@ -1374,8 +1385,7 @@ export default function ComprehensiveFinancialDashboard({
                     <span className="text-xs sm:text-sm">Capital Expenditures:</span>
                     <span className="font-semibold text-xs sm:text-sm">
                         {formatCurrency(
-                          analysis.cash_flow_analysis?.investing_activities
-                            ?.capital_expenditures || 0
+                          safeGet(analysis, 'cash_flow_analysis.investing_activities.capital_expenditures', 0)
                         )}
                       </span>
                     </div>
@@ -1383,8 +1393,7 @@ export default function ComprehensiveFinancialDashboard({
                     <span className="text-xs sm:text-sm">Asset Disposals:</span>
                     <span className="font-semibold text-xs sm:text-sm">
                         {formatCurrency(
-                          analysis.cash_flow_analysis?.investing_activities
-                            ?.asset_disposals || 0
+                          safeGet(analysis, 'cash_flow_analysis.investing_activities.asset_disposals', 0)
                         )}
                       </span>
                     </div>
@@ -1392,15 +1401,14 @@ export default function ComprehensiveFinancialDashboard({
                     <span className="text-xs sm:text-sm">Net Investing Cash Flow:</span>
                       <span
                       className={`text-xs sm:text-sm ${
-                          analysis.cash_flow_analysis?.investing_activities
-                            ?.net_investing_cash_flow >= 0
+                          safeNumber(analysis?.cash_flow_analysis?.investing_activities
+                            ?.net_investing_cash_flow, 0) >= 0
                             ? "text-green-600"
                             : "text-red-600"
                         }`}
                       >
                         {formatCurrency(
-                          analysis.cash_flow_analysis?.investing_activities
-                            ?.net_investing_cash_flow || 0
+                          safeGet(analysis, 'cash_flow_analysis.investing_activities.net_investing_cash_flow', 0)
                         )}
                       </span>
                     </div>
@@ -1416,8 +1424,7 @@ export default function ComprehensiveFinancialDashboard({
                     <span className="text-xs sm:text-sm">Beginning Cash:</span>
                     <span className="font-semibold text-xs sm:text-sm">
                         {formatCurrency(
-                          analysis.cash_flow_analysis?.cash_position
-                            ?.beginning_cash || 0
+                          safeGet(analysis, 'cash_flow_analysis.cash_position.beginning_cash', 0)
                         )}
                       </span>
                     </div>
@@ -1425,8 +1432,7 @@ export default function ComprehensiveFinancialDashboard({
                     <span className="text-xs sm:text-sm">Ending Cash:</span>
                     <span className="font-semibold text-xs sm:text-sm">
                         {formatCurrency(
-                          analysis.cash_flow_analysis?.cash_position
-                            ?.ending_cash || 0
+                          safeGet(analysis, 'cash_flow_analysis.cash_position.ending_cash', 0)
                         )}
                       </span>
                     </div>
@@ -1434,15 +1440,14 @@ export default function ComprehensiveFinancialDashboard({
                       <span>Free Cash Flow:</span>
                       <span
                         className={`${
-                          analysis.cash_flow_analysis?.cash_position
-                            ?.free_cash_flow >= 0
+                          safeNumber(analysis?.cash_flow_analysis?.cash_position
+                            ?.free_cash_flow, 0) >= 0
                             ? "text-green-600"
                             : "text-red-600"
                         }`}
                       >
                         {formatCurrency(
-                          analysis.cash_flow_analysis?.cash_position
-                            ?.free_cash_flow || 0
+                          safeGet(analysis, 'cash_flow_analysis.cash_position.free_cash_flow', 0)
                         )}
                       </span>
                     </div>
@@ -1463,31 +1468,31 @@ export default function ComprehensiveFinancialDashboard({
                     </CardTitle>
                   </CardHeader>
                 <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
-                                          {analysis.ai_powered_insights?.trend_analysis?.map(
+                    {safeArray(analysis?.ai_powered_insights?.trend_analysis).map(
                       (trend: any, index: number) => (
                         <div key={index} className="p-3 sm:p-4 border rounded-lg">
                           <div className="flex items-center justify-between mb-2">
                             <span className="font-semibold text-xs sm:text-sm">
-                              {trend.metric.replace("_", " ").toUpperCase()}
+                              {safeString(trend?.metric, 'unknown').replace("_", " ").toUpperCase()}
                             </span>
                             <div className="flex items-center gap-1 sm:gap-2">
-                              {getTrendIcon(trend.trend_direction)}
+                              {getTrendIcon(trend?.trend_direction)}
                               <Badge
                                 className={getSeverityColor(
-                                  trend.trend_strength
+                                  trend?.trend_strength
                                 )}
                               >
-                                {trend.trend_strength}
+                                {safeString(trend?.trend_strength, 'Unknown')}
                               </Badge>
                             </div>
                           </div>
                           <p className="text-xs sm:text-sm text-gray-600 mb-2">
                             Forecast:{" "}
-                            {formatCurrency(trend.forecast_next_period)}
+                            {formatCurrency(safeNumber(trend?.forecast_next_period, 0))}
                           </p>
                           <div className="text-xs text-gray-500">
                             Confidence:{" "}
-                            {(trend.statistical_confidence * 100).toFixed(0)}%
+                            {(safeNumber(trend?.statistical_confidence, 0) * 100).toFixed(0)}%
                           </div>
                         </div>
                       )
@@ -1504,27 +1509,27 @@ export default function ComprehensiveFinancialDashboard({
                     </CardTitle>
                   </CardHeader>
                 <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
-                    {analysis.ai_powered_insights?.anomaly_detection?.map(
+                    {safeArray(analysis?.ai_powered_insights?.anomaly_detection).map(
                       (anomaly: any, index: number) => (
                         <div key={index} className="p-3 sm:p-4 border rounded-lg">
                           <div className="flex items-center justify-between mb-2">
                             <span className="font-semibold text-xs sm:text-sm">
-                              {anomaly.metric.replace("_", " ").toUpperCase()}
+                              {safeString(anomaly?.metric, 'unknown').replace("_", " ").toUpperCase()}
                             </span>
                             <Badge
-                              className={getSeverityColor(anomaly.severity)}
+                              className={getSeverityColor(anomaly?.severity)}
                             >
-                              {anomaly.severity}
+                              {safeString(anomaly?.severity, 'Unknown')}
                             </Badge>
                           </div>
                           <p className="text-xs sm:text-sm text-gray-600 mb-2">
-                            {anomaly.root_cause_hypothesis}
+                            {safeString(anomaly?.root_cause_hypothesis, 'No hypothesis available')}
                           </p>
                           <div className="text-xs text-blue-600">
-                            Recommendation: {anomaly.recommended_investigation}
+                            Recommendation: {safeString(anomaly?.recommended_investigation, 'No recommendation available')}
                           </div>
                           <div className="text-xs text-gray-500 mt-1">
-                            Deviation: {anomaly.deviation_percentage}%
+                            Deviation: {safeNumber(anomaly?.deviation_percentage, 0)}%
                           </div>
                         </div>
                       )
@@ -1543,33 +1548,33 @@ export default function ComprehensiveFinancialDashboard({
                 </CardHeader>
               <CardContent className="p-4 sm:p-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
-                    {analysis.ai_powered_insights?.predictive_alerts?.map(
+                    {safeArray(analysis?.ai_powered_insights?.predictive_alerts).map(
                       (alert: any, index: number) => (
                         <div key={index} className="p-3 sm:p-4 border rounded-lg">
                           <div className="flex items-center justify-between mb-2">
                             <span className="font-semibold text-xs sm:text-sm">
-                              {alert.alert_type.replace("_", " ").toUpperCase()}
+                              {safeString(alert?.alert_type, 'unknown').replace("_", " ").toUpperCase()}
                             </span>
                             <Badge
-                              className={getSeverityColor(alert.alert_level)}
+                              className={getSeverityColor(alert?.alert_level)}
                             >
-                              {alert.alert_level}
+                              {safeString(alert?.alert_level, 'Unknown')}
                             </Badge>
                           </div>
                           <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
                             <div>
                               Forecast:{" "}
-                              {alert.forecast_horizon.replace("_", " ")}
+                              {safeString(alert?.forecast_horizon, 'unknown').replace("_", " ")}
                             </div>
                             <div>
                               Probability:{" "}
-                              {(alert.probability * 100).toFixed(0)}%
+                              {(safeNumber(alert?.probability, 0) * 100).toFixed(0)}%
                             </div>
                             <div>
-                              Impact: {formatCurrency(alert.potential_impact)}
+                              Impact: {formatCurrency(safeNumber(alert?.potential_impact, 0))}
                             </div>
                             <div className="text-blue-600">
-                              Actions: {alert.preventive_actions?.join(", ")}
+                              Actions: {safeArray(alert?.preventive_actions).join(", ") || 'No actions specified'}
                             </div>
                           </div>
                         </div>
@@ -1597,22 +1602,19 @@ export default function ComprehensiveFinancialDashboard({
                         <div>
                           Revenue:{" "}
                           {formatCurrency(
-                            analysis.what_if_scenarios?.revenue_impact_analysis
-                              ?.baseline_scenario?.revenue || 0
+                            safeGet(analysis, 'what_if_scenarios.revenue_impact_analysis.baseline_scenario.revenue', 0)
                           )}
                         </div>
                         <div>
                           Net Income:{" "}
                           {formatCurrency(
-                            analysis.what_if_scenarios?.revenue_impact_analysis
-                              ?.baseline_scenario?.net_income || 0
+                            safeGet(analysis, 'what_if_scenarios.revenue_impact_analysis.baseline_scenario.net_income', 0)
                           )}
                         </div>
                         <div>
                           Cash Flow:{" "}
                           {formatCurrency(
-                            analysis.what_if_scenarios?.revenue_impact_analysis
-                              ?.baseline_scenario?.cash_flow || 0
+                            safeGet(analysis, 'what_if_scenarios.revenue_impact_analysis.baseline_scenario.cash_flow', 0)
                           )}
                         </div>
                       </div>
@@ -1626,23 +1628,19 @@ export default function ComprehensiveFinancialDashboard({
                         <div>
                           Revenue:{" "}
                           {formatCurrency(
-                            analysis.what_if_scenarios?.revenue_impact_analysis
-                              ?.revenue_decrease_20_percent?.revenue || 0
+                            safeGet(analysis, 'what_if_scenarios.revenue_impact_analysis.revenue_decrease_20_percent.revenue', 0)
                           )}
                         </div>
                         <div>
                           Net Income:{" "}
                           {formatCurrency(
-                            analysis.what_if_scenarios?.revenue_impact_analysis
-                              ?.revenue_decrease_20_percent?.net_income || 0
+                            safeGet(analysis, 'what_if_scenarios.revenue_impact_analysis.revenue_decrease_20_percent.net_income', 0)
                           )}
                         </div>
                         <div>
                           Impact:{" "}
                           <span className="text-red-600 font-semibold">
-                            {analysis.what_if_scenarios?.revenue_impact_analysis
-                              ?.revenue_decrease_20_percent
-                              ?.impact_assessment || ""}
+                            {safeString(safeGet(analysis, 'what_if_scenarios.revenue_impact_analysis.revenue_decrease_20_percent.impact_assessment'), 'No impact assessment available')}
                           </span>
                         </div>
                       </div>
@@ -1656,22 +1654,19 @@ export default function ComprehensiveFinancialDashboard({
                         <div>
                           Revenue:{" "}
                           {formatCurrency(
-                            analysis.what_if_scenarios?.revenue_impact_analysis
-                              ?.revenue_increase_20_percent?.revenue || 0
+                            safeGet(analysis, 'what_if_scenarios.revenue_impact_analysis.revenue_increase_20_percent.revenue', 0)
                           )}
                         </div>
                         <div>
                           Net Income:{" "}
                           {formatCurrency(
-                            analysis.what_if_scenarios?.revenue_impact_analysis
-                              ?.revenue_increase_20_percent?.net_income || 0
+                            safeGet(analysis, 'what_if_scenarios.revenue_impact_analysis.revenue_increase_20_percent.net_income', 0)
                           )}
                         </div>
                         <div>
                           Cash Flow:{" "}
                           {formatCurrency(
-                            analysis.what_if_scenarios?.revenue_impact_analysis
-                              ?.revenue_increase_20_percent?.cash_flow || 0
+                            safeGet(analysis, 'what_if_scenarios.revenue_impact_analysis.revenue_increase_20_percent.cash_flow', 0)
                           )}
                         </div>
                       </div>
@@ -1693,28 +1688,19 @@ export default function ComprehensiveFinancialDashboard({
                         <div>
                           Cost Savings:{" "}
                           {formatCurrency(
-                            analysis.what_if_scenarios
-                              ?.cost_optimization_scenarios
-                              ?.fixed_cost_reduction_15_percent?.cost_savings ||
-                              0
+                            safeGet(analysis, 'what_if_scenarios.cost_optimization_scenarios.fixed_cost_reduction_15_percent.cost_savings', 0)
                           )}
                         </div>
                         <div>
                           Net Income Impact:{" "}
                           {formatCurrency(
-                            analysis.what_if_scenarios
-                              ?.cost_optimization_scenarios
-                              ?.fixed_cost_reduction_15_percent
-                              ?.net_income_impact || 0
+                            safeGet(analysis, 'what_if_scenarios.cost_optimization_scenarios.fixed_cost_reduction_15_percent.net_income_impact', 0)
                           )}
                         </div>
                         <div>
                           Feasibility:{" "}
                           <span className="text-green-600 font-semibold">
-                            {analysis.what_if_scenarios
-                              ?.cost_optimization_scenarios
-                              ?.fixed_cost_reduction_15_percent?.feasibility ||
-                              ""}
+                            {safeString(safeGet(analysis, 'what_if_scenarios.cost_optimization_scenarios.fixed_cost_reduction_15_percent.feasibility'), 'Unknown feasibility')}
                           </span>
                         </div>
                       </div>
@@ -1728,28 +1714,19 @@ export default function ComprehensiveFinancialDashboard({
                         <div>
                           Cost Savings:{" "}
                           {formatCurrency(
-                            analysis.what_if_scenarios
-                              ?.cost_optimization_scenarios
-                              ?.variable_cost_optimization_10_percent
-                              ?.cost_savings || 0
+                            safeGet(analysis, 'what_if_scenarios.cost_optimization_scenarios.variable_cost_optimization_10_percent.cost_savings', 0)
                           )}
                         </div>
                         <div>
                           Margin Improvement:{" "}
                           {formatCurrency(
-                            analysis.what_if_scenarios
-                              ?.cost_optimization_scenarios
-                              ?.variable_cost_optimization_10_percent
-                              ?.margin_improvement || 0
+                            safeGet(analysis, 'what_if_scenarios.cost_optimization_scenarios.variable_cost_optimization_10_percent.margin_improvement', 0)
                           )}
                         </div>
                         <div>
                           Implementation:{" "}
                           <span className="text-blue-600 font-semibold">
-                            {analysis.what_if_scenarios
-                              ?.cost_optimization_scenarios
-                              ?.variable_cost_optimization_10_percent
-                              ?.implementation_difficulty || ""}
+                            {safeString(safeGet(analysis, 'what_if_scenarios.cost_optimization_scenarios.variable_cost_optimization_10_percent.implementation_difficulty'), 'Unknown difficulty')}
                           </span>
                         </div>
                       </div>
@@ -1763,22 +1740,18 @@ export default function ComprehensiveFinancialDashboard({
                         <div>
                           Break-even Revenue:{" "}
                           {formatCurrency(
-                            analysis.what_if_scenarios?.cash_flow_stress_testing
-                              ?.break_even_analysis?.break_even_revenue || 0
+                            safeGet(analysis, 'what_if_scenarios.cash_flow_stress_testing.break_even_analysis.break_even_revenue', 0)
                           )}
                         </div>
                         <div>
                           Margin of Safety:{" "}
                           {formatCurrency(
-                            analysis.what_if_scenarios?.cash_flow_stress_testing
-                              ?.break_even_analysis?.margin_of_safety || 0
+                            safeGet(analysis, 'what_if_scenarios.cash_flow_stress_testing.break_even_analysis.margin_of_safety', 0)
                           )}
                         </div>
                         <div>
                           Operating Leverage:{" "}
-                          {analysis.what_if_scenarios?.cash_flow_stress_testing?.break_even_analysis?.operating_leverage?.toFixed(
-                            2
-                          ) || 0}
+                          {safeNumber(safeGet(analysis, 'what_if_scenarios.cash_flow_stress_testing.break_even_analysis.operating_leverage'), 0).toFixed(2)}
                         </div>
                       </div>
                     </div>
@@ -1800,34 +1773,34 @@ export default function ComprehensiveFinancialDashboard({
                   </CardHeader>
                 <CardContent className="p-4 sm:p-6">
                   <div className="space-y-3 sm:space-y-4">
-                      {analysis.strategic_recommendations?.immediate_actions_0_30_days?.map(
+                      {safeArray(analysis?.strategic_recommendations?.immediate_actions_0_30_days).map(
                         (action: any, index: number) => (
                           <div key={index} className="p-3 sm:p-4 border rounded-lg">
                             <div className="flex items-start justify-between mb-2">
                               <div className="flex items-center gap-1 sm:gap-2">
-                                {getPriorityIcon(action.priority)}
+                                {getPriorityIcon(action?.priority)}
                                 <span className="font-semibold text-xs sm:text-sm">
-                                  {action.action}
+                                  {safeString(action?.action, 'No action specified')}
                                 </span>
                               </div>
                               <Badge
-                                className={getSeverityColor(action.priority)}
+                                className={getSeverityColor(action?.priority)}
                               >
-                                {action.priority}
+                                {safeString(action?.priority, 'Unknown')}
                               </Badge>
                             </div>
                             <div className="text-xs sm:text-sm space-y-1">
                               <div>
                                 Expected Impact:{" "}
-                                {formatCurrency(action.expected_impact)}
+                                {formatCurrency(safeNumber(action?.expected_impact, 0))}
                               </div>
                               <div>
                                 Implementation Cost:{" "}
-                                {formatCurrency(action.implementation_cost)}
+                                {formatCurrency(safeNumber(action?.implementation_cost, 0))}
                               </div>
                               <div className="text-blue-600">
                                 Success Metrics:{" "}
-                                {action.success_metrics?.join(", ")}
+                                {safeArray(action?.success_metrics).join(", ") || 'No metrics specified'}
                               </div>
                             </div>
                           </div>
@@ -1847,28 +1820,28 @@ export default function ComprehensiveFinancialDashboard({
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {analysis.strategic_recommendations?.short_term_improvements_1_6_months?.map(
+                      {safeArray(analysis?.strategic_recommendations?.short_term_improvements_1_6_months).map(
                         (improvement: any, index: number) => (
                           <div key={index} className="p-4 border rounded-lg">
                             <div className="font-semibold mb-2">
-                              {improvement.initiative}
+                              {safeString(improvement?.initiative, 'No initiative specified')}
                             </div>
                             <div className="text-sm space-y-1">
                               <div>
-                                Business Case: {improvement.business_case}
+                                Business Case: {safeString(improvement?.business_case, 'No business case provided')}
                               </div>
                               <div>
                                 Investment Required:{" "}
                                 {formatCurrency(
-                                  improvement.investment_required
+                                  safeNumber(improvement?.investment_required, 0)
                                 )}
                               </div>
                               <div>
-                                Expected ROI: {improvement.expected_roi}x
+                                Expected ROI: {safeNumber(improvement?.expected_roi, 0)}x
                               </div>
                               <div className="text-red-600">
                                 Risk Factors:{" "}
-                                {improvement.risk_factors?.join(", ")}
+                                {safeArray(improvement?.risk_factors).join(", ") || 'No risk factors specified'}
                               </div>
                             </div>
                           </div>
@@ -1888,32 +1861,32 @@ export default function ComprehensiveFinancialDashboard({
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {analysis.strategic_recommendations?.growth_opportunities?.map(
+                      {safeArray(analysis?.strategic_recommendations?.growth_opportunities).map(
                         (opportunity: any, index: number) => (
                           <div key={index} className="p-4 border rounded-lg">
                             <div className="font-semibold mb-2">
-                              {opportunity.opportunity_type
+                              {safeString(opportunity?.opportunity_type, 'unknown')
                                 .replace("_", " ")
                                 .toUpperCase()}
                             </div>
                             <div className="text-sm space-y-1">
                               <div>
                                 Revenue Potential:{" "}
-                                {formatCurrency(opportunity.revenue_potential)}
+                                {formatCurrency(safeNumber(opportunity?.revenue_potential, 0))}
                               </div>
                               <div>
                                 Investment Required:{" "}
                                 {formatCurrency(
-                                  opportunity.investment_required
+                                  safeNumber(opportunity?.investment_required, 0)
                                 )}
                               </div>
                               <div>
                                 Timeline to Impact:{" "}
-                                {opportunity.timeline_to_impact}
+                                {safeString(opportunity?.timeline_to_impact, 'Not specified')}
                               </div>
                               <div>
                                 Feasibility Score:{" "}
-                                {(opportunity.feasibility_score * 100).toFixed(
+                                {(safeNumber(opportunity?.feasibility_score, 0) * 100).toFixed(
                                   0
                                 )}
                                 %
