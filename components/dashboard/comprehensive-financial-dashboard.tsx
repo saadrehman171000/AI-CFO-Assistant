@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -37,6 +37,7 @@ import {
   Clock,
   Sparkles,
   Eye,
+  Calendar as CalendarIcon,
 } from "lucide-react";
 import {
   LineChart,
@@ -151,10 +152,45 @@ export default function ComprehensiveFinancialDashboard({
   // Use analysisData directly from props
   const currentAnalysisData = analysisData;
 
-  const analysis = currentAnalysisData?.analysis;
+  // Fix for nested analysis data structure - normalize it
+  // TypeScript fix: use type assertion to handle nested analysis structure
+  const analysis = (currentAnalysisData?.analysis as any)?.analysis || currentAnalysisData?.analysis;
+  
+  // Helper function to safely access nested properties
+  const safeGet = (obj: any, path: string, defaultValue: any = 0): any => {
+    try {
+      const keys = path.split('.');
+      let result = obj;
+      for (const key of keys) {
+        if (result === undefined || result === null) return defaultValue;
+        result = result[key];
+      }
+      return result === undefined || result === null ? defaultValue : result;
+    } catch (e) {
+      return defaultValue;
+    }
+  };
 
+  // Component state for selections (additional to props)
+  const [internalSelectedBranchId, setInternalSelectedBranchId] = useState<string | null>(selectedBranchId || null);
+  const [internalSelectedAnalysisId, setInternalSelectedAnalysisId] = useState<string | null>(selectedAnalysisId || null);
+  
+  // Keep internal state in sync with props
+  useEffect(() => {
+    if (selectedBranchId !== undefined) {
+      setInternalSelectedBranchId(selectedBranchId);
+    }
+    if (selectedAnalysisId !== undefined) {
+      setInternalSelectedAnalysisId(selectedAnalysisId);
+    }
+  }, [selectedBranchId, selectedAnalysisId]);
+  
   const handleSelectionChange = (branchId: string | null, analysisId: string | null) => {
-    // Use the parent's onSelectionChange if provided, otherwise handle locally
+    // Update internal state first
+    setInternalSelectedBranchId(branchId);
+    setInternalSelectedAnalysisId(analysisId);
+    
+    // Use the parent's onSelectionChange if provided
     if (onSelectionChange) {
       onSelectionChange(branchId, analysisId);
     }
@@ -245,27 +281,19 @@ export default function ComprehensiveFinancialDashboard({
   const revenueData = analysis ? [
     {
       name: "Primary",
-      value:
-        analysis.profit_and_loss.revenue_analysis?.revenue_streams
-          ?.primary_revenue || 0,
+      value: safeGet(analysis, 'profit_and_loss.revenue_analysis.revenue_streams.primary_revenue', 0),
     },
     {
       name: "Secondary",
-      value:
-        analysis.profit_and_loss.revenue_analysis?.revenue_streams
-          ?.secondary_revenue || 0,
+      value: safeGet(analysis, 'profit_and_loss.revenue_analysis.revenue_streams.secondary_revenue', 0),
     },
     {
       name: "Recurring",
-      value:
-        analysis.profit_and_loss.revenue_analysis?.revenue_streams
-          ?.recurring_revenue || 0,
+      value: safeGet(analysis, 'profit_and_loss.revenue_analysis.revenue_streams.recurring_revenue', 0),
     },
     {
       name: "One-time",
-      value:
-        analysis.profit_and_loss.revenue_analysis?.revenue_streams
-          ?.one_time_revenue || 0,
+      value: safeGet(analysis, 'profit_and_loss.revenue_analysis.revenue_streams.one_time_revenue', 0),
     },
   ].filter((item) => item.value > 0) : [];
 
@@ -273,27 +301,19 @@ export default function ComprehensiveFinancialDashboard({
   const expenseData = analysis ? [
     {
       name: "Direct Costs",
-      value:
-        analysis.profit_and_loss.cost_structure?.cost_categories
-          ?.direct_costs || 0,
+      value: safeGet(analysis, 'profit_and_loss.cost_structure.cost_categories.direct_costs', 0),
     },
     {
       name: "Operating",
-      value:
-        analysis.profit_and_loss.cost_structure?.cost_categories
-          ?.operating_expenses || 0,
+      value: safeGet(analysis, 'profit_and_loss.cost_structure.cost_categories.operating_expenses', 0),
     },
     {
       name: "Administrative",
-      value:
-        analysis.profit_and_loss.cost_structure?.cost_categories
-          ?.administrative_costs || 0,
+      value: safeGet(analysis, 'profit_and_loss.cost_structure.cost_categories.administrative_costs', 0),
     },
     {
       name: "Financing",
-      value:
-        analysis.profit_and_loss.cost_structure?.cost_categories
-          ?.financing_costs || 0,
+      value: safeGet(analysis, 'profit_and_loss.cost_structure.cost_categories.financing_costs', 0),
     },
   ].filter((item) => item.value > 0) : [];
 
@@ -321,8 +341,8 @@ export default function ComprehensiveFinancialDashboard({
           title="Select Data Source"
           description="Choose a branch and financial analysis to view dashboard data"
           showAllBranchesOption={true}
-          initialBranchId={selectedBranchId}
-          initialAnalysisId={selectedAnalysisId}
+          initialBranchId={internalSelectedBranchId}
+          initialAnalysisId={internalSelectedAnalysisId}
         />
       )}
 
@@ -384,7 +404,7 @@ export default function ComprehensiveFinancialDashboard({
                 <p className="text-xs sm:text-sm font-medium text-gray-600">Total Revenue</p>
                 <p className="text-lg sm:text-2xl font-semibold text-emerald-600 truncate">
                   {formatCurrency(
-                    analysis.profit_and_loss.revenue_analysis?.total_revenue || 0
+                    safeGet(analysis, 'profit_and_loss.revenue_analysis.total_revenue', 0)
                   )}
                 </p>
               </div>
@@ -403,7 +423,7 @@ export default function ComprehensiveFinancialDashboard({
                 <p className="text-lg sm:text-2xl font-semibold text-red-600 truncate">
                   {formatCurrency(
                     Math.abs(
-                      analysis.profit_and_loss.cost_structure?.total_expenses || 0
+                      safeGet(analysis, 'profit_and_loss.cost_structure.total_expenses', 0)
                     )
                   )}
                 </p>
@@ -421,13 +441,13 @@ export default function ComprehensiveFinancialDashboard({
               <div className="min-w-0 flex-1 mr-3">
                 <p className="text-xs sm:text-sm font-medium text-gray-600">Net Income</p>
                 <p
-                  className={`text-lg sm:text-2xl font-semibold truncate ${analysis.profit_and_loss?.profitability_metrics?.net_income >= 0
+                  className={`text-lg sm:text-2xl font-semibold truncate ${safeGet(analysis, 'profit_and_loss.profitability_metrics.net_income', 0) >= 0
                     ? "text-emerald-600"
                     : "text-red-600"
                     }`}
                 >
                   {formatCurrency(
-                    analysis.profit_and_loss.profitability_metrics?.net_income || 0
+                    safeGet(analysis, 'profit_and_loss.profitability_metrics.net_income', 0)
                   )}
                 </p>
               </div>
@@ -445,8 +465,7 @@ export default function ComprehensiveFinancialDashboard({
                 <p className="text-xs sm:text-sm font-medium text-gray-600">Net Margin</p>
                 <p className="text-lg sm:text-2xl font-semibold text-slate-700">
                   {formatPercentage(
-                    analysis.profit_and_loss.profitability_metrics?.margins
-                      ?.net_margin || 0
+                    safeGet(analysis, 'profit_and_loss.profitability_metrics.margins.net_margin', 0)
                   )}
                 </p>
               </div>
@@ -470,7 +489,7 @@ export default function ComprehensiveFinancialDashboard({
             </div>
             <ul className="list-disc list-inside space-y-1">
               {analysis.executive_summary?.critical_alerts?.map(
-                (alert, index) => (
+                (alert: any, index: number) => (
                   <li key={index} className="text-sm">
                     {alert}
                   </li>
@@ -486,7 +505,7 @@ export default function ComprehensiveFinancialDashboard({
         <Tabs value={selectedTab} onValueChange={setSelectedTab}>
           <div className="border-b border-gray-200 px-4 sm:px-6 pt-4 sm:pt-6">
             <div className="overflow-x-auto">
-              <TabsList className="grid w-full grid-cols-4 md:grid-cols-7 min-w-[320px] md:min-w-0">
+              <TabsList className="grid w-full grid-cols-4 md:grid-cols-8 min-w-[320px] md:min-w-0">
                 {[
                   { value: "overview", label: "Overview" },
                   { value: "profitability", label: "P&L" },
@@ -494,6 +513,12 @@ export default function ComprehensiveFinancialDashboard({
                     value: "balance-sheet",
                     label: "Balance Sheet",
                     short: "Balance",
+                  },
+                  {
+                    value: "monthly",
+                    label: "Monthly Analysis",
+                    short: "Monthly",
+                    disabled: !analysis?.monthly_analysis,
                   },
                   {
                     value: "cash-flow",
@@ -680,8 +705,7 @@ export default function ComprehensiveFinancialDashboard({
                         </p>
                         <p className="text-base sm:text-xl lg:text-2xl font-bold truncate max-w-[140px] sm:max-w-full">
                           {formatCurrency(
-                            analysis.profit_and_loss?.profitability_metrics
-                              ?.ebitda || 0
+                            safeGet(analysis, 'profit_and_loss.profitability_metrics.ebitda', 0)
                           )}
                         </p>
                       </div>
@@ -716,17 +740,15 @@ export default function ComprehensiveFinancialDashboard({
                         <p className="text-xs sm:text-sm font-medium text-muted-foreground">
                           Op. Margin
                         </p>
-                        <p
+                                                  <p
                           className={`text-base sm:text-xl lg:text-2xl font-bold ${
-                            analysis.profit_and_loss?.profitability_metrics
-                              ?.margins?.operating_margin >= 0
+                            safeGet(analysis, 'profit_and_loss.profitability_metrics.margins.operating_margin', 0) >= 0
                               ? "text-green-600"
                               : "text-red-600"
                           }`}
                         >
                           {formatPercentage(
-                            analysis.profit_and_loss?.profitability_metrics
-                              ?.margins?.operating_margin || 0
+                            safeGet(analysis, 'profit_and_loss.profitability_metrics.margins.operating_margin', 0)
                           )}
                         </p>
                       </div>
@@ -782,17 +804,15 @@ export default function ComprehensiveFinancialDashboard({
                     </div>
                   <div className="flex justify-between items-center p-2 sm:p-3 bg-slate-50 rounded-lg">
                     <span className="text-xs sm:text-sm font-medium">Operating Profit:</span>
-                      <span
+                                                <span
                       className={`font-bold text-xs sm:text-sm ${
-                          analysis.profit_and_loss?.profitability_metrics
-                            ?.operating_profit >= 0
+                          safeGet(analysis, 'profit_and_loss.profitability_metrics.operating_profit', 0) >= 0
                             ? "text-green-600"
                             : "text-red-600"
                         }`}
                       >
                         {formatCurrency(
-                          analysis.profit_and_loss?.profitability_metrics
-                            ?.operating_profit || 0
+                          safeGet(analysis, 'profit_and_loss.profitability_metrics.operating_profit', 0)
                         )}
                       </span>
                     </div>
@@ -800,15 +820,13 @@ export default function ComprehensiveFinancialDashboard({
                     <span className="text-xs sm:text-sm font-medium">EBITDA:</span>
                       <span
                       className={`font-bold text-xs sm:text-sm ${
-                          analysis.profit_and_loss?.profitability_metrics
-                            ?.ebitda >= 0
+                          safeGet(analysis, 'profit_and_loss.profitability_metrics.ebitda', 0) >= 0
                             ? "text-green-600"
                             : "text-red-600"
                         }`}
                       >
                         {formatCurrency(
-                          analysis.profit_and_loss?.profitability_metrics
-                            ?.ebitda || 0
+                          safeGet(analysis, 'profit_and_loss.profitability_metrics.ebitda', 0)
                         )}
                       </span>
                     </div>
@@ -816,15 +834,13 @@ export default function ComprehensiveFinancialDashboard({
                     <span className="text-xs sm:text-sm font-medium">Net Income:</span>
                       <span
                       className={`font-bold text-xs sm:text-sm ${
-                          analysis.profit_and_loss?.profitability_metrics
-                            ?.net_income >= 0
+                          safeGet(analysis, 'profit_and_loss.profitability_metrics.net_income', 0) >= 0
                             ? "text-green-600"
                             : "text-red-600"
                         }`}
                       >
                         {formatCurrency(
-                          analysis.profit_and_loss?.profitability_metrics
-                            ?.net_income || 0
+                          safeGet(analysis, 'profit_and_loss.profitability_metrics.net_income', 0)
                         )}
                       </span>
                     </div>
@@ -842,16 +858,14 @@ export default function ComprehensiveFinancialDashboard({
                           <span>Gross Margin</span>
                           <span>
                             {formatPercentage(
-                              analysis.profit_and_loss?.profitability_metrics
-                                ?.margins?.gross_margin || 0
+                              safeGet(analysis, 'profit_and_loss.profitability_metrics.margins.gross_margin', 0)
                             )}
                           </span>
                         </div>
                         <Progress
                           value={Math.max(
                             0,
-                            analysis.profit_and_loss?.profitability_metrics
-                              ?.margins?.gross_margin || 0 * 100
+                            safeGet(analysis, 'profit_and_loss.profitability_metrics.margins.gross_margin', 0) * 100
                           )}
                         className="h-1.5 sm:h-2 mt-1 sm:mt-2"
                         />
@@ -862,16 +876,14 @@ export default function ComprehensiveFinancialDashboard({
                           <span>Operating Margin</span>
                           <span>
                             {formatPercentage(
-                              analysis.profit_and_loss?.profitability_metrics
-                                ?.margins?.operating_margin || 0
+                              safeGet(analysis, 'profit_and_loss.profitability_metrics.margins.operating_margin', 0)
                             )}
                           </span>
                         </div>
                         <Progress
                           value={Math.max(
                             0,
-                            analysis.profit_and_loss?.profitability_metrics
-                              ?.margins?.operating_margin || 0 * 100
+                            safeGet(analysis, 'profit_and_loss.profitability_metrics.margins.operating_margin', 0) * 100
                           )}
                         className="h-1.5 sm:h-2 mt-1 sm:mt-2"
                         />
@@ -882,16 +894,14 @@ export default function ComprehensiveFinancialDashboard({
                           <span>EBITDA Margin</span>
                           <span>
                             {formatPercentage(
-                              analysis.profit_and_loss?.profitability_metrics
-                                ?.margins?.ebitda_margin || 0
+                              safeGet(analysis, 'profit_and_loss.profitability_metrics.margins.ebitda_margin', 0)
                             )}
                           </span>
                         </div>
                         <Progress
                           value={Math.max(
                             0,
-                            analysis.profit_and_loss?.profitability_metrics
-                              ?.margins?.ebitda_margin || 0 * 100
+                            safeGet(analysis, 'profit_and_loss.profitability_metrics.margins.ebitda_margin', 0) * 100
                           )}
                         className="h-1.5 sm:h-2 mt-1 sm:mt-2"
                         />
@@ -902,16 +912,14 @@ export default function ComprehensiveFinancialDashboard({
                           <span>Net Margin</span>
                           <span>
                             {formatPercentage(
-                              analysis.profit_and_loss?.profitability_metrics
-                                ?.margins?.net_margin || 0
+                              safeGet(analysis, 'profit_and_loss.profitability_metrics.margins.net_margin', 0)
                             )}
                           </span>
                         </div>
                         <Progress
                           value={Math.max(
                             0,
-                            analysis.profit_and_loss?.profitability_metrics
-                              ?.margins?.net_margin || 0 * 100
+                            safeGet(analysis, 'profit_and_loss.profitability_metrics.margins.net_margin', 0) * 100
                           )}
                         className="h-1.5 sm:h-2 mt-1 sm:mt-2"
                         />
@@ -1046,6 +1054,271 @@ export default function ComprehensiveFinancialDashboard({
                 </Card>
               )}
             </TabsContent>
+
+          {/* Monthly Analysis Tab */}
+          <TabsContent value="monthly" className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+            {analysis?.monthly_analysis && analysis?.monthly_analysis?.months_detected?.length > 0 ? (
+              <div className="space-y-6">
+                {/* Monthly Overview */}
+                <Card>
+                  <CardHeader className="p-4 sm:p-6">
+                    <CardTitle className="text-base sm:text-lg">Monthly Overview</CardTitle>
+                    <CardDescription>
+                      Monthly financial data for {analysis.monthly_analysis.per_month_metrics?.length || 0} of {analysis.monthly_analysis.months_detected?.length || 0} periods
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead className="bg-slate-50">
+                          <tr>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">Month</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">Revenue</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">Expenses</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">Net Income</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">Net Margin</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200">
+                          {analysis.monthly_analysis.per_month_metrics?.map((month: any, index: number) => (
+                            <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-slate-900">{month.month}</td>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm text-right text-slate-900">
+                                {formatCurrency(month.revenue || 0)}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm text-right text-slate-900">
+                                {formatCurrency(month.expenses || 0)}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-medium">
+                                <span className={month.net_income >= 0 ? 'text-green-600' : 'text-red-600'}>
+                                  {formatCurrency(month.net_income || 0)}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm text-right">
+                                <span className={month.key_ratios?.net_margin >= 0 ? 'text-green-600' : 'text-red-600'}>
+                                  {formatPercentage(month.key_ratios?.net_margin || 0)}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    {analysis.monthly_analysis.per_month_metrics?.length < analysis.monthly_analysis.months_detected?.length && (
+                      <div className="px-4 py-3 text-sm bg-blue-50 text-blue-700 border-t border-blue-100">
+                        <p className="flex items-center">
+                          <AlertTriangle className="h-4 w-4 mr-2 text-blue-500" />
+                          Note: Data is only available for {analysis.monthly_analysis.per_month_metrics?.length || 0} of {analysis.monthly_analysis.months_detected?.length || 0} detected months.
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+                
+                {/* Monthly Analysis Details */}
+                {analysis.monthly_analysis.per_month_metrics?.length > 0 && (
+                  <Card>
+                    <CardHeader className="p-4 sm:p-6">
+                      <CardTitle className="text-base sm:text-lg">Monthly Details</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4 sm:p-6 space-y-4">
+                      {analysis.monthly_analysis.per_month_metrics?.map((month: any, index: number) => (
+                        <div key={index} className="border rounded-lg p-4 bg-white">
+                          <div className="flex flex-wrap justify-between items-center mb-3">
+                            <h3 className="text-lg font-medium text-slate-800">{month.month}</h3>
+                            <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">
+                              Net Margin: {formatPercentage(month.key_ratios?.net_margin || 0)}
+                            </Badge>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-3">
+                            <div className="flex flex-col p-3 bg-slate-50 rounded-md">
+                              <span className="text-sm text-slate-600">Revenue</span>
+                              <span className="text-lg font-semibold text-emerald-600">{formatCurrency(month.revenue || 0)}</span>
+                            </div>
+                            <div className="flex flex-col p-3 bg-slate-50 rounded-md">
+                              <span className="text-sm text-slate-600">Expenses</span>
+                              <span className="text-lg font-semibold text-red-600">{formatCurrency(month.expenses || 0)}</span>
+                            </div>
+                            <div className="flex flex-col p-3 bg-slate-50 rounded-md">
+                              <span className="text-sm text-slate-600">Net Income</span>
+                              <span className={`text-lg font-semibold ${month.net_income >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                                {formatCurrency(month.net_income || 0)}
+                              </span>
+                            </div>
+                          </div>
+                          {month.anomalies_detected && month.anomalies_detected.length > 0 && (
+                            <div className="mt-3">
+                              <h4 className="text-sm font-medium text-slate-800 mb-1">Anomalies Detected:</h4>
+                              <ul className="list-disc list-inside space-y-1">
+                                {month.anomalies_detected.map((anomaly: string, i: number) => (
+                                  <li key={i} className="text-sm text-slate-600">{anomaly}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          {month.month_specific_recommendations && month.month_specific_recommendations.length > 0 && (
+                            <div className="mt-3">
+                              <h4 className="text-sm font-medium text-slate-800 mb-1">Recommendations:</h4>
+                              <ul className="list-disc list-inside space-y-1">
+                                {month.month_specific_recommendations.map((rec: string, i: number) => (
+                                  <li key={i} className="text-sm text-blue-600">{rec}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                )}
+                
+                {/* Monthly Revenue Chart */}
+                <Card>
+                  <CardHeader className="p-4 sm:p-6">
+                    <CardTitle className="text-base sm:text-lg">Monthly Revenue Trend</CardTitle>
+                    {analysis.monthly_analysis.per_month_metrics?.length === 1 && (
+                      <CardDescription>
+                        Showing data for {analysis.monthly_analysis.per_month_metrics[0].month}
+                      </CardDescription>
+                    )}
+                  </CardHeader>
+                  <CardContent className="p-4 sm:p-6">
+                    {analysis.monthly_analysis.per_month_metrics?.length > 0 ? (
+                      <div className="h-[300px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart 
+                            data={analysis.monthly_analysis.per_month_metrics?.map((month: any) => ({
+                              name: month.month.split(' ')[0], // Just get the month name
+                              revenue: month.revenue || 0,
+                              expenses: month.expenses || 0
+                            }))}
+                            margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                          >
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis 
+                              dataKey="name" 
+                              angle={analysis.monthly_analysis.per_month_metrics?.length > 6 ? -45 : 0}
+                              textAnchor={analysis.monthly_analysis.per_month_metrics?.length > 6 ? "end" : "middle"}
+                              tick={{ fontSize: 12 }}
+                              height={60}
+                            />
+                            <YAxis 
+                              tickFormatter={(value) => formatCurrency(value).replace('.00', '')}
+                            />
+                            <Tooltip 
+                              formatter={(value) => formatCurrency(Number(value))}
+                            />
+                            <Bar dataKey="revenue" name="Revenue" fill="#10b981" />
+                            <Bar dataKey="expenses" name="Expenses" fill="#ef4444" />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-8 sm:py-12 text-center">
+                        <BarChart3 className="h-12 w-12 sm:h-16 sm:w-16 text-gray-300 mb-3 sm:mb-4" />
+                        <p className="text-sm sm:text-base text-gray-500 max-w-md mx-auto">
+                          No monthly metrics data available for chart visualization.
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+                
+                {/* Seasonal Patterns */}
+                {analysis.monthly_analysis.seasonal_patterns && 
+                 analysis.monthly_analysis.seasonal_patterns.length > 0 && (
+                  <Card>
+                    <CardHeader className="p-4 sm:p-6">
+                      <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                        <CalendarIcon className="h-5 w-5 text-blue-500" />
+                        Seasonal Patterns
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
+                      {analysis.monthly_analysis.seasonal_patterns.map((pattern: any, index: number) => (
+                        <div key={index} className="p-3 bg-slate-50 rounded-lg">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-semibold text-sm">{pattern.description}</span>
+                            <Badge variant={pattern.pattern_type === "revenue" ? "default" : "destructive"}>
+                              {pattern.pattern_type}
+                            </Badge>
+                          </div>
+                          <div className="text-xs text-gray-600 mb-2">
+                            Affected Months: {pattern.affected_months.join(", ")}
+                          </div>
+                          <div className="text-sm text-blue-600">
+                            Recommendation: {pattern.recommendation}
+                          </div>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                )}
+                
+                {/* Month-over-Month Changes */}
+                {analysis.monthly_analysis.month_over_month_comparison && 
+                 analysis.monthly_analysis.month_over_month_comparison.length > 0 && (
+                  <Card>
+                    <CardHeader className="p-4 sm:p-6">
+                      <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                        <TrendingUp className="h-5 w-5 text-blue-500" />
+                        Month-over-Month Comparisons
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
+                      {analysis.monthly_analysis.month_over_month_comparison.map((comparison: any, index: number) => (
+                        <div key={index} className="p-3 border rounded-lg">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-semibold text-sm">
+                              {comparison.current_month} vs {comparison.previous_month}
+                            </span>
+                            <div className="flex items-center">
+                              {comparison.trend === "increasing" ? (
+                                <TrendingUp className="h-4 w-4 text-green-500" />
+                              ) : comparison.trend === "decreasing" ? (
+                                <TrendingDown className="h-4 w-4 text-red-500" />
+                              ) : (
+                                <MinusIcon className="h-4 w-4 text-gray-500" />
+                              )}
+                              <Badge 
+                                className={comparison.trend === "increasing" ? "bg-green-100 text-green-800" : 
+                                  comparison.trend === "decreasing" ? "bg-red-100 text-red-800" : 
+                                  "bg-gray-100 text-gray-800"}
+                              >
+                                {comparison.change_percentage}%
+                              </Badge>
+                            </div>
+                          </div>
+                          <div className="text-xs text-gray-600 mb-1">
+                            Metric: {comparison.metric.toUpperCase()}
+                          </div>
+                          <div className="text-xs text-gray-600 mb-1">
+                            Change: {formatCurrency(comparison.change_amount)}
+                          </div>
+                          <div className="text-sm text-blue-600">
+                            {comparison.insight}
+                          </div>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-8 sm:py-12 text-center p-4 sm:p-6">
+                  <CalendarIcon className="h-12 w-12 sm:h-16 sm:w-16 text-gray-300 mb-3 sm:mb-4" />
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-700 mb-1 sm:mb-2">
+                    No Monthly Data Available
+                  </h3>
+                  <p className="text-sm sm:text-base text-gray-500 max-w-md mx-auto">
+                    The uploaded financial document does not contain monthly breakdown information.
+                    Try uploading a file with multi-month data for time-based analysis.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
 
           {/* Cash Flow Tab */}
           <TabsContent value="cash-flow" className="space-y-4 sm:space-y-6 p-4 sm:p-6">
@@ -1190,8 +1463,8 @@ export default function ComprehensiveFinancialDashboard({
                     </CardTitle>
                   </CardHeader>
                 <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
-                    {analysis.ai_powered_insights?.trend_analysis?.map(
-                      (trend, index) => (
+                                          {analysis.ai_powered_insights?.trend_analysis?.map(
+                      (trend: any, index: number) => (
                         <div key={index} className="p-3 sm:p-4 border rounded-lg">
                           <div className="flex items-center justify-between mb-2">
                             <span className="font-semibold text-xs sm:text-sm">
@@ -1232,7 +1505,7 @@ export default function ComprehensiveFinancialDashboard({
                   </CardHeader>
                 <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
                     {analysis.ai_powered_insights?.anomaly_detection?.map(
-                      (anomaly, index) => (
+                      (anomaly: any, index: number) => (
                         <div key={index} className="p-3 sm:p-4 border rounded-lg">
                           <div className="flex items-center justify-between mb-2">
                             <span className="font-semibold text-xs sm:text-sm">
@@ -1271,7 +1544,7 @@ export default function ComprehensiveFinancialDashboard({
               <CardContent className="p-4 sm:p-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
                     {analysis.ai_powered_insights?.predictive_alerts?.map(
-                      (alert, index) => (
+                      (alert: any, index: number) => (
                         <div key={index} className="p-3 sm:p-4 border rounded-lg">
                           <div className="flex items-center justify-between mb-2">
                             <span className="font-semibold text-xs sm:text-sm">
@@ -1528,7 +1801,7 @@ export default function ComprehensiveFinancialDashboard({
                 <CardContent className="p-4 sm:p-6">
                   <div className="space-y-3 sm:space-y-4">
                       {analysis.strategic_recommendations?.immediate_actions_0_30_days?.map(
-                        (action, index) => (
+                        (action: any, index: number) => (
                           <div key={index} className="p-3 sm:p-4 border rounded-lg">
                             <div className="flex items-start justify-between mb-2">
                               <div className="flex items-center gap-1 sm:gap-2">
@@ -1575,7 +1848,7 @@ export default function ComprehensiveFinancialDashboard({
                   <CardContent>
                     <div className="space-y-4">
                       {analysis.strategic_recommendations?.short_term_improvements_1_6_months?.map(
-                        (improvement, index) => (
+                        (improvement: any, index: number) => (
                           <div key={index} className="p-4 border rounded-lg">
                             <div className="font-semibold mb-2">
                               {improvement.initiative}
@@ -1616,7 +1889,7 @@ export default function ComprehensiveFinancialDashboard({
                   <CardContent>
                     <div className="space-y-4">
                       {analysis.strategic_recommendations?.growth_opportunities?.map(
-                        (opportunity, index) => (
+                        (opportunity: any, index: number) => (
                           <div key={index} className="p-4 border rounded-lg">
                             <div className="font-semibold mb-2">
                               {opportunity.opportunity_type

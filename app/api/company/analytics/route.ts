@@ -43,8 +43,6 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' }
     })
 
-    const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000"
-    
     // Process the data to create comparison metrics
     const branchMetrics = new Map()
     
@@ -74,52 +72,45 @@ export async function GET(request: NextRequest) {
       const metrics = branchMetrics.get(branchId)
       
       try {
-        // Fetch the actual analysis data from your backend
-        const backendResponse = await fetch(
-          `${BACKEND_URL}/get-analysis?analysis_id=${analysis.id}`,
-          { 
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
-          }
-        )
+        // Get the analysis data directly from our database
+        const analysisData = analysis.analysisData as any
         
-        if (backendResponse.ok) {
-          const analysisData = await backendResponse.json()
-          
-          if (analysisData?.analysis) {
-            const data = analysisData.analysis
+        // If we have the analysis data, extract the metrics
+        if (analysisData) {
+          // Handle nested "analysis" property if it exists
+          const data = analysisData.analysis || analysisData
             
-            // Extract financial metrics from your new data structure
-            const revenue = data.profit_and_loss?.revenue_analysis?.total_revenue || 0
-            const expenses = data.profit_and_loss?.cost_structure?.total_expenses || 0
-            const netProfit = data.profit_and_loss?.profitability_metrics?.net_income || 0
-            const ebitda = data.profit_and_loss?.profitability_metrics?.ebitda || 0
-            const grossMargin = data.profit_and_loss?.profitability_metrics?.margins?.gross_margin || 0
-            const businessHealthScore = data.executive_summary?.business_health_score || 0
-            const cashFlow = data.cash_flow_analysis?.cash_position?.free_cash_flow || 0
-            const currentRatio = data.financial_ratios?.liquidity_ratios?.current_ratio || 0
-            const debtToEquity = data.financial_ratios?.leverage_ratios?.debt_to_equity || 0
-            const workingCapital = data.key_kpis?.working_capital || 0
-            const criticalAlerts = data.executive_summary?.critical_alerts || []
+          // Extract financial metrics from your data structure
+          const revenue = data.profit_and_loss?.revenue_analysis?.total_revenue || 0
+          const expenses = data.profit_and_loss?.cost_structure?.total_expenses || 0
+          const netProfit = data.profit_and_loss?.profitability_metrics?.net_income || 0
+          const ebitda = data.profit_and_loss?.profitability_metrics?.ebitda || 0
+          const grossMargin = data.profit_and_loss?.profitability_metrics?.margins?.gross_margin || 0
+          const businessHealthScore = data.executive_summary?.business_health_score || 0
+          const cashFlow = data.cash_flow_analysis?.cash_position?.free_cash_flow || 0
+          const currentRatio = data.financial_ratios?.liquidity_ratios?.current_ratio || 0
+          const debtToEquity = data.financial_ratios?.leverage_ratios?.debt_to_equity || 0
+          const workingCapital = data.key_kpis?.working_capital || 0
+          const criticalAlerts = data.executive_summary?.critical_alerts || []
             
-            // Aggregate metrics (for multiple analyses per branch)
-            metrics.totalRevenue += revenue
-            metrics.totalExpenses += expenses
-            metrics.netProfit += netProfit
-            metrics.ebitda += ebitda
-            metrics.grossMargin = grossMargin // Use latest value
-            metrics.businessHealthScore = businessHealthScore // Use latest value
-            metrics.cashFlow += cashFlow
-            metrics.currentRatio = currentRatio // Use latest value
-            metrics.debtToEquity = debtToEquity // Use latest value
-            metrics.workingCapital += workingCapital
-            metrics.criticalAlerts = criticalAlerts // Use latest alerts
-          }
+          // Aggregate metrics (for multiple analyses per branch)
+          metrics.totalRevenue += revenue
+          metrics.totalExpenses += expenses
+          metrics.netProfit += netProfit
+          metrics.ebitda += ebitda
+          metrics.grossMargin = grossMargin // Use latest value
+          metrics.businessHealthScore = businessHealthScore // Use latest value
+          metrics.cashFlow += cashFlow
+          metrics.currentRatio = currentRatio // Use latest value
+          metrics.debtToEquity = debtToEquity // Use latest value
+          metrics.workingCapital += workingCapital
+          metrics.criticalAlerts = criticalAlerts // Use latest alerts
         } else {
-          console.warn(`Failed to fetch analysis data for ${analysis.id}`)
+          // If no analysis data, still increment the count but don't add metrics
+          console.warn(`No analysis data found for ${analysis.id}`)
         }
-      } catch (fetchError) {
-        console.error(`Error fetching analysis for ${analysis.id}:`, fetchError)
+      } catch (error) {
+        console.error(`Error processing analysis data for ${analysis.id}:`, error)
       }
       
       metrics.analysisCount++

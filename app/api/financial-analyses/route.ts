@@ -46,10 +46,9 @@ export async function GET(request: NextRequest) {
         analysis: {
           id: analysis.id,
           fileName: analysis.fileName,
-          reportType: analysis.reportType,
+
           createdAt: analysis.createdAt.toISOString(),
-          year: analysis.year,
-          month: analysis.month,
+
           branchId: analysis.branchId,
           branchName: analysis.branch?.name
         }
@@ -78,10 +77,9 @@ export async function GET(request: NextRequest) {
     const formattedAnalyses = analyses.map(analysis => ({
       id: analysis.id,
       fileName: analysis.fileName,
-      reportType: analysis.reportType,
+
       createdAt: analysis.createdAt.toISOString(),
-      year: analysis.year,
-      month: analysis.month,
+
       branchId: analysis.branchId,
       branchName: analysis.branch?.name || 'Unassigned'
     }))
@@ -144,38 +142,85 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Create financial analysis record
-    const financialAnalysis = await prisma.financialAnalysis.create({
-      data: {
-        userId: userId,
-        fileName: file.name,
-        fileType: fileType.toUpperCase(),
-        reportType: 'PROFIT_LOSS', // Default, could be determined from file
-        year: new Date().getFullYear(),
-        month: new Date().getMonth() + 1,
-        fileSize: file.size,
-        status: 'PROCESSING',
-        companyId: user.companyId,
-        branchId: branchId
-      }
+    // Get user's internal DB ID
+    const dbUser = await prisma.user.findUnique({
+      where: { clerkId: userId },
+      select: { id: true }
     })
 
-    // Here you would typically send the file to your backend for processing
-    // For now, we'll just return the created record
-    
-    return NextResponse.json({
-      success: true,
-      analysis: {
-        id: financialAnalysis.id,
-        fileName: financialAnalysis.fileName,
-        status: financialAnalysis.status
+    if (!dbUser) {
+      return NextResponse.json({ error: 'User not found in database' }, { status: 404 })
+    }
+
+    // Forward the file to the backend for analysis
+    const BACKEND_URL = process.env.NEXT_PUBLIC_BASE_URL;
+
+    if (!BACKEND_URL) {
+      return NextResponse.json({
+        error: 'Backend URL not configured. Please set NEXT_PUBLIC_BASE_URL in your environment variables.'
+      }, { status: 500 });
+    }
+
+    // Prepare the form data to send to the backend
+    const backendFormData = new FormData();
+    backendFormData.append('file', file);
+
+    // Build the backend URL with query parameters
+    const backendUrl = `${BACKEND_URL}/upload-financial-document?user_id=${encodeURIComponent(userId)}&store_in_vector_db=true`;
+
+    try {
+      console.log("Sending file to backend for analysis:", backendUrl);
+      const backendResponse = await fetch(backendUrl, {
+        method: 'POST',
+        body: backendFormData,
+      });
+
+      if (!backendResponse.ok) {
+        const errorText = await backendResponse.text();
+        console.error('Backend error:', errorText);
+        return NextResponse.json({
+          error: 'Failed to process file with AI backend',
+          details: errorText
+        }, { status: backendResponse.status });
       }
-    })
+
+      // Get the analysis result from the backend
+      const result = await backendResponse.json();
+
+      // Create financial analysis record with the data from the backend
+      const financialAnalysis = await prisma.financialAnalysis.create({
+        data: {
+          userId: dbUser.id, // Use the database internal ID
+          fileName: file.name,
+          fileType: fileType?.toUpperCase() || 'UNKNOWN',
+          fileSizeMb: Number((file.size / (1024 * 1024)).toFixed(2)), // Convert bytes to MB
+          analysisData: result, // Use the analysis data from the backend
+          companyId: user.companyId,
+          branchId: branchId
+        }
+      });
+
+      // Return the success response with the analysis record
+      return NextResponse.json({
+        success: true,
+        analysis: {
+          id: financialAnalysis.id,
+          fileName: financialAnalysis.fileName,
+          createdAt: financialAnalysis.createdAt
+        }
+      });
+    } catch (error) {
+      console.error("Backend processing error:", error);
+      return NextResponse.json({
+        error: 'Failed to process file with backend service',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      }, { status: 500 });
+    }
 
   } catch (error) {
     console.error('Error creating financial analysis:', error)
     return NextResponse.json(
-      { error: 'Failed to create analysis' },
+      { error: `Failed to create analysis: ${error instanceof Error ? error.message : 'Unknown error'}` },
       { status: 500 }
     )
   }

@@ -470,11 +470,7 @@ export function Sidebar() {
                             )}
                           </div>
                           <span className="font-medium">{item.name}</span>
-                          {item.featured && !isLocked && (
-                            <Badge className="ml-auto text-xs bg-purple-600 text-white border-0 px-2 py-0.5">
-                              {isCompanyMode ? "COMPARE" : "NEW"}
-                            </Badge>
-                          )}
+                         
                           {isLocked && (
                             <div className="ml-auto">
                               <Crown className="h-3 w-3 text-amber-500" />
