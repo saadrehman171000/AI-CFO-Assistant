@@ -148,6 +148,38 @@ export default function AnalyticsContent() {
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
   const [selectedAnalysisId, setSelectedAnalysisId] = useState<string | null>(null);
 
+  // Helper function to safely access nested properties
+  const safeGet = (obj: any, path: string, defaultValue: any = 0): any => {
+    try {
+      if (!obj || typeof obj !== 'object') return defaultValue;
+      const keys = path.split('.');
+      let result = obj;
+      for (const key of keys) {
+        if (result === undefined || result === null || typeof result !== 'object') return defaultValue;
+        result = result[key];
+      }
+      return result === undefined || result === null ? defaultValue : result;
+    } catch (e) {
+      return defaultValue;
+    }
+  };
+
+  // Helper function to safely get string values
+  const safeString = (value: any, defaultValue: string = ''): string => {
+    return value != null && typeof value === 'string' ? value : defaultValue;
+  };
+
+  // Helper function to safely get number values
+  const safeNumber = (value: any, defaultValue: number = 0): number => {
+    const num = Number(value);
+    return !isNaN(num) && isFinite(num) ? num : defaultValue;
+  };
+
+  // Helper function to safely get array values
+  const safeArray = (arr: any): any[] => {
+    return Array.isArray(arr) ? arr : [];
+  };
+
   const fetchAnalyticsData = async () => {
     try {
       setLoading(true);
@@ -156,133 +188,154 @@ export default function AnalyticsContent() {
       let analysisResult = null;
 
       // If a specific analysis is selected, fetch that data
-      if (selectedAnalysisId) {
-        const analysisResponse = await fetch(
-          `/api/analysis-data?analysisId=${selectedAnalysisId}`
-        );
+      if (selectedAnalysisId && typeof selectedAnalysisId === 'string') {
+        try {
+          const analysisResponse = await fetch(
+            `/api/analysis-data?analysisId=${encodeURIComponent(selectedAnalysisId)}`
+          );
 
-        if (analysisResponse.ok) {
-          const result = await analysisResponse.json();
-          if (result.success && result.analysisData) {
-            analysisResult = result.analysisData;
+          if (analysisResponse.ok) {
+            const result = await analysisResponse.json();
+            if (result?.success && result?.analysisData) {
+              analysisResult = result.analysisData;
+            } else {
+              console.warn('Invalid API response structure:', result);
+            }
+          } else {
+            console.warn(`API request failed with status: ${analysisResponse.status}`);
           }
+        } catch (fetchError) {
+          console.error('Error fetching specific analysis:', fetchError);
         }
       }
       // If no specific analysis selected, fetch latest for the branch or company
       else {
-        const endpoint = selectedBranchId
-          ? `/api/financial-analyses?branchId=${selectedBranchId}&latest=true`
-          : "/api/financial-analyses?latest=true";
+        try {
+          const endpoint = selectedBranchId && typeof selectedBranchId === 'string'
+            ? `/api/financial-analyses?branchId=${encodeURIComponent(selectedBranchId)}&latest=true`
+            : "/api/financial-analyses?latest=true";
 
-        const analysisResponse = await fetch(endpoint);
+          const analysisResponse = await fetch(endpoint);
 
-        if (analysisResponse.ok) {
-          const result = await analysisResponse.json();
-          if (result.success && result.analysis) {
+          if (analysisResponse.ok) {
+            const result = await analysisResponse.json();
+            if (result?.success && result?.analysis?.id) {
             // Now fetch the actual analysis data
-            const dataResponse = await fetch(
-              `/api/analysis-data?analysisId=${result.analysis.id}`
-            );
-            if (dataResponse.ok) {
-              const dataResult = await dataResponse.json();
-              if (dataResult.success && dataResult.analysisData) {
-                analysisResult = dataResult.analysisData;
+              try {
+                const dataResponse = await fetch(
+                  `/api/analysis-data?analysisId=${encodeURIComponent(result.analysis.id)}`
+                );
+                if (dataResponse.ok) {
+                  const dataResult = await dataResponse.json();
+                  if (dataResult?.success && dataResult?.analysisData) {
+                    analysisResult = dataResult.analysisData;
+                  } else {
+                    console.warn('Invalid analysis data response:', dataResult);
+                  }
+                } else {
+                  console.warn(`Analysis data request failed with status: ${dataResponse.status}`);
+                }
+              } catch (dataFetchError) {
+                console.error('Error fetching analysis data:', dataFetchError);
               }
+            } else {
+              console.warn('No valid analysis found in response:', result);
             }
+          } else {
+            console.warn(`Analysis list request failed with status: ${analysisResponse.status}`);
           }
+        } catch (fetchError) {
+          console.error('Error fetching latest analysis:', fetchError);
         }
       }
 
       // Check if we have the Flask backend format (file_info and analysis structure)
       if (
-        analysisResult &&
-        analysisResult.file_info &&
-        analysisResult.analysis
+        analysisResult?.file_info &&
+        analysisResult?.analysis
       ) {
-        // Transform the Flask backend data into the format expected by the analytics component
+        // Transform the Flask backend data into the format expected by the analytics component with null safety
         const transformedData: AnalyticsData = {
           metrics: {
-            totalRevenue:
-              analysisResult.analysis.profit_and_loss.revenue_analysis
-                ?.total_revenue || 0,
-            totalExpenses:
-              analysisResult.analysis.profit_and_loss.cost_structure
-                ?.total_expenses || 0,
-            netProfit:
-              analysisResult.analysis.profit_and_loss.profitability_metrics
-                ?.net_income || 0,
-            grossMargin:
-              analysisResult.analysis.profit_and_loss.profitability_metrics
-                ?.margins?.gross_margin || 0,
-            netMargin:
-              analysisResult.analysis.profit_and_loss.profitability_metrics
-                ?.margins?.net_margin || 0,
-            totalAssets:
-              analysisResult.analysis.balance_sheet?.assets?.total_assets || 0,
-            totalLiabilities:
-              analysisResult.analysis.balance_sheet?.liabilities
-                ?.total_liabilities || 0,
-            totalEquity:
-              analysisResult.analysis.balance_sheet?.equity?.total_equity || 0,
-            cashFlowFromOperations:
-              analysisResult.analysis.cash_flow_analysis?.operating_activities
-                ?.net_cash_from_operations || 0,
-            cashFlowFromInvesting:
-              analysisResult.analysis.cash_flow_analysis?.investing_activities
-                ?.net_investing_cash_flow || 0,
-            cashFlowFromFinancing:
-              analysisResult.analysis.cash_flow_analysis?.financing_activities
-                ?.net_financing_cash_flow || 0,
-            netCashFlow:
-              analysisResult.analysis.cash_flow_analysis?.cash_position
-                ?.net_change_in_cash || 0,
-            arDays:
-              analysisResult.analysis.working_capital_management
-                ?.cash_conversion_cycle?.days_sales_outstanding || 0,
-            apDays:
-              analysisResult.analysis.working_capital_management
-                ?.cash_conversion_cycle?.days_payable_outstanding || 0,
-            ebitda:
-              analysisResult.analysis.profit_and_loss.profitability_metrics
-                ?.ebitda || 0,
-            currentRatio:
-              analysisResult.analysis.financial_ratios?.liquidity_ratios
-                ?.current_ratio || 0,
-            quickRatio:
-              analysisResult.analysis.financial_ratios?.liquidity_ratios
-                ?.quick_ratio || 0,
-            debtToEquityRatio:
-              analysisResult.analysis.financial_ratios?.leverage_ratios
-                ?.debt_to_equity || 0,
+            totalRevenue: safeNumber(
+              safeGet(analysisResult, 'analysis.profit_and_loss.revenue_analysis.total_revenue')
+            ),
+            totalExpenses: safeNumber(
+              safeGet(analysisResult, 'analysis.profit_and_loss.cost_structure.total_expenses')
+            ),
+            netProfit: safeNumber(
+              safeGet(analysisResult, 'analysis.profit_and_loss.profitability_metrics.net_income')
+            ),
+            grossMargin: safeNumber(
+              safeGet(analysisResult, 'analysis.profit_and_loss.profitability_metrics.margins.gross_margin')
+            ),
+            netMargin: safeNumber(
+              safeGet(analysisResult, 'analysis.profit_and_loss.profitability_metrics.margins.net_margin')
+            ),
+            totalAssets: safeNumber(
+              safeGet(analysisResult, 'analysis.balance_sheet.assets.total_assets')
+            ),
+            totalLiabilities: safeNumber(
+              safeGet(analysisResult, 'analysis.balance_sheet.liabilities.total_liabilities')
+            ),
+            totalEquity: safeNumber(
+              safeGet(analysisResult, 'analysis.balance_sheet.equity.total_equity')
+            ),
+            cashFlowFromOperations: safeNumber(
+              safeGet(analysisResult, 'analysis.cash_flow_analysis.operating_activities.net_cash_from_operations')
+            ),
+            cashFlowFromInvesting: safeNumber(
+              safeGet(analysisResult, 'analysis.cash_flow_analysis.investing_activities.net_investing_cash_flow')
+            ),
+            cashFlowFromFinancing: safeNumber(
+              safeGet(analysisResult, 'analysis.cash_flow_analysis.financing_activities.net_financing_cash_flow')
+            ),
+            netCashFlow: safeNumber(
+              safeGet(analysisResult, 'analysis.cash_flow_analysis.cash_position.net_change_in_cash')
+            ),
+            arDays: safeNumber(
+              safeGet(analysisResult, 'analysis.working_capital_management.cash_conversion_cycle.days_sales_outstanding')
+            ),
+            apDays: safeNumber(
+              safeGet(analysisResult, 'analysis.working_capital_management.cash_conversion_cycle.days_payable_outstanding')
+            ),
+            ebitda: safeNumber(
+              safeGet(analysisResult, 'analysis.profit_and_loss.profitability_metrics.ebitda')
+            ),
+            currentRatio: safeNumber(
+              safeGet(analysisResult, 'analysis.financial_ratios.liquidity_ratios.current_ratio')
+            ),
+            quickRatio: safeNumber(
+              safeGet(analysisResult, 'analysis.financial_ratios.liquidity_ratios.quick_ratio')
+            ),
+            debtToEquityRatio: safeNumber(
+              safeGet(analysisResult, 'analysis.financial_ratios.leverage_ratios.debt_to_equity')
+            ),
           },
-          // Transform insights from key_insights_summary
-          insights:
-            analysisResult.analysis.key_insights_summary?.map(
-              (insight: string, index: number) => ({
-                type:
-                  index % 4 === 0
-                    ? "trend"
-                    : index % 4 === 1
-                    ? "anomaly"
-                    : index % 4 === 2
-                    ? "recommendation"
-                    : "summary",
-                title: `Insight ${index + 1}`,
-                description: insight,
-                severity:
-                  index % 3 === 0 ? "high" : index % 3 === 1 ? "medium" : "low",
-                impact: "Impacts financial performance and decision-making",
-                suggestion:
-                  index % 2 === 0
-                    ? "Review this area for potential optimization"
-                    : undefined,
-              })
-            ) || [],
-          // Mock trends data since it's not provided in the same structure
+          // Transform insights from key_insights_summary with null safety
+          insights: safeArray(
+            safeGet(analysisResult, 'analysis.key_insights_summary', [])
+          ).map((insight: any, index: number) => ({
+            type: (index % 4 === 0
+              ? "trend"
+              : index % 4 === 1
+                ? "anomaly"
+                : index % 4 === 2
+                  ? "recommendation"
+                  : "summary") as "trend" | "anomaly" | "recommendation" | "summary",
+            title: `Insight ${index + 1}`,
+            description: safeString(insight, 'No insight available'),
+            severity: (index % 3 === 0 ? "high" : index % 3 === 1 ? "medium" : "low") as "high" | "medium" | "low",
+            impact: "Impacts financial performance and decision-making",
+            suggestion: index % 2 === 0
+              ? "Review this area for potential optimization"
+              : undefined,
+          })),
+          // Generate trends data from available metrics with null safety
           trends: {
-            revenue: [213200],
-            expenses: [342360],
-            profit: [-234160],
+            revenue: [safeNumber(safeGet(analysisResult, 'analysis.profit_and_loss.revenue_analysis.total_revenue'), 0)],
+            expenses: [safeNumber(safeGet(analysisResult, 'analysis.profit_and_loss.cost_structure.total_expenses'), 0)],
+            profit: [safeNumber(safeGet(analysisResult, 'analysis.profit_and_loss.profitability_metrics.net_income'), 0)],
             months: ["Current"],
           },
           // Create empty top accounts since we don't have them in the same format
@@ -295,29 +348,33 @@ export default function AnalyticsContent() {
           reportInfo: {
             latestReport: {
               id: "1",
-              fileName: analysisResult.file_info.filename,
+              fileName: safeString(analysisResult?.file_info?.filename, 'Unknown File'),
               reportType: "PROFIT_LOSS",
               year: new Date().getFullYear(),
               month: new Date().getMonth() + 1,
               uploadDate: new Date().toISOString(),
-              totalRecords:
-                analysisResult.analysis.key_insights_summary?.length || 0,
+              totalRecords: safeArray(
+                safeGet(analysisResult, 'analysis.key_insights_summary', [])
+              ).length,
             },
             totalReports: 1,
-            totalRecords:
-              analysisResult.analysis.key_insights_summary?.length || 0,
+            totalRecords: safeArray(
+              safeGet(analysisResult, 'analysis.key_insights_summary', [])
+            ).length,
           },
         };
 
         setAnalyticsData(transformedData);
-      } else if (analysisResult.success && analysisResult.data) {
+      } else if (analysisResult?.success && analysisResult?.data) {
         // Backward compatibility with old format
         setAnalyticsData(analysisResult.data);
       } else {
         throw new Error("Invalid data format received from API");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      console.error('Error fetching analytics data:', err);
+      setError(err instanceof Error ? err.message : "An unexpected error occurred while fetching analytics data");
+      setAnalyticsData(null);
     } finally {
       setLoading(false);
     }
@@ -337,16 +394,22 @@ export default function AnalyticsContent() {
   }, [selectedBranchId, selectedAnalysisId]); // Re-fetch when selection changes
 
   const handleSelectionChange = (branchId: string | null, analysisId: string | null) => {
-    // Prevent unnecessary re-renders if values haven't changed
-    if (selectedBranchId !== branchId || selectedAnalysisId !== analysisId) {
-      console.log('Analytics: Selection changed:', { branchId, analysisId });
-      setSelectedBranchId(branchId);
-      setSelectedAnalysisId(analysisId);
+    // Validate inputs and prevent unnecessary re-renders if values haven't changed
+    const safeBranchId = branchId && typeof branchId === 'string' ? branchId : null;
+    const safeAnalysisId = analysisId && typeof analysisId === 'string' ? analysisId : null;
+
+    if (selectedBranchId !== safeBranchId || selectedAnalysisId !== safeAnalysisId) {
+      console.log('Analytics: Selection changed:', { branchId: safeBranchId, analysisId: safeAnalysisId });
+      setSelectedBranchId(safeBranchId);
+      setSelectedAnalysisId(safeAnalysisId);
+      // Clear any previous errors when selection changes
+      setError(null);
     }
   };
 
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
+  const getSeverityColor = (severity: string | null | undefined) => {
+    const safeSeverity = safeString(severity).toLowerCase();
+    switch (safeSeverity) {
       case "high":
         return "destructive";
       case "medium":
@@ -358,8 +421,9 @@ export default function AnalyticsContent() {
     }
   };
 
-  const getInsightIcon = (type: string) => {
-    switch (type) {
+  const getInsightIcon = (type: string | null | undefined) => {
+    const safeType = safeString(type).toLowerCase();
+    switch (safeType) {
       case "trend":
         return <TrendingUp className="h-4 w-4" />;
       case "anomaly":
@@ -373,17 +437,19 @@ export default function AnalyticsContent() {
     }
   };
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | null | undefined) => {
+    const safeAmount = safeNumber(amount, 0);
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(amount);
+    }).format(safeAmount);
   };
 
-  const formatPercentage = (value: number) => {
-    return `${value.toFixed(1)}%`;
+  const formatPercentage = (value: number | null | undefined) => {
+    const safeValue = safeNumber(value, 0);
+    return `${safeValue.toFixed(1)}%`;
   };
 
   if (loading) {
@@ -463,24 +529,24 @@ export default function AnalyticsContent() {
 
   const { metrics, insights, trends, topAccounts, reportInfo } = analyticsData;
 
-  // Prepare data for charts
-  const trendData = trends.months.map((month, index) => ({
-    month,
-    revenue: trends.revenue[index] || 0,
-    expenses: trends.expenses[index] || 0,
-    profit: trends.profit[index] || 0,
+  // Prepare data for charts with null safety
+  const trendData = safeArray(trends?.months).map((month, index) => ({
+    month: safeString(month, `Period ${index + 1}`),
+    revenue: safeNumber(safeArray(trends?.revenue)[index], 0),
+    expenses: safeNumber(safeArray(trends?.expenses)[index], 0),
+    profit: safeNumber(safeArray(trends?.profit)[index], 0),
   }));
 
   const pieChartData = [
-    { name: "Revenue", value: metrics.totalRevenue || 0, color: "#10b981" },
-    { name: "Expenses", value: metrics.totalExpenses || 0, color: "#ef4444" },
-    { name: "Assets", value: metrics.totalAssets || 0, color: "#3b82f6" },
+    { name: "Revenue", value: safeNumber(metrics?.totalRevenue, 0), color: "#10b981" },
+    { name: "Expenses", value: safeNumber(metrics?.totalExpenses, 0), color: "#ef4444" },
+    { name: "Assets", value: safeNumber(metrics?.totalAssets, 0), color: "#3b82f6" },
     {
       name: "Liabilities",
-      value: metrics.totalLiabilities || 0,
+      value: safeNumber(metrics?.totalLiabilities, 0),
       color: "#f59e0b",
     },
-  ].filter((item) => item.value > 0);
+  ].filter((item) => safeNumber(item?.value, 0) > 0);
 
   return (
     <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
@@ -535,13 +601,13 @@ export default function AnalyticsContent() {
               </div>
             </div>
             <div className="text-lg sm:text-2xl font-bold text-emerald-600 mb-2 truncate">
-              {formatCurrency(metrics.totalRevenue || 0)}
+              {formatCurrency(safeNumber(metrics?.totalRevenue, 0))}
             </div>
             <p className="text-xs sm:text-sm text-gray-600 mb-1">
               Revenue Growth
             </p>
             <p className="text-xs text-emerald-600 font-medium">
-              Gross Margin: {formatPercentage(metrics.grossMargin || 0)}
+              Gross Margin: {formatPercentage(safeNumber(metrics?.grossMargin, 0))}
             </p>
           </CardContent>
         </Card>
@@ -554,13 +620,13 @@ export default function AnalyticsContent() {
               </div>
             </div>
             <div className="text-lg sm:text-2xl font-bold text-red-600 mb-2 truncate">
-              {formatCurrency(metrics.totalExpenses || 0)}
+              {formatCurrency(safeNumber(metrics?.totalExpenses, 0))}
             </div>
             <p className="text-xs sm:text-sm text-gray-600 mb-1">
               Expense Ratio
             </p>
             <p className="text-xs text-red-600 font-medium">
-              Net Margin: {formatPercentage(metrics.netMargin || 0)}
+              Net Margin: {formatPercentage(safeNumber(metrics?.netMargin, 0))}
             </p>
           </CardContent>
         </Card>
@@ -574,18 +640,18 @@ export default function AnalyticsContent() {
             </div>
             <div
               className={`text-lg sm:text-2xl font-bold mb-2 truncate ${
-                (metrics.netProfit || 0) >= 0
+                safeNumber(metrics?.netProfit, 0) >= 0
                 ? "text-emerald-600"
                   : "text-red-600"
               }`}
             >
-              {formatCurrency(metrics.netProfit || 0)}
+              {formatCurrency(safeNumber(metrics?.netProfit, 0))}
             </div>
             <p className="text-xs sm:text-sm text-gray-600 mb-1">
               Profitability
             </p>
             <p className="text-xs text-blue-600 font-medium">
-              {(metrics.netProfit || 0) >= 0 ? "Positive" : "Negative"} Net Income
+              {safeNumber(metrics?.netProfit, 0) >= 0 ? "Positive" : "Negative"} Net Income
             </p>
           </CardContent>
         </Card>
@@ -598,7 +664,7 @@ export default function AnalyticsContent() {
               </div>
             </div>
             <div className="text-lg sm:text-2xl font-bold text-purple-600 mb-2 truncate">
-              {metrics.currentRatio?.toFixed(2) || "N/A"}
+              {safeNumber(metrics?.currentRatio, 0) > 0 ? safeNumber(metrics?.currentRatio, 0).toFixed(2) : "N/A"}
             </div>
             <p className="text-xs sm:text-sm text-gray-600 mb-1">
               Financial Health
@@ -633,7 +699,7 @@ export default function AnalyticsContent() {
                   <XAxis dataKey="month" tick={{ fontSize: 10 }} />
                   <YAxis tick={{ fontSize: 10 }} width={50} />
                   <Tooltip
-                    formatter={(value) => formatCurrency(Number(value))}
+                    formatter={(value) => formatCurrency(safeNumber(value, 0))}
                   />
                   <Area
                     type="monotone"
@@ -690,18 +756,21 @@ export default function AnalyticsContent() {
                     cy="50%"
                     labelLine={false}
                     label={({ name, percent }) =>
-                      `${name} ${((percent || 0) * 100).toFixed(0)}%`
+                      `${safeString(name, 'Unknown')} ${(safeNumber(percent, 0) * 100).toFixed(0)}%`
                     }
                     outerRadius={100}
                     fill="#8884d8"
                     dataKey="value"
                   >
-                    {pieChartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
+                    {safeArray(pieChartData).map((entry, index) => {
+                      if (!entry) return null;
+                      return (
+                        <Cell key={`cell-${index}`} fill={safeString(entry?.color, '#8884d8')} />
+                      );
+                    }).filter(Boolean)}
                   </Pie>
                   <Tooltip
-                    formatter={(value) => formatCurrency(Number(value))}
+                    formatter={(value) => formatCurrency(safeNumber(value, 0))}
                   />
                 </RechartsPieChart>
               </ResponsiveContainer>
@@ -729,12 +798,12 @@ export default function AnalyticsContent() {
               </span>
               <Badge
                 variant={
-                  metrics.cashFlowFromOperations >= 0
+                  safeNumber(metrics?.cashFlowFromOperations, 0) >= 0
                     ? "default"
                     : "destructive"
                 }
               >
-                {formatCurrency(metrics.cashFlowFromOperations || 0)}
+                {formatCurrency(safeNumber(metrics?.cashFlowFromOperations, 0))}
               </Badge>
             </div>
             <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
@@ -743,12 +812,12 @@ export default function AnalyticsContent() {
               </span>
               <Badge
                 variant={
-                  metrics.cashFlowFromInvesting >= 0
+                  safeNumber(metrics?.cashFlowFromInvesting, 0) >= 0
                     ? "default"
                     : "destructive"
                 }
               >
-                {formatCurrency(metrics.cashFlowFromInvesting || 0)}
+                {formatCurrency(safeNumber(metrics?.cashFlowFromInvesting, 0))}
               </Badge>
             </div>
             <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
@@ -756,9 +825,9 @@ export default function AnalyticsContent() {
                 Net Cash Flow
               </span>
               <Badge
-                variant={metrics.netCashFlow >= 0 ? "default" : "destructive"}
+                variant={safeNumber(metrics?.netCashFlow, 0) >= 0 ? "default" : "destructive"}
               >
-                {formatCurrency(metrics.netCashFlow || 0)}
+                {formatCurrency(safeNumber(metrics?.netCashFlow, 0))}
               </Badge>
             </div>
           </CardContent>
@@ -780,9 +849,9 @@ export default function AnalyticsContent() {
                 Current Ratio
               </span>
               <Badge
-                variant={metrics.currentRatio > 1 ? "default" : "destructive"}
+                variant={safeNumber(metrics?.currentRatio, 0) > 1 ? "default" : "destructive"}
               >
-                {metrics.currentRatio?.toFixed(2) || "N/A"}
+                {safeNumber(metrics?.currentRatio, 0) > 0 ? safeNumber(metrics?.currentRatio, 0).toFixed(2) : "N/A"}
               </Badge>
             </div>
             <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
@@ -791,10 +860,10 @@ export default function AnalyticsContent() {
               </span>
               <Badge
                 variant={
-                  metrics.debtToEquityRatio < 1 ? "default" : "destructive"
+                  safeNumber(metrics?.debtToEquityRatio, 0) < 1 ? "default" : "destructive"
                 }
               >
-                {metrics.debtToEquityRatio?.toFixed(2) || "N/A"}
+                {safeNumber(metrics?.debtToEquityRatio, 0) > 0 ? safeNumber(metrics?.debtToEquityRatio, 0).toFixed(2) : "N/A"}
               </Badge>
             </div>
             <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
@@ -802,9 +871,9 @@ export default function AnalyticsContent() {
                 Quick Ratio
               </span>
               <Badge
-                variant={metrics.quickRatio > 1 ? "default" : "destructive"}
+                variant={safeNumber(metrics?.quickRatio, 0) > 1 ? "default" : "destructive"}
               >
-                {metrics.quickRatio?.toFixed(2) || "N/A"}
+                {safeNumber(metrics?.quickRatio, 0) > 0 ? safeNumber(metrics?.quickRatio, 0).toFixed(2) : "N/A"}
               </Badge>
             </div>
           </CardContent>
@@ -826,7 +895,7 @@ export default function AnalyticsContent() {
                 EBITDA
               </span>
               <Badge variant="default">
-                {formatCurrency(metrics.ebitda || 0)}
+                {formatCurrency(safeNumber(metrics?.ebitda, 0))}
               </Badge>
             </div>
             <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
@@ -834,9 +903,9 @@ export default function AnalyticsContent() {
                 AR Days
               </span>
               <Badge
-                variant={metrics.arDays < 30 ? "default" : "destructive"}
+                variant={safeNumber(metrics?.arDays, 0) < 30 && safeNumber(metrics?.arDays, 0) > 0 ? "default" : "destructive"}
               >
-                {metrics.arDays || "N/A"}
+                {safeNumber(metrics?.arDays, 0) > 0 ? safeNumber(metrics?.arDays, 0) : "N/A"}
               </Badge>
             </div>
             <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
@@ -844,9 +913,9 @@ export default function AnalyticsContent() {
                 AP Days
               </span>
               <Badge
-                variant={metrics.apDays < 45 ? "default" : "destructive"}
+                variant={safeNumber(metrics?.apDays, 0) < 45 && safeNumber(metrics?.apDays, 0) > 0 ? "default" : "destructive"}
               >
-                {metrics.apDays || "N/A"}
+                {safeNumber(metrics?.apDays, 0) > 0 ? safeNumber(metrics?.apDays, 0) : "N/A"}
               </Badge>
             </div>
           </CardContent>
@@ -870,43 +939,46 @@ export default function AnalyticsContent() {
         </CardHeader>
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {insights.map((insight, index) => (
-              <div
-                key={index}
-                className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    {getInsightIcon(insight.type)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 mb-2">
-                      <h4 className="font-semibold text-sm text-gray-900">
-                        {insight.title}
-                      </h4>
-                      <Badge variant={getSeverityColor(insight.severity)}>
-                        {insight.severity}
-                      </Badge>
+            {safeArray(insights).map((insight, index) => {
+              if (!insight) return null;
+              return (
+                <div
+                  key={index}
+                  className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      {getInsightIcon(insight?.type)}
                     </div>
-                    <p className="text-sm text-gray-700 mb-2 line-clamp-3">
-                      {insight.description}
-                    </p>
-                    <p className="text-sm font-medium mb-2 line-clamp-2">
-                      <span className="text-blue-600">Impact:</span>{" "}
-                      {insight.impact}
-                    </p>
-                    {insight.suggestion && (
-                      <p className="text-sm line-clamp-2">
-                        <span className="text-emerald-600 font-medium">
-                          Suggestion:
-                        </span>{" "}
-                        {insight.suggestion}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
+                        <h4 className="font-semibold text-sm text-gray-900">
+                          {safeString(insight?.title, 'Unknown Insight')}
+                        </h4>
+                        <Badge variant={getSeverityColor(insight?.severity)}>
+                          {safeString(insight?.severity, 'unknown')}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-gray-700 mb-2 line-clamp-3">
+                        {safeString(insight?.description, 'No description available')}
                       </p>
-                    )}
+                      <p className="text-sm font-medium mb-2 line-clamp-2">
+                        <span className="text-blue-600">Impact:</span>{" "}
+                        {safeString(insight?.impact, 'Impact not specified')}
+                      </p>
+                      {insight?.suggestion && (
+                        <p className="text-sm line-clamp-2">
+                          <span className="text-emerald-600 font-medium">
+                            Suggestion:
+                          </span>{" "}
+                          {safeString(insight.suggestion, 'No suggestion available')}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            }).filter(Boolean)}
           </div>
         </CardContent>
       </Card>

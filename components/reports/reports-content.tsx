@@ -48,19 +48,56 @@ export function ReportsContent() {
   const [selectedAnalysisId, setSelectedAnalysisId] = useState<string | null>(null);
   const itemsPerPage = 10;
 
-  // Enhanced export functions
+  // Helper function to safely access nested properties
+  const safeGet = (obj: any, path: string, defaultValue: any = 0): any => {
+    try {
+      if (!obj || typeof obj !== 'object') return defaultValue;
+      const keys = path.split('.');
+      let result = obj;
+      for (const key of keys) {
+        if (result === undefined || result === null || typeof result !== 'object') return defaultValue;
+        result = result[key];
+      }
+      return result === undefined || result === null ? defaultValue : result;
+    } catch (e) {
+      return defaultValue;
+    }
+  };
+
+  // Helper function to safely get string values
+  const safeString = (value: any, defaultValue: string = ''): string => {
+    return value != null && typeof value === 'string' ? value : defaultValue;
+  };
+
+  // Helper function to safely get number values
+  const safeNumber = (value: any, defaultValue: number = 0): number => {
+    const num = Number(value);
+    return !isNaN(num) && isFinite(num) ? num : defaultValue;
+  };
+
+  // Helper function to format currency safely
+  const formatCurrency = (amount: number | null | undefined): string => {
+    const safeAmount = safeNumber(amount, 0);
+    return `$${Math.abs(safeAmount).toLocaleString()}`;
+  };
+
+  // Enhanced export functions with null safety
   const handleExportToPDF = async () => {
+    if (!financialData || !tableData || tableData.length === 0) {
+      alert("No data available to export.");
+      return;
+    }
+
     setExporting(true);
     try {
       const { tableData: exportData, options } = prepareDataForExport(
         tableData,
         activeTab,
-        tabs[activeTab]
+        safeString(tabs[activeTab], 'Financial Report')
       );
       await exportToPDF(exportData, options);
     } catch (error) {
       console.error("PDF export failed:", error);
-      // You could add a toast notification here
       alert("PDF export failed. Please try again.");
     } finally {
       setExporting(false);
@@ -68,312 +105,305 @@ export function ReportsContent() {
   };
 
   const handleExportToCSV = async () => {
+    if (!financialData || !tableData || tableData.length === 0) {
+      alert("No data available to export.");
+      return;
+    }
+
     setExporting(true);
     try {
       const { tableData: exportData, options } = prepareDataForExport(
         tableData,
         activeTab,
-        tabs[activeTab]
+        safeString(tabs[activeTab], 'Financial Report')
       );
       await exportToCSV(exportData, options);
     } catch (error) {
       console.error("CSV export failed:", error);
-      // You could add a toast notification here
       alert("CSV export failed. Please try again.");
     } finally {
       setExporting(false);
     }
   };
 
-  // Generate table data based on active tab
+  // Generate table data based on active tab with null safety
   const getTableData = (): TableRow[] => {
-    if (!financialData || !financialData.analysis) return [];
+    if (!financialData?.analysis) return [];
 
-    switch (activeTab) {
-      case 0: // P&L
-        const plData = financialData.analysis.profit_and_loss;
-        const plRows: TableRow[] = [
-          { account: "Revenue Streams", amount: 0, isTotal: true },
-          {
-            account: "Total Revenue",
-            amount: plData.revenue_analysis?.total_revenue || 0,
-          },
-          {
-            account: "Primary Revenue",
-            amount:
-              plData.revenue_analysis?.revenue_streams?.primary_revenue || 0,
-          },
-          {
-            account: "Secondary Revenue",
-            amount:
-              plData.revenue_analysis?.revenue_streams?.secondary_revenue || 0,
-          },
-          {
-            account: "Recurring Revenue",
-            amount:
-              plData.revenue_analysis?.revenue_streams?.recurring_revenue || 0,
-          },
-          {
-            account: "One-time Revenue",
-            amount:
-              plData.revenue_analysis?.revenue_streams?.one_time_revenue || 0,
-          },
+    try {
+      switch (activeTab) {
+        case 0: // P&L
+          const plData = financialData.analysis.profit_and_loss;
+          if (!plData) return [{ account: "No P&L data available", amount: 0 }];
 
-          { account: "Expense Categories", amount: 0, isTotal: true },
-          {
-            account: "Total Expenses",
-            amount: -(plData.cost_structure?.total_expenses || 0),
-          },
-          {
-            account: "Direct Costs",
-            amount: -(
-              plData.cost_structure?.cost_categories?.direct_costs || 0
-            ),
-          },
-          {
-            account: "Operating Expenses",
-            amount: -(
-              plData.cost_structure?.cost_categories?.operating_expenses || 0
-            ),
-          },
-          {
-            account: "Administrative Costs",
-            amount: -(
-              plData.cost_structure?.cost_categories?.administrative_costs || 0
-            ),
-          },
-          {
-            account: "Financing Costs",
-            amount: -(
-              plData.cost_structure?.cost_categories?.financing_costs || 0
-            ),
-          },
+          const plRows: TableRow[] = [
+            { account: "Revenue Streams", amount: 0, isTotal: true },
+            {
+              account: "Total Revenue",
+              amount: safeNumber(safeGet(plData, 'revenue_analysis.total_revenue')),
+            },
+            {
+              account: "Primary Revenue",
+              amount: safeNumber(safeGet(plData, 'revenue_analysis.revenue_streams.primary_revenue')),
+            },
+            {
+              account: "Secondary Revenue",
+              amount: safeNumber(safeGet(plData, 'revenue_analysis.revenue_streams.secondary_revenue')),
+            },
+            {
+              account: "Recurring Revenue",
+              amount: safeNumber(safeGet(plData, 'revenue_analysis.revenue_streams.recurring_revenue')),
+            },
+            {
+              account: "One-time Revenue",
+              amount: safeNumber(safeGet(plData, 'revenue_analysis.revenue_streams.one_time_revenue')),
+            },
 
-          { account: "Profitability", amount: 0, isTotal: true },
-          {
-            account: "Gross Profit",
-            amount: plData.profitability_metrics?.gross_profit || 0,
-          },
-          {
-            account: "Operating Profit",
-            amount: plData.profitability_metrics?.operating_profit || 0,
-          },
-          {
-            account: "EBITDA",
-            amount: plData.profitability_metrics?.ebitda || 0,
-          },
-          {
-            account: "Net Income",
-            amount: plData.profitability_metrics?.net_income || 0,
-            isNetIncome: true,
-          },
-        ];
-        return plRows;
+            { account: "Expense Categories", amount: 0, isTotal: true },
+            {
+              account: "Total Expenses",
+              amount: -safeNumber(safeGet(plData, 'cost_structure.total_expenses')),
+            },
+            {
+              account: "Direct Costs",
+              amount: -safeNumber(safeGet(plData, 'cost_structure.cost_categories.direct_costs')),
+            },
+            {
+              account: "Operating Expenses",
+              amount: -safeNumber(safeGet(plData, 'cost_structure.cost_categories.operating_expenses')),
+            },
+            {
+              account: "Administrative Costs",
+              amount: -safeNumber(safeGet(plData, 'cost_structure.cost_categories.administrative_costs')),
+            },
+            {
+              account: "Financing Costs",
+              amount: -safeNumber(safeGet(plData, 'cost_structure.cost_categories.financing_costs')),
+            },
 
-      case 1: // Balance Sheet
-        const bsData = financialData.analysis.balance_sheet;
-        if (
-          !bsData.assets.total_assets &&
-          !bsData.liabilities.total_liabilities &&
-          !bsData.equity.total_equity
-        ) {
-          return [{ account: "No Balance Sheet data available", amount: 0 }];
-        }
+            { account: "Profitability", amount: 0, isTotal: true },
+            {
+              account: "Gross Profit",
+              amount: safeNumber(safeGet(plData, 'profitability_metrics.gross_profit')),
+            },
+            {
+              account: "Operating Profit",
+              amount: safeNumber(safeGet(plData, 'profitability_metrics.operating_profit')),
+            },
+            {
+              account: "EBITDA",
+              amount: safeNumber(safeGet(plData, 'profitability_metrics.ebitda')),
+            },
+            {
+              account: "Net Income",
+              amount: safeNumber(safeGet(plData, 'profitability_metrics.net_income')),
+              isNetIncome: true,
+            },
+          ];
+          return plRows;
 
-        const bsRows: TableRow[] = [
-          { account: "Assets", amount: 0, isTotal: true },
-          {
-            account: "Current Assets",
-            amount: bsData.assets.current_assets.total_current || 0,
-          },
-          {
-            account: "Cash and Equivalents",
-            amount: bsData.assets.current_assets.cash_and_equivalents || 0,
-          },
-          {
-            account: "Accounts Receivable",
-            amount: bsData.assets.current_assets.accounts_receivable || 0,
-          },
-          {
-            account: "Inventory",
-            amount: bsData.assets.current_assets.inventory || 0,
-          },
-          {
-            account: "Prepaid Expenses",
-            amount: bsData.assets.current_assets.prepaid_expenses || 0,
-          },
+        case 1: // Balance Sheet
+          const bsData = financialData.analysis.balance_sheet;
+          if (!bsData || (
+            safeNumber(safeGet(bsData, 'assets.total_assets')) === 0 &&
+            safeNumber(safeGet(bsData, 'liabilities.total_liabilities')) === 0 &&
+            safeNumber(safeGet(bsData, 'equity.total_equity')) === 0
+          )) {
+            return [{ account: "No Balance Sheet data available", amount: 0 }];
+          }
 
-          {
-            account: "Non-Current Assets",
-            amount: bsData.assets.non_current_assets.total_non_current || 0,
-          },
-          {
-            account: "Property & Equipment",
-            amount: bsData.assets.non_current_assets.property_equipment || 0,
-          },
-          {
-            account: "Intangible Assets",
-            amount: bsData.assets.non_current_assets.intangible_assets || 0,
-          },
-          {
-            account: "Investments",
-            amount: bsData.assets.non_current_assets.investments || 0,
-          },
+          const bsRows: TableRow[] = [
+            { account: "Assets", amount: 0, isTotal: true },
+            {
+              account: "Current Assets",
+              amount: safeNumber(safeGet(bsData, 'assets.current_assets.total_current')),
+            },
+            {
+              account: "Cash and Equivalents",
+              amount: safeNumber(safeGet(bsData, 'assets.current_assets.cash_and_equivalents')),
+            },
+            {
+              account: "Accounts Receivable",
+              amount: safeNumber(safeGet(bsData, 'assets.current_assets.accounts_receivable')),
+            },
+            {
+              account: "Inventory",
+              amount: safeNumber(safeGet(bsData, 'assets.current_assets.inventory')),
+            },
+            {
+              account: "Prepaid Expenses",
+              amount: safeNumber(safeGet(bsData, 'assets.current_assets.prepaid_expenses')),
+            },
 
-          {
-            account: "Total Assets",
-            amount: bsData.assets.total_assets || 0,
-            isTotal: true,
-          },
+            {
+              account: "Non-Current Assets",
+              amount: safeNumber(safeGet(bsData, 'assets.non_current_assets.total_non_current')),
+            },
+            {
+              account: "Property & Equipment",
+              amount: safeNumber(safeGet(bsData, 'assets.non_current_assets.property_equipment')),
+            },
+            {
+              account: "Intangible Assets",
+              amount: safeNumber(safeGet(bsData, 'assets.non_current_assets.intangible_assets')),
+            },
+            {
+              account: "Investments",
+              amount: safeNumber(safeGet(bsData, 'assets.non_current_assets.investments')),
+            },
 
-          { account: "Liabilities", amount: 0, isTotal: true },
-          {
-            account: "Current Liabilities",
-            amount: bsData.liabilities.current_liabilities.total_current || 0,
-          },
-          {
-            account: "Accounts Payable",
-            amount:
-              bsData.liabilities.current_liabilities.accounts_payable || 0,
-          },
-          {
-            account: "Accrued Expenses",
-            amount:
-              bsData.liabilities.current_liabilities.accrued_expenses || 0,
-          },
-          {
-            account: "Short Term Debt",
-            amount: bsData.liabilities.current_liabilities.short_term_debt || 0,
-          },
+            {
+              account: "Total Assets",
+              amount: safeNumber(safeGet(bsData, 'assets.total_assets')),
+              isTotal: true,
+            },
 
-          {
-            account: "Long-term Liabilities",
-            amount:
-              bsData.liabilities.long_term_liabilities.total_long_term || 0,
-          },
-          {
-            account: "Long Term Debt",
-            amount:
-              bsData.liabilities.long_term_liabilities.long_term_debt || 0,
-          },
-          {
-            account: "Deferred Tax",
-            amount: bsData.liabilities.long_term_liabilities.deferred_tax || 0,
-          },
-          {
-            account: "Other Long Term",
-            amount:
-              bsData.liabilities.long_term_liabilities.other_long_term || 0,
-          },
+            { account: "Liabilities", amount: 0, isTotal: true },
+            {
+              account: "Current Liabilities",
+              amount: safeNumber(safeGet(bsData, 'liabilities.current_liabilities.total_current')),
+            },
+            {
+              account: "Accounts Payable",
+              amount: safeNumber(safeGet(bsData, 'liabilities.current_liabilities.accounts_payable')),
+            },
+            {
+              account: "Accrued Expenses",
+              amount: safeNumber(safeGet(bsData, 'liabilities.current_liabilities.accrued_expenses')),
+            },
+            {
+              account: "Short Term Debt",
+              amount: safeNumber(safeGet(bsData, 'liabilities.current_liabilities.short_term_debt')),
+            },
 
-          {
-            account: "Total Liabilities",
-            amount: bsData.liabilities.total_liabilities || 0,
-            isTotal: true,
-          },
+            {
+              account: "Long-term Liabilities",
+              amount: safeNumber(safeGet(bsData, 'liabilities.long_term_liabilities.total_long_term')),
+            },
+            {
+              account: "Long Term Debt",
+              amount: safeNumber(safeGet(bsData, 'liabilities.long_term_liabilities.long_term_debt')),
+            },
+            {
+              account: "Deferred Tax",
+              amount: safeNumber(safeGet(bsData, 'liabilities.long_term_liabilities.deferred_tax')),
+            },
+            {
+              account: "Other Long Term",
+              amount: safeNumber(safeGet(bsData, 'liabilities.long_term_liabilities.other_long_term')),
+            },
 
-          { account: "Equity", amount: 0, isTotal: true },
-          { account: "Owner Equity", amount: bsData.equity.owner_equity || 0 },
-          {
-            account: "Retained Earnings",
-            amount: bsData.equity.retained_earnings || 0,
-          },
-          {
-            account: "Current Year Earnings",
-            amount: bsData.equity.current_year_earnings || 0,
-          },
+            {
+              account: "Total Liabilities",
+              amount: safeNumber(safeGet(bsData, 'liabilities.total_liabilities')),
+              isTotal: true,
+            },
 
-          {
-            account: "Total Equity",
-            amount: bsData.equity.total_equity || 0,
-            isTotal: true,
-          },
-          {
-            account: "Total Liabilities & Equity",
-            amount:
-              (bsData.liabilities.total_liabilities || 0) +
-              (bsData.equity.total_equity || 0),
-            isNetIncome: true,
-          },
-        ];
-        return bsRows;
+            { account: "Equity", amount: 0, isTotal: true },
+            { account: "Owner Equity", amount: safeNumber(safeGet(bsData, 'equity.owner_equity')) },
+            {
+              account: "Retained Earnings",
+              amount: safeNumber(safeGet(bsData, 'equity.retained_earnings')),
+            },
+            {
+              account: "Current Year Earnings",
+              amount: safeNumber(safeGet(bsData, 'equity.current_year_earnings')),
+            },
 
-      case 2: // Cash Flow
-        const cfData = financialData.analysis.cash_flow_analysis;
-        if (
-          !cfData.operating_activities.net_cash_from_operations &&
-          !cfData.investing_activities.net_investing_cash_flow &&
-          !cfData.financing_activities.net_financing_cash_flow
-        ) {
-          return [{ account: "No Cash Flow data available", amount: 0 }];
-        }
+            {
+              account: "Total Equity",
+              amount: safeNumber(safeGet(bsData, 'equity.total_equity')),
+              isTotal: true,
+            },
+            {
+              account: "Total Liabilities & Equity",
+              amount: safeNumber(safeGet(bsData, 'liabilities.total_liabilities')) +
+                safeNumber(safeGet(bsData, 'equity.total_equity')),
+              isNetIncome: true,
+            },
+          ];
+          return bsRows;
 
-        const cfRows: TableRow[] = [
-          { account: "Operating Activities", amount: 0, isTotal: true },
-          {
-            account: "Net Cash from Operations",
-            amount: cfData.operating_activities.net_cash_from_operations || 0,
-          },
+        case 2: // Cash Flow
+          const cfData = financialData.analysis.cash_flow_analysis;
+          if (!cfData || (
+            safeNumber(safeGet(cfData, 'operating_activities.net_cash_from_operations')) === 0 &&
+            safeNumber(safeGet(cfData, 'investing_activities.net_investing_cash_flow')) === 0 &&
+            safeNumber(safeGet(cfData, 'financing_activities.net_financing_cash_flow')) === 0
+          )) {
+            return [{ account: "No Cash Flow data available", amount: 0 }];
+          }
 
-          { account: "Investing Activities", amount: 0, isTotal: true },
-          {
-            account: "Capital Expenditures",
-            amount: cfData.investing_activities.capital_expenditures || 0,
-          },
-          {
-            account: "Asset Disposals",
-            amount: cfData.investing_activities.asset_disposals || 0,
-          },
-          {
-            account: "Net Investing Cash Flow",
-            amount: cfData.investing_activities.net_investing_cash_flow || 0,
-          },
+          const cfRows: TableRow[] = [
+            { account: "Operating Activities", amount: 0, isTotal: true },
+            {
+              account: "Net Cash from Operations",
+              amount: safeNumber(safeGet(cfData, 'operating_activities.net_cash_from_operations')),
+            },
 
-          { account: "Financing Activities", amount: 0, isTotal: true },
-          {
-            account: "Debt Changes",
-            amount: cfData.financing_activities.debt_changes || 0,
-          },
-          {
-            account: "Equity Changes",
-            amount: cfData.financing_activities.equity_changes || 0,
-          },
-          {
-            account: "Dividends/Distributions",
-            amount: cfData.financing_activities.dividends_distributions || 0,
-          },
-          {
-            account: "Net Financing Cash Flow",
-            amount: cfData.financing_activities.net_financing_cash_flow || 0,
-          },
+            { account: "Investing Activities", amount: 0, isTotal: true },
+            {
+              account: "Capital Expenditures",
+              amount: safeNumber(safeGet(cfData, 'investing_activities.capital_expenditures')),
+            },
+            {
+              account: "Asset Disposals",
+              amount: safeNumber(safeGet(cfData, 'investing_activities.asset_disposals')),
+            },
+            {
+              account: "Net Investing Cash Flow",
+              amount: safeNumber(safeGet(cfData, 'investing_activities.net_investing_cash_flow')),
+            },
 
-          { account: "Cash Position", amount: 0, isTotal: true },
-          {
-            account: "Beginning Cash",
-            amount: cfData.cash_position.beginning_cash || 0,
-          },
-          {
-            account: "Ending Cash",
-            amount: cfData.cash_position.ending_cash || 0,
-          },
-          {
-            account: "Net Change in Cash",
-            amount: cfData.cash_position.net_change_in_cash || 0,
-          },
-          {
-            account: "Free Cash Flow",
-            amount: cfData.cash_position.free_cash_flow || 0,
-            isNetIncome: true,
-          },
-        ];
-        return cfRows;
+            { account: "Financing Activities", amount: 0, isTotal: true },
+            {
+              account: "Debt Changes",
+              amount: safeNumber(safeGet(cfData, 'financing_activities.debt_changes')),
+            },
+            {
+              account: "Equity Changes",
+              amount: safeNumber(safeGet(cfData, 'financing_activities.equity_changes')),
+            },
+            {
+              account: "Dividends/Distributions",
+              amount: safeNumber(safeGet(cfData, 'financing_activities.dividends_distributions')),
+            },
+            {
+              account: "Net Financing Cash Flow",
+              amount: safeNumber(safeGet(cfData, 'financing_activities.net_financing_cash_flow')),
+            },
 
-      default:
-        return [];
+            { account: "Cash Position", amount: 0, isTotal: true },
+            {
+              account: "Beginning Cash",
+              amount: safeNumber(safeGet(cfData, 'cash_position.beginning_cash')),
+            },
+            {
+              account: "Ending Cash",
+              amount: safeNumber(safeGet(cfData, 'cash_position.ending_cash')),
+            },
+            {
+              account: "Net Change in Cash",
+              amount: safeNumber(safeGet(cfData, 'cash_position.net_change_in_cash')),
+            },
+            {
+              account: "Free Cash Flow",
+              amount: safeNumber(safeGet(cfData, 'cash_position.free_cash_flow')),
+              isNetIncome: true,
+            },
+          ];
+          return cfRows;
+
+        default:
+          return [];
+      }
+    } catch (error) {
+      console.error('Error generating table data:', error);
+      return [{ account: "Error loading data", amount: 0 }];
     }
   };
 
-  // Fetch financial data from API
+  // Fetch financial data from API with enhanced null safety
   useEffect(() => {
     const fetchFinancialData = async () => {
       setLoading(true);
@@ -382,47 +412,80 @@ export function ReportsContent() {
         let analysisData = null;
 
         // If a specific analysis is selected, fetch that data
-        if (selectedAnalysisId) {
-          const analysisResponse = await fetch(
-            `/api/analysis-data?analysisId=${selectedAnalysisId}`
-          );
+        if (selectedAnalysisId && typeof selectedAnalysisId === 'string') {
+          try {
+            const analysisResponse = await fetch(
+              `/api/analysis-data?analysisId=${encodeURIComponent(selectedAnalysisId)}`
+            );
 
-          if (analysisResponse.ok) {
-            const result = await analysisResponse.json();
-            if (result.success && result.analysisData) {
-              analysisData = result.analysisData;
+            if (analysisResponse.ok) {
+              const result = await analysisResponse.json();
+              if (result?.success && result?.analysisData) {
+                analysisData = result.analysisData;
+              } else {
+                console.warn('Invalid API response structure:', result);
+              }
+            } else {
+              console.warn(`API request failed with status: ${analysisResponse.status}`);
             }
+          } catch (fetchError) {
+            console.error('Error fetching specific analysis:', fetchError);
           }
         }
         // If no specific analysis selected, fetch latest for the branch or company
         else {
-          const endpoint = selectedBranchId
-            ? `/api/financial-analyses?branchId=${selectedBranchId}&latest=true`
-            : "/api/financial-analyses?latest=true";
+          try {
+            const endpoint = selectedBranchId && typeof selectedBranchId === 'string'
+              ? `/api/financial-analyses?branchId=${encodeURIComponent(selectedBranchId)}&latest=true`
+              : "/api/financial-analyses?latest=true";
 
-          const analysisResponse = await fetch(endpoint);
+            const analysisResponse = await fetch(endpoint);
 
-          if (analysisResponse.ok) {
-            const result = await analysisResponse.json();
-            if (result.success && result.analysis) {
+            if (analysisResponse.ok) {
+              const result = await analysisResponse.json();
+              if (result?.success && result?.analysis?.id) {
               // Now fetch the actual analysis data
-              const dataResponse = await fetch(
-                `/api/analysis-data?analysisId=${result.analysis.id}`
-              );
-              if (dataResponse.ok) {
-                const dataResult = await dataResponse.json();
-                if (dataResult.success && dataResult.analysisData) {
-                  analysisData = dataResult.analysisData;
+                try {
+                  const dataResponse = await fetch(
+                    `/api/analysis-data?analysisId=${encodeURIComponent(result.analysis.id)}`
+                  );
+                  if (dataResponse.ok) {
+                    const dataResult = await dataResponse.json();
+                    if (dataResult?.success && dataResult?.analysisData) {
+                      analysisData = dataResult.analysisData;
+                    } else {
+                      console.warn('Invalid analysis data response:', dataResult);
+                    }
+                  } else {
+                    console.warn(`Analysis data request failed with status: ${dataResponse.status}`);
+                  }
+                } catch (dataFetchError) {
+                  console.error('Error fetching analysis data:', dataFetchError);
                 }
+              } else {
+                console.warn('No valid analysis found in response:', result);
               }
+            } else {
+              console.warn(`Analysis list request failed with status: ${analysisResponse.status}`);
             }
+          } catch (fetchError) {
+            console.error('Error fetching latest analysis:', fetchError);
           }
         }
 
-        setFinancialData(analysisData);
+        // Validate analysisData structure before setting
+        if (analysisData && typeof analysisData === 'object' && analysisData.analysis) {
+          setFinancialData(analysisData);
+        } else {
+          setFinancialData(null);
+          if (selectedAnalysisId || selectedBranchId) {
+            setError('No valid financial data found for the selected analysis.');
+          }
+        }
       } catch (err) {
         console.error("Error fetching financial data:", err);
-        setError(err instanceof Error ? err.message : "An error occurred");
+        setError(err instanceof Error ? err.message : "An unexpected error occurred while fetching data");
+        setFinancialData(null);
       } finally {
         setLoading(false);
       }
@@ -432,10 +495,15 @@ export function ReportsContent() {
   }, [selectedBranchId, selectedAnalysisId]); // Re-fetch when selection changes
 
   const handleSelectionChange = (branchId: string | null, analysisId: string | null) => {
-    // Prevent unnecessary re-renders if values haven't changed
-    if (selectedBranchId !== branchId || selectedAnalysisId !== analysisId) {
-      setSelectedBranchId(branchId);
-      setSelectedAnalysisId(analysisId);
+    // Validate inputs and prevent unnecessary re-renders if values haven't changed
+    const safeBranchId = branchId && typeof branchId === 'string' ? branchId : null;
+    const safeAnalysisId = analysisId && typeof analysisId === 'string' ? analysisId : null;
+
+    if (selectedBranchId !== safeBranchId || selectedAnalysisId !== safeAnalysisId) {
+      setSelectedBranchId(safeBranchId);
+      setSelectedAnalysisId(safeAnalysisId);
+      // Clear any previous errors when selection changes
+      setError(null);
     }
   };
 
@@ -580,9 +648,9 @@ export function ReportsContent() {
                       }`}
                     >
                       <span>
-                        {index === 1 && window.innerWidth < 640
+                        {index === 1 && typeof window !== 'undefined' && window.innerWidth < 640
                           ? "Balance"
-                          : tab}
+                          : safeString(tab, 'Report')}
                       </span>
                     </button>
                   ))}
@@ -672,27 +740,27 @@ export function ReportsContent() {
                                 )}
                                 <span
                                   className={`min-w-0 ${
-                                    row.isTotal ? "font-semibold" : ""
-                                    } ${row.isNetIncome ? "font-bold" : ""}`}
+                                    row?.isTotal ? "font-semibold" : ""
+                                    } ${row?.isNetIncome ? "font-bold" : ""}`}
                                 >
-                                  {row.account}
+                                  {safeString(row?.account, 'Unknown Account')}
                                 </span>
                               </div>
                             </td>
                             <td
-                              className={`px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-right font-medium ${row.amount === 0
+                              className={`px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-right font-medium ${safeNumber(row?.amount) === 0
                                 ? "text-gray-400"
-                                : row.amount > 0
+                                : safeNumber(row?.amount) > 0
                                   ? "text-emerald-600"
                                   : "text-red-600"
-                                } ${row.isNetIncome
+                                } ${row?.isNetIncome
                                 ? "text-blue-600 font-bold text-sm sm:text-base"
                                   : ""
                                 }`}
                             >
-                              {row.amount === 0 && row.isTotal
+                              {safeNumber(row?.amount) === 0 && row?.isTotal
                                 ? ""
-                                : `$${Math.abs(row.amount).toLocaleString()}`}
+                                : formatCurrency(row?.amount)}
                             </td>
                           </tr>
                         ))
@@ -794,11 +862,9 @@ export function ReportsContent() {
                           Revenue
                         </p>
                         <p className="text-lg font-bold text-emerald-600">
-                          $
-                          {(
-                            financialData.analysis.profit_and_loss
-                              .revenue_analysis?.total_revenue || 0
-                          ).toLocaleString()}
+                          {formatCurrency(
+                            safeGet(financialData, 'analysis.profit_and_loss.revenue_analysis.total_revenue', 0)
+                          )}
                         </p>
                       </div>
                       <div className="p-4 bg-red-50 rounded-lg border border-red-200">
@@ -806,16 +872,13 @@ export function ReportsContent() {
                           Expenses
                         </p>
                         <p className="text-lg font-bold text-red-600">
-                          $
-                          {Math.abs(
-                            financialData.analysis.profit_and_loss
-                              .cost_structure?.total_expenses || 0
-                          ).toLocaleString()}
+                          {formatCurrency(
+                            Math.abs(safeGet(financialData, 'analysis.profit_and_loss.cost_structure.total_expenses', 0))
+                          )}
                         </p>
                       </div>
                       <div
-                        className={`p-4 rounded-lg border ${(financialData.analysis.profit_and_loss
-                          .profitability_metrics?.net_income || 0) >= 0
+                        className={`p-4 rounded-lg border ${safeNumber(safeGet(financialData, 'analysis.profit_and_loss.profitability_metrics.net_income', 0)) >= 0
                           ? "bg-blue-50 border-blue-200"
                           : "bg-orange-50 border-orange-200"
                           }`}
@@ -824,19 +887,15 @@ export function ReportsContent() {
                           Net Income
                         </p>
                         <p
-                          className={`text-lg font-bold ${(financialData.analysis.profit_and_loss
-                            .profitability_metrics?.net_income || 0) >= 0
+                          className={`text-lg font-bold ${safeNumber(safeGet(financialData, 'analysis.profit_and_loss.profitability_metrics.net_income', 0)) >= 0
                             ? "text-blue-600"
                             : "text-orange-600"
                             }`}
                         >
-                          $
-                          {Math.abs(
-                            financialData.analysis.profit_and_loss
-                              .profitability_metrics?.net_income || 0
-                          ).toLocaleString()}
-                          {(financialData.analysis.profit_and_loss
-                            .profitability_metrics?.net_income || 0) < 0
+                          {formatCurrency(
+                            Math.abs(safeGet(financialData, 'analysis.profit_and_loss.profitability_metrics.net_income', 0))
+                          )}
+                          {safeNumber(safeGet(financialData, 'analysis.profit_and_loss.profitability_metrics.net_income', 0)) < 0
                             ? " (Loss)"
                             : ""}
                         </p>
@@ -856,11 +915,9 @@ export function ReportsContent() {
                           Total Assets
                         </p>
                         <p className="text-lg font-bold text-blue-600">
-                          $
-                          {(
-                            financialData.analysis.balance_sheet?.assets
-                              ?.total_assets || 0
-                          ).toLocaleString()}
+                          {formatCurrency(
+                            safeGet(financialData, 'analysis.balance_sheet.assets.total_assets', 0)
+                          )}
                         </p>
                       </div>
                       <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
@@ -868,11 +925,9 @@ export function ReportsContent() {
                           Total Liabilities
                         </p>
                         <p className="text-lg font-bold text-orange-600">
-                          $
-                          {(
-                            financialData.analysis.balance_sheet
-                              ?.liabilities?.total_liabilities || 0
-                          ).toLocaleString()}
+                          {formatCurrency(
+                            safeGet(financialData, 'analysis.balance_sheet.liabilities.total_liabilities', 0)
+                          )}
                         </p>
                       </div>
                       <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
@@ -880,11 +935,9 @@ export function ReportsContent() {
                           Total Equity
                         </p>
                         <p className="text-lg font-bold text-purple-600">
-                          $
-                          {(
-                            financialData.analysis.balance_sheet?.equity
-                              ?.total_equity || 0
-                          ).toLocaleString()}
+                          {formatCurrency(
+                            safeGet(financialData, 'analysis.balance_sheet.equity.total_equity', 0)
+                          )}
                         </p>
                       </div>
                     </div>
@@ -898,9 +951,7 @@ export function ReportsContent() {
                     </h4>
                     <div className="space-y-3">
                       <div
-                        className={`p-4 rounded-lg border ${(financialData.analysis.cash_flow_analysis
-                          ?.operating_activities
-                          ?.net_cash_from_operations || 0) >= 0
+                        className={`p-4 rounded-lg border ${safeNumber(safeGet(financialData, 'analysis.cash_flow_analysis.operating_activities.net_cash_from_operations', 0)) >= 0
                           ? "bg-emerald-50 border-emerald-200"
                           : "bg-red-50 border-red-200"
                           }`}
@@ -909,24 +960,18 @@ export function ReportsContent() {
                           Operating Cash Flow
                         </p>
                         <p
-                          className={`text-lg font-bold ${(financialData.analysis.cash_flow_analysis
-                            ?.operating_activities
-                            ?.net_cash_from_operations || 0) >= 0
+                          className={`text-lg font-bold ${safeNumber(safeGet(financialData, 'analysis.cash_flow_analysis.operating_activities.net_cash_from_operations', 0)) >= 0
                             ? "text-emerald-600"
                             : "text-red-600"
                             }`}
                         >
-                          $
-                          {Math.abs(
-                            financialData.analysis.cash_flow_analysis
-                              ?.operating_activities
-                              ?.net_cash_from_operations || 0
-                          ).toLocaleString()}
+                          {formatCurrency(
+                            Math.abs(safeGet(financialData, 'analysis.cash_flow_analysis.operating_activities.net_cash_from_operations', 0))
+                          )}
                         </p>
                       </div>
                       <div
-                        className={`p-4 rounded-lg border ${(financialData.analysis.cash_flow_analysis
-                          ?.cash_position?.free_cash_flow || 0) >= 0
+                        className={`p-4 rounded-lg border ${safeNumber(safeGet(financialData, 'analysis.cash_flow_analysis.cash_position.free_cash_flow', 0)) >= 0
                           ? "bg-blue-50 border-blue-200"
                           : "bg-orange-50 border-orange-200"
                           }`}
@@ -935,17 +980,14 @@ export function ReportsContent() {
                           Free Cash Flow
                         </p>
                         <p
-                          className={`text-lg font-bold ${(financialData.analysis.cash_flow_analysis
-                            ?.cash_position?.free_cash_flow || 0) >= 0
+                          className={`text-lg font-bold ${safeNumber(safeGet(financialData, 'analysis.cash_flow_analysis.cash_position.free_cash_flow', 0)) >= 0
                             ? "text-blue-600"
                             : "text-orange-600"
                             }`}
                         >
-                          $
-                          {Math.abs(
-                            financialData.analysis.cash_flow_analysis
-                              ?.cash_position?.free_cash_flow || 0
-                          ).toLocaleString()}
+                          {formatCurrency(
+                            Math.abs(safeGet(financialData, 'analysis.cash_flow_analysis.cash_position.free_cash_flow', 0))
+                          )}
                         </p>
                       </div>
                     </div>

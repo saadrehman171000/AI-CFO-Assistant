@@ -115,6 +115,38 @@ export default function ForecastingContent() {
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
   const [selectedAnalysisId, setSelectedAnalysisId] = useState<string | null>(null);
 
+  // Helper function to safely access nested properties
+  const safeGet = (obj: any, path: string, defaultValue: any = 0): any => {
+    try {
+      if (!obj || typeof obj !== 'object') return defaultValue;
+      const keys = path.split('.');
+      let result = obj;
+      for (const key of keys) {
+        if (result === undefined || result === null || typeof result !== 'object') return defaultValue;
+        result = result[key];
+      }
+      return result === undefined || result === null ? defaultValue : result;
+    } catch (e) {
+      return defaultValue;
+    }
+  };
+
+  // Helper function to safely get string values
+  const safeString = (value: any, defaultValue: string = ''): string => {
+    return value != null && typeof value === 'string' ? value : defaultValue;
+  };
+
+  // Helper function to safely get number values
+  const safeNumber = (value: any, defaultValue: number = 0): number => {
+    const num = Number(value);
+    return !isNaN(num) && isFinite(num) ? num : defaultValue;
+  };
+
+  // Helper function to safely get array values
+  const safeArray = (arr: any): any[] => {
+    return Array.isArray(arr) ? arr : [];
+  };
+
   const generateForecast = async () => {
     try {
       setLoading(true);
@@ -123,90 +155,117 @@ export default function ForecastingContent() {
       let analysisData = null;
 
       // If a specific analysis is selected, fetch that data
-      if (selectedAnalysisId) {
-        const analysisResponse = await fetch(
-          `/api/analysis-data?analysisId=${selectedAnalysisId}`
-        );
+      if (selectedAnalysisId && typeof selectedAnalysisId === 'string') {
+        try {
+          const analysisResponse = await fetch(
+            `/api/analysis-data?analysisId=${encodeURIComponent(selectedAnalysisId)}`
+          );
 
-        if (analysisResponse.ok) {
-          const result = await analysisResponse.json();
-          if (result.success && result.analysisData) {
-            analysisData = result.analysisData;
+          if (analysisResponse.ok) {
+            const result = await analysisResponse.json();
+            if (result?.success && result?.analysisData) {
+              analysisData = result.analysisData;
+            } else {
+              console.warn('Invalid API response structure:', result);
+            }
+          } else {
+            console.warn(`API request failed with status: ${analysisResponse.status}`);
           }
+        } catch (fetchError) {
+          console.error('Error fetching specific analysis:', fetchError);
         }
       }
       // If no specific analysis selected, fetch latest for the branch or company
       else {
-        const endpoint = selectedBranchId
-          ? `/api/financial-analyses?branchId=${selectedBranchId}&latest=true`
-          : "/api/financial-analyses?latest=true";
+        try {
+          const endpoint = selectedBranchId && typeof selectedBranchId === 'string'
+            ? `/api/financial-analyses?branchId=${encodeURIComponent(selectedBranchId)}&latest=true`
+            : "/api/financial-analyses?latest=true";
 
-        const analysisResponse = await fetch(endpoint);
+          const analysisResponse = await fetch(endpoint);
 
-        if (analysisResponse.ok) {
-          const result = await analysisResponse.json();
-          if (result.success && result.analysis) {
+          if (analysisResponse.ok) {
+            const result = await analysisResponse.json();
+            if (result?.success && result?.analysis?.id) {
             // Now fetch the actual analysis data
-            const dataResponse = await fetch(
-              `/api/analysis-data?analysisId=${result.analysis.id}`
-            );
-            if (dataResponse.ok) {
-              const dataResult = await dataResponse.json();
-              if (dataResult.success && dataResult.analysisData) {
-                analysisData = dataResult.analysisData;
+              try {
+                const dataResponse = await fetch(
+                  `/api/analysis-data?analysisId=${encodeURIComponent(result.analysis.id)}`
+                );
+                if (dataResponse.ok) {
+                  const dataResult = await dataResponse.json();
+                  if (dataResult?.success && dataResult?.analysisData) {
+                    analysisData = dataResult.analysisData;
+                  } else {
+                    console.warn('Invalid analysis data response:', dataResult);
+                  }
+                } else {
+                  console.warn(`Analysis data request failed with status: ${dataResponse.status}`);
+                }
+              } catch (dataFetchError) {
+                console.error('Error fetching analysis data:', dataFetchError);
               }
+            } else {
+              console.warn('No valid analysis found in response:', result);
             }
+          } else {
+            console.warn(`Analysis list request failed with status: ${analysisResponse.status}`);
           }
+        } catch (fetchError) {
+          console.error('Error fetching latest analysis:', fetchError);
         }
       }
 
-      if (analysisData && analysisData.analysis) {
-        // Use real financial data from the API
+      if (analysisData?.analysis) {
+      // Use real financial data from the API with null safety
         const metrics = {
-          totalRevenue:
-            analysisData.analysis.profit_and_loss.revenue_analysis
-              ?.total_revenue || 0,
-          totalExpenses:
-            analysisData.analysis.profit_and_loss.cost_structure
-              ?.total_expenses || 0,
-          netProfit:
-            analysisData.analysis.profit_and_loss.profitability_metrics
-              ?.net_income || 0,
-          netCashFlow:
-            analysisData.analysis.cash_flow_analysis?.cash_position
-              ?.free_cash_flow || 0,
-          // Other metrics
-          grossMargin:
-            analysisData.analysis.profit_and_loss.profitability_metrics?.margins
-              ?.gross_margin || 0,
-          netMargin:
-            analysisData.analysis.profit_and_loss.profitability_metrics?.margins
-              ?.net_margin || 0,
-          totalAssets:
-            analysisData.analysis.balance_sheet?.assets?.total_assets || 0,
-          totalLiabilities:
-            analysisData.analysis.balance_sheet?.liabilities
-              ?.total_liabilities || 0,
-          totalEquity:
-            analysisData.analysis.balance_sheet?.equity?.total_equity || 0,
-          cashFlowFromOperations:
-            analysisData.analysis.cash_flow_analysis?.operating_activities
-              ?.net_cash_from_operations || 0,
+          totalRevenue: safeNumber(
+            safeGet(analysisData, 'analysis.profit_and_loss.revenue_analysis.total_revenue')
+          ),
+          totalExpenses: safeNumber(
+            safeGet(analysisData, 'analysis.profit_and_loss.cost_structure.total_expenses')
+          ),
+          netProfit: safeNumber(
+            safeGet(analysisData, 'analysis.profit_and_loss.profitability_metrics.net_income')
+          ),
+          netCashFlow: safeNumber(
+            safeGet(analysisData, 'analysis.cash_flow_analysis.cash_position.free_cash_flow')
+          ),
+          // Other metrics with null safety
+          grossMargin: safeNumber(
+            safeGet(analysisData, 'analysis.profit_and_loss.profitability_metrics.margins.gross_margin')
+          ),
+          netMargin: safeNumber(
+            safeGet(analysisData, 'analysis.profit_and_loss.profitability_metrics.margins.net_margin')
+          ),
+          totalAssets: safeNumber(
+            safeGet(analysisData, 'analysis.balance_sheet.assets.total_assets')
+          ),
+          totalLiabilities: safeNumber(
+            safeGet(analysisData, 'analysis.balance_sheet.liabilities.total_liabilities')
+          ),
+          totalEquity: safeNumber(
+            safeGet(analysisData, 'analysis.balance_sheet.equity.total_equity')
+          ),
+          cashFlowFromOperations: safeNumber(
+            safeGet(analysisData, 'analysis.cash_flow_analysis.operating_activities.net_cash_from_operations')
+          ),
         };
 
         // Use what-if scenario data if available, or generate it
-        if (analysisData.analysis.what_if_scenarios) {
+        const whatIfScenarios = safeGet(analysisData, 'analysis.what_if_scenarios');
+        if (whatIfScenarios && typeof whatIfScenarios === 'object') {
           const forecast = generateForecastFromScenarios(
-            analysisData.analysis.what_if_scenarios,
+            whatIfScenarios,
             metrics,
-            parseInt(selectedPeriod)
+            safeNumber(parseInt(selectedPeriod), 90)
           );
           setForecastData(forecast);
         } else {
           // Fall back to generating forecast data
           const forecast = generateForecastData(
             metrics,
-            parseInt(selectedPeriod)
+            safeNumber(parseInt(selectedPeriod), 90)
           );
           setForecastData(forecast);
         }
@@ -214,75 +273,93 @@ export default function ForecastingContent() {
         throw new Error("Invalid or missing financial analysis data");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      console.error('Error generating forecast:', err);
+      setError(err instanceof Error ? err.message : "An unexpected error occurred while generating forecast");
+      setForecastData(null);
     } finally {
       setLoading(false);
     }
   };
 
   const generateForecastData = (
-    metrics: FinancialMetrics,
+    metrics: FinancialMetrics | null,
     days: number
   ): ForecastData => {
-    const dates = [];
-    const projected = [];
-    const optimistic = [];
-    const pessimistic = [];
+    const dates: string[] = [];
+    const projected: number[] = [];
+    const optimistic: number[] = [];
+    const pessimistic: number[] = [];
+
+    // Validate inputs
+    const safeDays = safeNumber(days, 90);
+    const safeMetrics = metrics || {
+      totalRevenue: 0,
+      totalExpenses: 0,
+      netProfit: 0,
+      grossMargin: 0,
+      netMargin: 0,
+      totalAssets: 0,
+      totalLiabilities: 0,
+      totalEquity: 0,
+      cashFlowFromOperations: 0,
+      netCashFlow: 0,
+    };
 
     const currentDate = new Date();
-    const dailyCashFlow = (metrics.netCashFlow || 0) / 30; // Assume monthly data
+    const netCashFlow = safeNumber(safeMetrics.netCashFlow, 0);
+    const dailyCashFlow = netCashFlow / 30; // Assume monthly data
 
-    for (let i = 0; i < days; i++) {
+    for (let i = 0; i < safeDays; i++) {
       const date = new Date(currentDate);
       date.setDate(date.getDate() + i);
       dates.push(
         date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
       );
 
-      const baseProjection = (metrics.netCashFlow || 0) + dailyCashFlow * i;
+      const baseProjection = netCashFlow + dailyCashFlow * i;
       projected.push(baseProjection);
       optimistic.push(baseProjection * 1.2);
       pessimistic.push(baseProjection * 0.8);
     }
 
+    const totalRevenue = safeNumber(safeMetrics.totalRevenue, 0);
+    const totalExpenses = safeNumber(safeMetrics.totalExpenses, 0);
+    const netProfit = safeNumber(safeMetrics.netProfit, 0);
+
     const scenarios = [
       {
         name: "Base Case",
-        revenue: metrics.totalRevenue || 0,
-        expenses: metrics.totalExpenses || 0,
-        profit: metrics.netProfit || 0,
-        cashFlow: metrics.netCashFlow || 0,
+        revenue: totalRevenue,
+        expenses: totalExpenses,
+        profit: netProfit,
+        cashFlow: netCashFlow,
         probability: 0.6,
       },
       {
         name: "Optimistic",
-        revenue: (metrics.totalRevenue || 0) * 1.2,
-        expenses: (metrics.totalExpenses || 0) * 1.05,
-        profit:
-          (metrics.totalRevenue || 0) * 1.2 -
-          (metrics.totalExpenses || 0) * 1.05,
-        cashFlow: (metrics.netCashFlow || 0) * 1.3,
+        revenue: totalRevenue * 1.2,
+        expenses: totalExpenses * 1.05,
+        profit: totalRevenue * 1.2 - totalExpenses * 1.05,
+        cashFlow: netCashFlow * 1.3,
         probability: 0.2,
       },
       {
         name: "Pessimistic",
-        revenue: (metrics.totalRevenue || 0) * 0.8,
-        expenses: (metrics.totalExpenses || 0) * 1.1,
-        profit:
-          (metrics.totalRevenue || 0) * 0.8 -
-          (metrics.totalExpenses || 0) * 1.1,
-        cashFlow: (metrics.netCashFlow || 0) * 0.7,
+        revenue: totalRevenue * 0.8,
+        expenses: totalExpenses * 1.1,
+        profit: totalRevenue * 0.8 - totalExpenses * 1.1,
+        cashFlow: netCashFlow * 0.7,
         probability: 0.2,
       },
     ];
 
-    const breakEvenPoint = metrics.totalExpenses
-      ? metrics.totalExpenses / (metrics.totalRevenue / 100)
+    const breakEvenPoint = totalRevenue > 0 && totalExpenses > 0
+      ? (totalExpenses / totalRevenue) * 100
       : 0;
-    const cashRunway = metrics.netCashFlow
-      ? Math.abs(metrics.netCashFlow / (metrics.totalExpenses / 30))
-      : 0;
-    const burnRate = metrics.totalExpenses ? metrics.totalExpenses / 30 : 0;
+    const cashRunway = totalExpenses > 0 && netCashFlow < 0
+      ? Math.abs(netCashFlow / (totalExpenses / 30))
+      : netCashFlow > 0 ? 999 : 0; // If positive cash flow, runway is effectively infinite
+    const burnRate = totalExpenses > 0 ? totalExpenses / 30 : 0;
     const growthRate = 0.08; // Assume 8% monthly growth
 
     return {
@@ -301,55 +378,68 @@ export default function ForecastingContent() {
   }, [selectedBranchId, selectedAnalysisId]);
 
   const handleSelectionChange = (branchId: string | null, analysisId: string | null) => {
-    // Prevent unnecessary re-renders if values haven't changed
-    if (selectedBranchId !== branchId || selectedAnalysisId !== analysisId) {
-      console.log('Forecasting: Selection changed:', { branchId, analysisId });
-      setSelectedBranchId(branchId);
-      setSelectedAnalysisId(analysisId);
+    // Validate inputs and prevent unnecessary re-renders if values haven't changed
+    const safeBranchId = branchId && typeof branchId === 'string' ? branchId : null;
+    const safeAnalysisId = analysisId && typeof analysisId === 'string' ? analysisId : null;
+
+    if (selectedBranchId !== safeBranchId || selectedAnalysisId !== safeAnalysisId) {
+      console.log('Forecasting: Selection changed:', { branchId: safeBranchId, analysisId: safeAnalysisId });
+      setSelectedBranchId(safeBranchId);
+      setSelectedAnalysisId(safeAnalysisId);
+      // Clear any previous errors when selection changes
+      setError(null);
     }
   };
 
-  // Generate forecast from what-if scenarios data
+  // Generate forecast from what-if scenarios data with null safety
   const generateForecastFromScenarios = (
     whatIfScenarios: any,
-    metrics: FinancialMetrics,
+    metrics: FinancialMetrics | null,
     days: number
   ): ForecastData => {
-    const dates = [];
-    const projected = [];
-    const optimistic = [];
-    const pessimistic = [];
+    const dates: string[] = [];
+    const projected: number[] = [];
+    const optimistic: number[] = [];
+    const pessimistic: number[] = [];
+
+    // Validate inputs
+    const safeDays = safeNumber(days, 90);
+    const safeMetrics = metrics || {
+      totalRevenue: 0,
+      totalExpenses: 0,
+      netProfit: 0,
+      grossMargin: 0,
+      netMargin: 0,
+      totalAssets: 0,
+      totalLiabilities: 0,
+      totalEquity: 0,
+      cashFlowFromOperations: 0,
+      netCashFlow: 0,
+    };
 
     const currentDate = new Date();
 
     // Calculate daily cash flow rates using baseline and scenario data if available
-    let baselineCashFlow = metrics.netCashFlow || 0;
+    let baselineCashFlow = safeNumber(safeMetrics.netCashFlow, 0);
     let optimisticCashFlow = baselineCashFlow * 1.2;
     let pessimisticCashFlow = baselineCashFlow * 0.8;
 
-    // Use what-if scenario data if available
-    if (whatIfScenarios.revenue_impact_analysis) {
-      if (
-        whatIfScenarios.revenue_impact_analysis.baseline_scenario?.cash_flow
-      ) {
-        baselineCashFlow =
-          whatIfScenarios.revenue_impact_analysis.baseline_scenario.cash_flow;
+    // Use what-if scenario data if available with null safety
+    const revenueImpactAnalysis = safeGet(whatIfScenarios, 'revenue_impact_analysis');
+    if (revenueImpactAnalysis && typeof revenueImpactAnalysis === 'object') {
+      const baselineScenario = safeGet(revenueImpactAnalysis, 'baseline_scenario.cash_flow');
+      if (baselineScenario !== undefined) {
+        baselineCashFlow = safeNumber(baselineScenario, baselineCashFlow);
       }
-      if (
-        whatIfScenarios.revenue_impact_analysis.revenue_increase_20_percent
-          ?.cash_flow
-      ) {
-        optimisticCashFlow =
-          whatIfScenarios.revenue_impact_analysis.revenue_increase_20_percent
-            .cash_flow;
+
+      const revenueIncrease = safeGet(revenueImpactAnalysis, 'revenue_increase_20_percent.cash_flow');
+      if (revenueIncrease !== undefined) {
+        optimisticCashFlow = safeNumber(revenueIncrease, optimisticCashFlow);
       }
-      if (
-        whatIfScenarios.revenue_impact_analysis.revenue_decrease_20_percent
-          ?.cash_flow
-      ) {
-        pessimisticCashFlow =
-          whatIfScenarios.revenue_impact_analysis.revenue_decrease_20_percent
-            .cash_flow;
+
+      const revenueDecrease = safeGet(revenueImpactAnalysis, 'revenue_decrease_20_percent.cash_flow');
+      if (revenueDecrease !== undefined) {
+        pessimisticCashFlow = safeNumber(revenueDecrease, pessimisticCashFlow);
       }
     }
 
@@ -358,7 +448,7 @@ export default function ForecastingContent() {
     const dailyCashFlowPess = pessimisticCashFlow / 30;
 
     // Generate the dates and projections
-    for (let i = 0; i < days; i++) {
+    for (let i = 0; i < safeDays; i++) {
       const date = new Date(currentDate);
       date.setDate(date.getDate() + i);
       dates.push(
@@ -370,124 +460,122 @@ export default function ForecastingContent() {
       pessimistic.push(pessimisticCashFlow + dailyCashFlowPess * i);
     }
 
-    // Build scenarios from what-if data
+    // Build scenarios from what-if data with null safety
+    const totalRevenue = safeNumber(safeMetrics.totalRevenue, 0);
+    const totalExpenses = safeNumber(safeMetrics.totalExpenses, 0);
+    const netProfit = safeNumber(safeMetrics.netProfit, 0);
+
     const scenarios = [
       {
         name: "Baseline",
-        revenue: metrics.totalRevenue || 0,
-        expenses: metrics.totalExpenses || 0,
-        profit: metrics.netProfit || 0,
+        revenue: totalRevenue,
+        expenses: totalExpenses,
+        profit: netProfit,
         cashFlow: baselineCashFlow,
         probability: 0.6,
       },
     ];
 
-    // Add optimistic scenario if available
-    if (whatIfScenarios.revenue_impact_analysis?.revenue_increase_20_percent) {
-      const optimisticData =
-        whatIfScenarios.revenue_impact_analysis.revenue_increase_20_percent;
+    // Add optimistic scenario if available with null safety
+    const revenueIncrease20 = safeGet(revenueImpactAnalysis, 'revenue_increase_20_percent');
+    if (revenueIncrease20 && typeof revenueIncrease20 === 'object') {
       scenarios.push({
         name: "Revenue +20%",
-        revenue: optimisticData.revenue || metrics.totalRevenue * 1.2,
-        expenses: metrics.totalExpenses || 0,
-        profit: optimisticData.net_income || metrics.netProfit * 1.3,
-        cashFlow: optimisticData.cash_flow || optimisticCashFlow,
+        revenue: safeNumber(revenueIncrease20.revenue, totalRevenue * 1.2),
+        expenses: totalExpenses,
+        profit: safeNumber(revenueIncrease20.net_income, netProfit * 1.3),
+        cashFlow: safeNumber(revenueIncrease20.cash_flow, optimisticCashFlow),
         probability: 0.2,
       });
     } else {
       // Add fallback optimistic scenario
       scenarios.push({
         name: "Optimistic",
-        revenue: metrics.totalRevenue * 1.2,
-        expenses: metrics.totalExpenses * 1.05,
-        profit: metrics.totalRevenue * 1.2 - metrics.totalExpenses * 1.05,
+        revenue: totalRevenue * 1.2,
+        expenses: totalExpenses * 1.05,
+        profit: totalRevenue * 1.2 - totalExpenses * 1.05,
         cashFlow: optimisticCashFlow,
         probability: 0.2,
       });
     }
 
-    // Add pessimistic scenario if available
-    if (whatIfScenarios.revenue_impact_analysis?.revenue_decrease_20_percent) {
-      const pessimisticData =
-        whatIfScenarios.revenue_impact_analysis.revenue_decrease_20_percent;
+    // Add pessimistic scenario if available with null safety
+    const revenueDecrease20 = safeGet(revenueImpactAnalysis, 'revenue_decrease_20_percent');
+    if (revenueDecrease20 && typeof revenueDecrease20 === 'object') {
       scenarios.push({
         name: "Revenue -20%",
-        revenue: pessimisticData.revenue || metrics.totalRevenue * 0.8,
-        expenses: metrics.totalExpenses || 0,
-        profit: pessimisticData.net_income || metrics.netProfit * 0.7,
-        cashFlow: pessimisticData.cash_flow || pessimisticCashFlow,
+        revenue: safeNumber(revenueDecrease20.revenue, totalRevenue * 0.8),
+        expenses: totalExpenses,
+        profit: safeNumber(revenueDecrease20.net_income, netProfit * 0.7),
+        cashFlow: safeNumber(revenueDecrease20.cash_flow, pessimisticCashFlow),
         probability: 0.2,
       });
     } else {
       // Add fallback pessimistic scenario
       scenarios.push({
         name: "Pessimistic",
-        revenue: metrics.totalRevenue * 0.8,
-        expenses: metrics.totalExpenses * 1.1,
-        profit: metrics.totalRevenue * 0.8 - metrics.totalExpenses * 1.1,
+        revenue: totalRevenue * 0.8,
+        expenses: totalExpenses * 1.1,
+        profit: totalRevenue * 0.8 - totalExpenses * 1.1,
         cashFlow: pessimisticCashFlow,
         probability: 0.2,
       });
     }
 
-    // Add cost optimization scenario if available
-    if (
-      whatIfScenarios.cost_optimization_scenarios
-        ?.fixed_cost_reduction_15_percent
-    ) {
-      const costReduction =
-        whatIfScenarios.cost_optimization_scenarios
-          .fixed_cost_reduction_15_percent;
+    // Add cost optimization scenario if available with null safety
+    const costOptimizationScenarios = safeGet(whatIfScenarios, 'cost_optimization_scenarios');
+    const fixedCostReduction = safeGet(costOptimizationScenarios, 'fixed_cost_reduction_15_percent');
+    if (fixedCostReduction && typeof fixedCostReduction === 'object') {
+      const costSavings = safeNumber(fixedCostReduction.cost_savings, totalExpenses * 0.15);
+      const netIncomeImpact = safeNumber(fixedCostReduction.net_income_impact, totalExpenses * 0.15);
+      const cashFlowImpact = safeNumber(fixedCostReduction.cash_flow_impact, totalExpenses * 0.15);
+
       scenarios.push({
         name: "Cost -15%",
-        revenue: metrics.totalRevenue,
-        expenses:
-          metrics.totalExpenses -
-          (costReduction.cost_savings || metrics.totalExpenses * 0.15),
-        profit:
-          metrics.netProfit +
-          (costReduction.net_income_impact || metrics.totalExpenses * 0.15),
-        cashFlow:
-          metrics.netCashFlow +
-          (costReduction.cash_flow_impact || metrics.totalExpenses * 0.15),
+        revenue: totalRevenue,
+        expenses: totalExpenses - costSavings,
+        profit: netProfit + netIncomeImpact,
+        cashFlow: baselineCashFlow + cashFlowImpact,
         probability: 0.3,
       });
     }
 
-    // Calculate metrics from what-if scenarios and break-even analysis
-    let breakEvenPoint = metrics.totalExpenses
-      ? metrics.totalExpenses / (metrics.totalRevenue / 100)
+    // Calculate metrics from what-if scenarios and break-even analysis with null safety
+    let breakEvenPoint = totalRevenue > 0 && totalExpenses > 0
+      ? (totalExpenses / totalRevenue) * 100
       : 0;
-    let cashRunway =
-      metrics.netCashFlow && metrics.totalExpenses
-        ? Math.abs(metrics.netCashFlow / (metrics.totalExpenses / 30))
-        : 0;
-    let burnRate = metrics.totalExpenses ? metrics.totalExpenses / 30 : 0;
+    let cashRunway = totalExpenses > 0 && baselineCashFlow < 0
+      ? Math.abs(baselineCashFlow / (totalExpenses / 30))
+      : baselineCashFlow > 0 ? 999 : 0; // If positive cash flow, runway is effectively infinite
+    let burnRate = totalExpenses > 0 ? totalExpenses / 30 : 0;
     let growthRate = 0.05; // Default to 5%
 
-    // Use what-if scenario data if available
-    if (
-      whatIfScenarios.cash_flow_stress_testing?.break_even_analysis
-        ?.break_even_revenue
-    ) {
-      breakEvenPoint =
-        (whatIfScenarios.cash_flow_stress_testing.break_even_analysis
-          .break_even_revenue /
-          metrics.totalRevenue) *
-        100;
+    // Use what-if scenario data if available with null safety
+    const cashFlowStressTesting = safeGet(whatIfScenarios, 'cash_flow_stress_testing');
+    if (cashFlowStressTesting && typeof cashFlowStressTesting === 'object') {
+      const breakEvenAnalysis = safeGet(cashFlowStressTesting, 'break_even_analysis');
+      if (breakEvenAnalysis && typeof breakEvenAnalysis === 'object') {
+        const breakEvenRevenue = safeNumber(breakEvenAnalysis.break_even_revenue);
+        if (breakEvenRevenue > 0 && totalRevenue > 0) {
+          breakEvenPoint = (breakEvenRevenue / totalRevenue) * 100;
+        }
+      }
+
+      const bestCaseScenario = safeGet(cashFlowStressTesting, 'best_case_scenario');
+      if (bestCaseScenario && typeof bestCaseScenario === 'object') {
+        const monthsOfRunway = safeNumber(bestCaseScenario.months_of_runway);
+        if (monthsOfRunway > 0) {
+          cashRunway = monthsOfRunway * 30;
+        }
+      }
     }
 
-    if (
-      whatIfScenarios.cash_flow_stress_testing?.best_case_scenario
-        ?.months_of_runway
-    ) {
-      cashRunway =
-        whatIfScenarios.cash_flow_stress_testing.best_case_scenario
-          .months_of_runway * 30;
-    }
-
-    if (whatIfScenarios.growth_projections?.annual_growth_rate) {
-      growthRate = whatIfScenarios.growth_projections.annual_growth_rate / 12; // Monthly growth rate
+    const growthProjections = safeGet(whatIfScenarios, 'growth_projections');
+    if (growthProjections && typeof growthProjections === 'object') {
+      const annualGrowthRate = safeNumber(growthProjections.annual_growth_rate);
+      if (annualGrowthRate > 0) {
+        growthRate = annualGrowthRate / 12; // Monthly growth rate
+      }
     }
 
     return {
@@ -498,15 +586,29 @@ export default function ForecastingContent() {
   };
 
   const createCustomScenario = () => {
-    if (!forecastData) return;
+    if (!forecastData?.scenarios || !Array.isArray(forecastData.scenarios) || forecastData.scenarios.length === 0) {
+      console.warn('No forecast data or scenarios available for custom scenario creation');
+      return;
+    }
 
-    const { revenue, expenses } = forecastData.scenarios[0];
-    const newRevenue = revenue * (1 + scenarioInputs.revenueChange / 100);
-    const newExpenses = expenses * (1 + scenarioInputs.expenseChange / 100);
+    const baseScenario = forecastData.scenarios[0];
+    if (!baseScenario) {
+      console.warn('No base scenario available');
+      return;
+    }
+
+    const baseRevenue = safeNumber(baseScenario.revenue, 0);
+    const baseExpenses = safeNumber(baseScenario.expenses, 0);
+    const baseCashFlow = safeNumber(baseScenario.cashFlow, 0);
+
+    const revenueChangePercent = safeNumber(scenarioInputs.revenueChange, 0);
+    const expenseChangePercent = safeNumber(scenarioInputs.expenseChange, 0);
+    const cashFlowChangePercent = safeNumber(scenarioInputs.cashFlowChange, 0);
+
+    const newRevenue = baseRevenue * (1 + revenueChangePercent / 100);
+    const newExpenses = baseExpenses * (1 + expenseChangePercent / 100);
     const newProfit = newRevenue - newExpenses;
-    const newCashFlow =
-      forecastData.scenarios[0].cashFlow *
-      (1 + scenarioInputs.cashFlowChange / 100);
+    const newCashFlow = baseCashFlow * (1 + cashFlowChangePercent / 100);
 
     const newScenario = {
       name: "Custom Scenario",
@@ -517,27 +619,33 @@ export default function ForecastingContent() {
       probability: 0.1,
     };
 
-    setForecastData({
-      ...forecastData,
-      scenarios: [...forecastData.scenarios, newScenario],
-    });
+    try {
+      setForecastData({
+        ...forecastData,
+        scenarios: [...forecastData.scenarios, newScenario],
+      });
+    } catch (error) {
+      console.error('Error creating custom scenario:', error);
+    }
   };
 
   useEffect(() => {
     generateForecast();
   }, [selectedPeriod]);
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | null | undefined) => {
+    const safeAmount = safeNumber(amount, 0);
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(amount);
+    }).format(safeAmount);
   };
 
-  const formatPercentage = (value: number) => {
-    return `${value.toFixed(1)}%`;
+  const formatPercentage = (value: number | null | undefined) => {
+    const safeValue = safeNumber(value, 0);
+    return `${safeValue.toFixed(1)}%`;
   };
 
   if (loading) {
@@ -615,18 +723,18 @@ export default function ForecastingContent() {
 
   const { cashFlow, scenarios, metrics } = forecastData;
 
-  // Prepare chart data
-  const chartData = cashFlow.dates.map((date, index) => ({
-    date,
-    projected: cashFlow.projected[index],
-    optimistic: cashFlow.optimistic[index],
-    pessimistic: cashFlow.pessimistic[index],
+  // Prepare chart data with null safety
+  const chartData = safeArray(cashFlow?.dates).map((date, index) => ({
+    date: safeString(date, `Day ${index + 1}`),
+    projected: safeNumber(safeArray(cashFlow?.projected)[index], 0),
+    optimistic: safeNumber(safeArray(cashFlow?.optimistic)[index], 0),
+    pessimistic: safeNumber(safeArray(cashFlow?.pessimistic)[index], 0),
   }));
 
-  const scenarioChartData = scenarios.map((scenario) => ({
-    name: scenario.name,
-    profit: scenario.profit,
-    cashFlow: scenario.cashFlow,
+  const scenarioChartData = safeArray(scenarios).map((scenario) => ({
+    name: safeString(scenario?.name, 'Unknown Scenario'),
+    profit: safeNumber(scenario?.profit, 0),
+    cashFlow: safeNumber(scenario?.cashFlow, 0),
   }));
 
   return (
@@ -691,7 +799,7 @@ export default function ForecastingContent() {
               </div>
             </div>
             <div className="text-lg sm:text-2xl font-bold text-blue-600 mb-2 truncate">
-              {formatPercentage(metrics.breakEvenPoint)}
+              {formatPercentage(safeNumber(metrics?.breakEvenPoint, 0))}
             </div>
             <div className="text-xs sm:text-sm text-gray-600 mb-1">
               Break-Even Point
@@ -710,7 +818,7 @@ export default function ForecastingContent() {
               </div>
             </div>
             <div className="text-2xl font-bold text-emerald-600 mb-2">
-              {Math.round(metrics.cashRunway)} days
+              {Math.round(safeNumber(metrics?.cashRunway, 0))} days
             </div>
             <div className="text-sm text-gray-600 mb-1">Cash Runway</div>
             <p className="text-xs text-emerald-600 font-medium">
@@ -727,7 +835,7 @@ export default function ForecastingContent() {
               </div>
             </div>
             <div className="text-2xl font-bold text-red-600 mb-2">
-              {formatCurrency(metrics.burnRate)}
+              {formatCurrency(safeNumber(metrics?.burnRate, 0))}
             </div>
             <div className="text-sm text-gray-600 mb-1">
               Monthly Burn Rate
@@ -746,7 +854,7 @@ export default function ForecastingContent() {
               </div>
             </div>
             <div className="text-2xl font-bold text-purple-600 mb-2">
-              {formatPercentage(metrics.growthRate * 100)}
+              {formatPercentage(safeNumber(metrics?.growthRate, 0) * 100)}
             </div>
             <div className="text-sm text-gray-600 mb-1">Growth Rate</div>
             <p className="text-xs text-purple-600 font-medium">
@@ -794,12 +902,12 @@ export default function ForecastingContent() {
                     fontSize: 12,
                   }}
                   tickFormatter={(value) =>
-                    formatCurrency(Number(value)).replace(/\.00$/, "")
+                    formatCurrency(safeNumber(value, 0)).replace(/\.00$/, "")
                   }
                   width={60}
                 />
                 <Tooltip
-                  formatter={(value) => formatCurrency(Number(value))}
+                  formatter={(value) => formatCurrency(safeNumber(value, 0))}
                   contentStyle={{
                     backgroundColor: "#ffffff",
                     border: "1px solid #e2e8f0",
@@ -879,12 +987,12 @@ export default function ForecastingContent() {
                       fontSize: 12,
                     }}
                     tickFormatter={(value) =>
-                      formatCurrency(Number(value)).replace(/\.00$/, "")
+                      formatCurrency(safeNumber(value, 0)).replace(/\.00$/, "")
                     }
                     width={60}
                   />
                   <Tooltip
-                    formatter={(value) => formatCurrency(Number(value))}
+                    formatter={(value) => formatCurrency(safeNumber(value, 0))}
                     contentStyle={{
                       backgroundColor: "#ffffff",
                       border: "1px solid #e2e8f0",
@@ -948,11 +1056,11 @@ export default function ForecastingContent() {
                   <Input
                     id="revenue-change"
                     type="number"
-                    value={scenarioInputs.revenueChange}
+                    value={safeNumber(scenarioInputs.revenueChange, 0)}
                     onChange={(e) =>
                       setScenarioInputs((prev) => ({
                         ...prev,
-                        revenueChange: Number(e.target.value),
+                        revenueChange: safeNumber(e.target.value, 0),
                       }))
                     }
                     className="text-center h-8"
@@ -994,11 +1102,11 @@ export default function ForecastingContent() {
                   <Input
                     id="expense-change"
                     type="number"
-                    value={scenarioInputs.expenseChange}
+                    value={safeNumber(scenarioInputs.expenseChange, 0)}
                     onChange={(e) =>
                       setScenarioInputs((prev) => ({
                         ...prev,
-                        expenseChange: Number(e.target.value),
+                        expenseChange: safeNumber(e.target.value, 0),
                       }))
                     }
                     className="text-center h-8"
@@ -1041,11 +1149,11 @@ export default function ForecastingContent() {
                 <Input
                   id="cashflow-change"
                   type="number"
-                  value={scenarioInputs.cashFlowChange}
+                  value={safeNumber(scenarioInputs.cashFlowChange, 0)}
                   onChange={(e) =>
                     setScenarioInputs((prev) => ({
                       ...prev,
-                      cashFlowChange: Number(e.target.value),
+                      cashFlowChange: safeNumber(e.target.value, 0),
                     }))
                   }
                   className="text-center h-8"
@@ -1115,48 +1223,57 @@ export default function ForecastingContent() {
                 </tr>
               </thead>
               <tbody>
-                {scenarios
+                {safeArray(scenarios)
                   .filter(
                     (scenario) =>
-                      scenario.revenue !== 0 || scenario.expenses !== 0
+                      safeNumber(scenario?.revenue, 0) !== 0 || safeNumber(scenario?.expenses, 0) !== 0
                   )
-                  .map((scenario, index) => (
-                    <tr
-                      key={index}
-                      className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="p-3 font-medium text-sm text-gray-800">
-                        {scenario.name}
-                      </td>
-                      <td className="p-3 text-emerald-600 font-semibold text-sm hidden sm:table-cell">
-                        {formatCurrency(scenario.revenue)}
-                      </td>
-                      <td className="p-3 text-red-600 font-semibold text-sm hidden sm:table-cell">
-                        {formatCurrency(scenario.expenses)}
-                      </td>
-                      <td
-                        className={`p-3 font-semibold text-sm ${scenario.profit >= 0
-                          ? "text-emerald-600"
-                          : "text-red-600"
-                          }`}
+                  .map((scenario, index) => {
+                    if (!scenario) return null;
+                    const scenarioRevenue = safeNumber(scenario.revenue, 0);
+                    const scenarioExpenses = safeNumber(scenario.expenses, 0);
+                    const scenarioProfit = safeNumber(scenario.profit, 0);
+                    const scenarioCashFlow = safeNumber(scenario.cashFlow, 0);
+                    const scenarioProbability = safeNumber(scenario.probability, 0);
+
+                    return (
+                      <tr
+                        key={index}
+                        className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
                       >
-                        {formatCurrency(scenario.profit)}
-                      </td>
-                      <td
-                        className={`p-3 font-semibold text-sm ${scenario.cashFlow >= 0
-                          ? "text-emerald-600"
-                          : "text-red-600"
-                          }`}
-                      >
-                        {formatCurrency(scenario.cashFlow)}
-                      </td>
-                      <td className="p-3">
-                        <Badge variant="secondary">
-                          {formatPercentage(scenario.probability * 100)}
-                        </Badge>
-                      </td>
-                    </tr>
-                  ))}
+                        <td className="p-3 font-medium text-sm text-gray-800">
+                          {safeString(scenario.name, 'Unknown Scenario')}
+                        </td>
+                        <td className="p-3 text-emerald-600 font-semibold text-sm hidden sm:table-cell">
+                          {formatCurrency(scenarioRevenue)}
+                        </td>
+                        <td className="p-3 text-red-600 font-semibold text-sm hidden sm:table-cell">
+                          {formatCurrency(scenarioExpenses)}
+                        </td>
+                        <td
+                          className={`p-3 font-semibold text-sm ${scenarioProfit >= 0
+                            ? "text-emerald-600"
+                            : "text-red-600"
+                            }`}
+                        >
+                          {formatCurrency(scenarioProfit)}
+                        </td>
+                        <td
+                          className={`p-3 font-semibold text-sm ${scenarioCashFlow >= 0
+                            ? "text-emerald-600"
+                            : "text-red-600"
+                            }`}
+                        >
+                          {formatCurrency(scenarioCashFlow)}
+                        </td>
+                        <td className="p-3">
+                          <Badge variant="secondary">
+                            {formatPercentage(scenarioProbability * 100)}
+                          </Badge>
+                        </td>
+                      </tr>
+                    );
+                  }).filter(Boolean)}
               </tbody>
             </table>
           </div>
