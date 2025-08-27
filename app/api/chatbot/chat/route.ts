@@ -4,7 +4,7 @@ import { prisma, getOrCreateUser } from "@/lib/db";
 import { currentUser } from "@clerk/nextjs/server";
 
 // Backend API URL - you can configure this via environment variable
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 export async function POST(request: NextRequest) {
   try {
