@@ -1244,7 +1244,7 @@ export default function ComprehensiveFinancialDashboard({
                             </Badge>
                           </div>
                           <div className="text-xs text-gray-600 mb-2">
-                            Affected Months: {pattern.affected_months.join(", ")}
+                            Affected Months: {pattern.affected_months?.join(", ")}
                           </div>
                           <div className="text-sm text-blue-600">
                             Recommendation: {pattern.recommendation}
@@ -1569,7 +1569,7 @@ export default function ComprehensiveFinancialDashboard({
                               Impact: {formatCurrency(alert.potential_impact)}
                             </div>
                             <div className="text-blue-600">
-                              Actions: {alert.preventive_actions.join(", ")}
+                              Actions: {alert.preventive_actions?.join(", ")}
                             </div>
                           </div>
                         </div>
@@ -1827,7 +1827,7 @@ export default function ComprehensiveFinancialDashboard({
                               </div>
                               <div className="text-blue-600">
                                 Success Metrics:{" "}
-                                {action.success_metrics.join(", ")}
+                                {action.success_metrics?.join(", ")}
                               </div>
                             </div>
                           </div>
@@ -1868,7 +1868,7 @@ export default function ComprehensiveFinancialDashboard({
                               </div>
                               <div className="text-red-600">
                                 Risk Factors:{" "}
-                                {improvement.risk_factors.join(", ")}
+                                {improvement.risk_factors?.join(", ")}
                               </div>
                             </div>
                           </div>
