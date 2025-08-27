@@ -22,7 +22,7 @@ A comprehensive financial analysis and management platform built with Next.js, d
 
 ### Comprehensive Financial Analysis Features
 
-- **Profit & Loss Analysis**: Detailed revenue breakdown, cost structure, and profitability metrics
+- **Profit and Loss Analysis**: Detailed revenue breakdown, cost structure, and profitability metrics
 - **Balance Sheet Reconciliation**: Complete asset, liability, and equity analysis
 - **Cash Flow Statement**: Operating, investing, and financing activities tracking
 - **Financial Ratios**: Profitability, liquidity, efficiency, and leverage ratios
