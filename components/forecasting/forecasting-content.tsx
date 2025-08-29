@@ -796,33 +796,94 @@ export default function ForecastingContent() {
 
   if (error) {
     return (
-      <div className="p-4 sm:p-6">
-        <Alert variant="destructive">
-          <AlertDescription>
-            {error}. Please try refreshing the page.
-          </AlertDescription>
-        </Alert>
+      <div className="flex items-center justify-center min-h-[60vh] p-6">
+        <div className="max-w-md mx-auto">
+          <div className="bg-white rounded-xl border border-gray-200 p-8 text-center shadow-sm">
+            <div className="w-16 h-16 bg-red-50 rounded-xl flex items-center justify-center mx-auto mb-6">
+              <Calculator className="h-8 w-8 text-red-600" />
+            </div>
+
+            <h3 className="text-xl font-semibold text-gray-900 mb-3">
+              Forecasting Unavailable
+            </h3>
+
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              We encountered an issue while generating your forecast. Please try again or upload new data.
+            </p>
+
+            <div className="space-y-3">
+              <Button
+                onClick={() => window.location.reload()}
+                className="w-full bg-gray-900 hover:bg-gray-800"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Retry Forecast
+              </Button>
+
+              <Button
+                asChild
+                variant="outline"
+                className="w-full"
+              >
+                <a href="/upload">
+                  <FileText className="w-4 h-4 mr-2" />
+                  Upload New Data
+                </a>
+              </Button>
+            </div>
+
+            <div className="mt-6 text-sm text-gray-500">
+              Error: {error}
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!forecastData) {
     return (
-      <div className="p-4 sm:p-6 text-center">
-        <div className="bg-white rounded-lg border border-gray-200 p-8 sm:p-12 max-w-md mx-auto">
-          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
-            <Calculator className="h-6 w-6 sm:h-8 sm:w-8 text-slate-600" />
+      <div className="flex items-center justify-center min-h-[60vh] p-6">
+        <div className="max-w-lg mx-auto">
+          <div className="bg-white rounded-xl border border-gray-200 p-10 text-center shadow-sm">
+            <div className="w-20 h-20 bg-green-50 rounded-xl flex items-center justify-center mx-auto mb-6">
+              <Target className="h-10 w-10 text-green-600" />
+            </div>
+
+            <h3 className="text-2xl font-semibold text-gray-900 mb-4">
+              Financial Forecasting
+            </h3>
+
+            <p className="text-gray-600 mb-8 leading-relaxed">
+              Upload your financial data to generate cash flow forecasts, scenario planning, and growth projections for your business.
+            </p>
+
+            <Button
+              asChild
+              size="lg"
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <a href="/upload">
+                <TrendingUp className="w-5 h-5 mr-2" />
+                Start Forecasting
+              </a>
+            </Button>
+
+            <div className="mt-8 grid grid-cols-3 gap-4 text-sm text-gray-500">
+              <div className="text-center">
+                <div className="w-3 h-3 bg-green-100 rounded-full mx-auto mb-2"></div>
+                Cash Flow
+              </div>
+              <div className="text-center">
+                <div className="w-3 h-3 bg-green-100 rounded-full mx-auto mb-2"></div>
+                Scenarios
+              </div>
+              <div className="text-center">
+                <div className="w-3 h-3 bg-green-100 rounded-full mx-auto mb-2"></div>
+                Projections
+              </div>
+            </div>
           </div>
-          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3">
-            No Forecast Data Available
-          </h3>
-          <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
-            Upload financial reports to generate cash flow forecasts and
-            scenario analysis.
-          </p>
-          <Button asChild className="w-full sm:w-auto">
-            <a href="/upload">Upload Report</a>
-          </Button>
         </div>
       </div>
     );

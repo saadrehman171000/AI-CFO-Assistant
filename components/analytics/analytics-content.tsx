@@ -501,35 +501,94 @@ export default function AnalyticsContent() {
 
   if (error) {
     return (
-      <div className="p-4 sm:p-6">
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            {error}. Please try refreshing the page.
-          </AlertDescription>
-        </Alert>
+      <div className="flex items-center justify-center min-h-[60vh] p-6">
+        <div className="max-w-md mx-auto">
+          <div className="bg-white rounded-xl border border-gray-200 p-8 text-center shadow-sm">
+            <div className="w-16 h-16 bg-red-50 rounded-xl flex items-center justify-center mx-auto mb-6">
+              <AlertTriangle className="h-8 w-8 text-red-600" />
+            </div>
+
+            <h3 className="text-xl font-semibold text-gray-900 mb-3">
+              Analytics Unavailable
+            </h3>
+
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              We encountered an issue while processing your analytics. Please try again or upload new data.
+            </p>
+
+            <div className="space-y-3">
+              <Button
+                onClick={() => window.location.reload()}
+                className="w-full bg-gray-900 hover:bg-gray-800"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Refresh Analytics
+              </Button>
+
+              <Button
+                asChild
+                variant="outline"
+                className="w-full"
+              >
+                <a href="/upload">
+                  <FileText className="w-4 h-4 mr-2" />
+                  Upload New Data
+                </a>
+              </Button>
+            </div>
+
+            <div className="mt-6 text-sm text-gray-500">
+              Error: {error}
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!analyticsData) {
     return (
-      <div className="p-4 sm:p-6 text-center">
-        <div className="bg-white rounded-lg border border-gray-200 p-8 sm:p-12 max-w-md mx-auto">
-          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
-            <FileText className="h-6 w-6 sm:h-8 sm:w-8 text-slate-600" />
+      <div className="flex items-center justify-center min-h-[60vh] p-6">
+        <div className="max-w-lg mx-auto">
+          <div className="bg-white rounded-xl border border-gray-200 p-10 text-center shadow-sm">
+            <div className="w-20 h-20 bg-purple-50 rounded-xl flex items-center justify-center mx-auto mb-6">
+              <Eye className="h-10 w-10 text-purple-600" />
+            </div>
+
+            <h3 className="text-2xl font-semibold text-gray-900 mb-4">
+              Analytics Dashboard
+            </h3>
+
+            <p className="text-gray-600 mb-8 leading-relaxed">
+              Upload your financial data to view detailed analytics, charts, and AI-powered insights about your business performance.
+            </p>
+
+            <Button
+              asChild
+              size="lg"
+              className="bg-purple-600 hover:bg-purple-700"
+            >
+              <a href="/upload">
+                <TrendingUp className="w-5 h-5 mr-2" />
+                Start Analytics
+              </a>
+            </Button>
+
+            <div className="mt-8 grid grid-cols-3 gap-4 text-sm text-gray-500">
+              <div className="text-center">
+                <div className="w-3 h-3 bg-purple-100 rounded-full mx-auto mb-2"></div>
+                Charts & Graphs
+              </div>
+              <div className="text-center">
+                <div className="w-3 h-3 bg-purple-100 rounded-full mx-auto mb-2"></div>
+                AI Insights
+              </div>
+              <div className="text-center">
+                <div className="w-3 h-3 bg-purple-100 rounded-full mx-auto mb-2"></div>
+                Trend Analysis
+              </div>
+            </div>
           </div>
-          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3">
-            No Analytics Data Available
-          </h3>
-          <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
-            Upload your first financial report to see detailed analytics and
-            insights.
-          </p>
-          <Button className="w-full sm:w-auto">
-            <FileText className="h-4 w-4 mr-2" />
-            Upload Report
-          </Button>
         </div>
       </div>
     );

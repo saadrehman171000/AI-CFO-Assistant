@@ -488,15 +488,46 @@ export default function DashboardContent() {
 
   if (error) {
     return (
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-pink-600 opacity-10 rounded-2xl"></div>
-        <div className="relative bg-red-50/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-red-200">
-          <Alert variant="destructive" className="bg-transparent border-0 p-0">
-            <AlertTriangle className="h-5 w-5 text-red-600" />
-            <AlertDescription className="text-red-800">
-              {error}. Please try refreshing the page.
-            </AlertDescription>
-          </Alert>
+      <div className="flex items-center justify-center min-h-[60vh] p-6">
+        <div className="max-w-md mx-auto">
+          <div className="bg-white rounded-xl border border-gray-200 p-8 text-center shadow-sm">
+            <div className="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center mx-auto mb-6">
+              <AlertTriangle className="h-8 w-8 text-gray-400" />
+            </div>
+
+            <h3 className="text-xl font-semibold text-gray-900 mb-3">
+              Unable to Load Data
+            </h3>
+
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              We encountered an issue while loading your financial data. Please try again or upload a new document.
+            </p>
+
+            <div className="space-y-3">
+              <Button
+                onClick={() => window.location.reload()}
+                className="w-full bg-gray-900 hover:bg-gray-800"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Try Again
+              </Button>
+
+              <Button
+                asChild
+                variant="outline"
+                className="w-full"
+              >
+                <a href="/upload">
+                  <FileText className="w-4 h-4 mr-2" />
+                  Upload Document
+                </a>
+              </Button>
+            </div>
+
+            <div className="mt-6 text-sm text-gray-500">
+              Error: {error}
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -504,25 +535,47 @@ export default function DashboardContent() {
 
   if (!dashboardData) {
     return (
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-10 rounded-3xl"></div>
-        <div className="relative bg-white/80 backdrop-blur-xl rounded-3xl p-12 shadow-2xl border border-white/20 text-center">
-          <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl mx-auto mb-6 transform rotate-3 hover:rotate-0 transition-all duration-300">
-            <FileText className="h-10 w-10 text-white" />
+      <div className="flex items-center justify-center min-h-[60vh] p-6">
+        <div className="max-w-lg mx-auto">
+          <div className="bg-white rounded-xl border border-gray-200 p-10 text-center shadow-sm">
+            <div className="w-20 h-20 bg-blue-50 rounded-xl flex items-center justify-center mx-auto mb-6">
+              <BarChart3 className="h-10 w-10 text-blue-600" />
+            </div>
+
+            <h3 className="text-2xl font-semibold text-gray-900 mb-4">
+              Welcome to Your Dashboard
+            </h3>
+
+            <p className="text-gray-600 mb-8 leading-relaxed">
+              Upload your financial documents to get started with AI-powered insights, analytics, and reporting.
+            </p>
+
+            <Button
+              asChild
+              size="lg"
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              <a href="/upload">
+                <FileText className="w-5 h-5 mr-2" />
+                Upload Your First Document
+              </a>
+            </Button>
+
+            <div className="mt-8 flex items-center justify-center space-x-8 text-sm text-gray-500">
+              <div className="flex items-center">
+                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                Excel & CSV
+              </div>
+              <div className="flex items-center">
+                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                PDF Reports
+              </div>
+              <div className="flex items-center">
+                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                AI Analysis
+              </div>
+            </div>
           </div>
-          <h3 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent mb-4">
-            No Financial Data Available
-          </h3>
-          <p className="text-gray-600 mb-6 max-w-md mx-auto">
-            Upload your first financial document to see AI-powered insights and
-            analytics.
-          </p>
-          <Button
-            asChild
-            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300"
-          >
-            <a href="/upload">Upload Document</a>
-          </Button>
         </div>
       </div>
     );

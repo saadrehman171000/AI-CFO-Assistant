@@ -15,58 +15,70 @@ export async function POST(request: NextRequest) {
     const user = await getOrCreateUser(clerkUser);
     const data = await request.json();
 
+    // Validate the new combined analysis data format
     if (
       !data ||
-      !data.files ||
-      !Array.isArray(data.files) ||
-      data.files.length === 0
+      !data.fileName ||
+      !data.fileNames ||
+      !Array.isArray(data.fileNames) ||
+      data.fileNames.length === 0 ||
+      !data.analysisData
     ) {
       return NextResponse.json(
-        { error: "Missing required files data" },
+        { error: "Missing required combined analysis data" },
         { status: 400 }
       );
     }
 
-    // Store each financial analysis in the database
-    const savedAnalyses = [];
-    for (const fileAnalysis of data.files) {
-      if (
-        !fileAnalysis.fileName ||
-        !fileAnalysis.fileType ||
-        !fileAnalysis.fileSizeMb ||
-        !fileAnalysis.analysisData
-      ) {
-        continue; // Skip invalid entries
+    // Extract file info from the backend response
+    const backendAnalysis = data.analysisData;
+    const fileInfo = backendAnalysis.file_info || {};
+
+    // Add metadata to the analysis data
+    const analysisDataWithMetadata = {
+      ...backendAnalysis,
+      multiFileMetadata: {
+        originalFiles: data.fileNames,
+        analysisType: "combined_multi_file",
+        filesCount: data.fileNames.length
       }
+    };
 
-      const financialAnalysis = await prisma.financialAnalysis.create({
-        data: {
-          userId: user.id,
-          fileName: fileAnalysis.fileName,
-          fileType: fileAnalysis.fileType,
-          fileSizeMb: fileAnalysis.fileSizeMb,
-          analysisData: fileAnalysis.analysisData,
-          isMultiFileAnalysis: true,
-          multiFileAnalysisGroupId: data.groupId || new Date().toISOString(),
-        },
-      });
-
-      savedAnalyses.push({
-        id: financialAnalysis.id,
-        fileName: fileAnalysis.fileName,
-      });
-    }
+    // Create a single combined analysis entry
+    const financialAnalysis = await prisma.financialAnalysis.create({
+      data: {
+        userId: user.id,
+        fileName: data.fileName, // Combined filename (e.g., "file1_file2_combined")
+        fileType: fileInfo.file_type || "combined",
+        fileSizeMb: fileInfo.file_size_mb || 0,
+        analysisData: analysisDataWithMetadata,
+        isMultiFileAnalysis: true,
+        multiFileAnalysisGroupId: new Date().toISOString(),
+        companyId: data.companyId || null,
+        branchId: data.branchId || null,
+      },
+    });
 
     return NextResponse.json({
       success: true,
-      savedFiles: savedAnalyses,
-      totalSaved: savedAnalyses.length,
+      analysis: {
+        id: financialAnalysis.id,
+        fileName: financialAnalysis.fileName,
+        fileType: financialAnalysis.fileType,
+        fileSizeMb: financialAnalysis.fileSizeMb,
+        uploadDate: financialAnalysis.createdAt,
+        isMultiFileAnalysis: true,
+        originalFiles: data.fileNames,
+        branchId: financialAnalysis.branchId,
+        companyId: financialAnalysis.companyId,
+      },
+      message: "Combined analysis stored successfully"
     });
   } catch (error) {
-    console.error("Error storing multi-file financial analysis:", error);
+    console.error("Error storing combined multi-file analysis:", error);
     return NextResponse.json(
       {
-        error: "Failed to store multi-file financial analysis",
+        error: "Failed to store combined multi-file analysis",
         details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }

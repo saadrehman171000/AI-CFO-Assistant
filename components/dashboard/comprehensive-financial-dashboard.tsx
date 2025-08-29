@@ -216,14 +216,48 @@ export default function ComprehensiveFinancialDashboard({
   // Add error handling for potentially missing data
   if (!currentAnalysisData && !showSelector) {
     return (
-      <div className="space-y-6">
-        <Alert>
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            Unable to load financial analysis data. The data structure may be
-            incomplete.
-          </AlertDescription>
-        </Alert>
+      <div className="flex items-center justify-center min-h-[50vh] p-6">
+        <div className="max-w-lg mx-auto">
+          <div className="bg-white rounded-xl border border-gray-200 p-10 text-center shadow-sm">
+            <div className="w-20 h-20 bg-blue-50 rounded-xl flex items-center justify-center mx-auto mb-6">
+              <BarChart3 className="h-10 w-10 text-blue-600" />
+            </div>
+
+            <h3 className="text-2xl font-semibold text-gray-900 mb-4">
+              Financial Dashboard
+            </h3>
+
+            <p className="text-gray-600 mb-8 leading-relaxed">
+              Upload your financial documents to view comprehensive analysis, insights, and interactive dashboards.
+            </p>
+
+            <Button
+              asChild
+              size="lg"
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              <a href="/upload">
+                <FileText className="w-5 h-5 mr-2" />
+                Upload Financial Data
+              </a>
+            </Button>
+
+            <div className="mt-8 grid grid-cols-3 gap-4 text-sm text-gray-500">
+              <div className="text-center">
+                <div className="w-3 h-3 bg-blue-100 rounded-full mx-auto mb-2"></div>
+                Excel & CSV
+              </div>
+              <div className="text-center">
+                <div className="w-3 h-3 bg-blue-100 rounded-full mx-auto mb-2"></div>
+                PDF Reports
+              </div>
+              <div className="text-center">
+                <div className="w-3 h-3 bg-blue-100 rounded-full mx-auto mb-2"></div>
+                AI Analysis
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -342,16 +376,35 @@ export default function ComprehensiveFinancialDashboard({
 
   const COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6"];
 
-  // If no analysis data and selector is not shown, show error
+  // If no analysis data and selector is not shown, show error  
   if (!currentAnalysisData && !showSelector) {
     return (
-      <div className="space-y-6">
-        <Alert>
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            Unable to load financial analysis data. Please select an analysis or upload a file.
-          </AlertDescription>
-        </Alert>
+      <div className="flex items-center justify-center min-h-[40vh] p-6">
+        <div className="max-w-md mx-auto">
+          <div className="bg-white rounded-xl border border-gray-200 p-8 text-center shadow-sm">
+            <div className="w-16 h-16 bg-amber-50 rounded-xl flex items-center justify-center mx-auto mb-6">
+              <AlertTriangle className="h-8 w-8 text-amber-600" />
+            </div>
+
+            <h3 className="text-xl font-semibold text-gray-900 mb-3">
+              No Analysis Selected
+            </h3>
+
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              Please select a financial analysis from the dropdown above, or upload a new document to get started.
+            </p>
+
+            <Button
+              asChild
+              className="w-full bg-blue-600 hover:bg-blue-700"
+            >
+              <a href="/upload">
+                <FileText className="w-4 h-4 mr-2" />
+                Upload Document
+              </a>
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }

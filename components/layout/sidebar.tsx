@@ -164,13 +164,6 @@ const companyNavigation = [
     color: "bg-cyan-600",
   },
   {
-    name: "Company Settings",
-    href: "/company-settings",
-    icon: Building2,
-    requiresSubscription: true,
-    color: "bg-slate-600",
-  },
-  {
     name: "Profile",
     href: "/profile",
     icon: User,

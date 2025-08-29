@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Upload,
   FileText,
@@ -31,9 +32,13 @@ import {
   DollarSign,
   Building2,
   MapPin,
+  X,
+  File,
+  Files,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { useUser } from "@clerk/nextjs";
 
 interface Branch {
   id: string;
@@ -61,17 +66,36 @@ interface AnalysisResult {
   branch?: Branch;
 }
 
+interface FileWithPreview extends File {
+  preview?: string;
+}
+
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+
 export default function EnhancedFileUpload() {
   const router = useRouter();
+  const { user } = useUser();
+
+  // Single file upload states
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedBranch, setSelectedBranch] = useState<string>('');
   const [isUploading, setIsUploading] = useState(false);
+
+  // Multi-file upload states
+  const [selectedFiles, setSelectedFiles] = useState<FileWithPreview[]>([]);
+  const [multiSelectedBranch, setMultiSelectedBranch] = useState<string>('');
+  const [isMultiUploading, setIsMultiUploading] = useState(false);
+
+  // Common states
   const [uploadedAnalysis, setUploadedAnalysis] = useState<AnalysisResult | null>(null);
   const [analyses, setAnalyses] = useState<AnalysisResult[]>([]);
   const [isLoadingAnalyses, setIsLoadingAnalyses] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [companyData, setCompanyData] = useState<CompanyData | null>(null);
+  const [isCheckingDuplicates, setIsCheckingDuplicates] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const multiFileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -182,6 +206,243 @@ export default function EnhancedFileUpload() {
       });
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  // Multi-file upload functions
+  const handleMultiFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    const newFiles: FileWithPreview[] = [];
+
+    // Check for maximum file count
+    if (selectedFiles.length + files.length > 10) {
+      toast({
+        title: "Too many files",
+        description: "Maximum 10 files allowed.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Process each file
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const fileType = file.name.split(".").pop()?.toLowerCase();
+
+      if (fileType && ["csv", "pdf", "xlsx", "xls"].includes(fileType)) {
+        // Check file size (50MB limit)
+        if (file.size <= 50 * 1024 * 1024) {
+          newFiles.push(file);
+        } else {
+          toast({
+            title: "File too large",
+            description: `${file.name} exceeds the 50MB limit.`,
+            variant: "destructive",
+          });
+        }
+      } else {
+        toast({
+          title: "Invalid file type",
+          description: `${file.name}: Please select CSV, PDF, or Excel (.xlsx/.xls) files.`,
+          variant: "destructive",
+        });
+      }
+    }
+
+    if (newFiles.length > 0) {
+      setSelectedFiles((prev) => [...prev, ...newFiles]);
+    }
+
+    // Reset the file input
+    if (multiFileInputRef.current) {
+      multiFileInputRef.current.value = "";
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const checkForDuplicates = async (files: FileWithPreview[]): Promise<string[]> => {
+    setIsCheckingDuplicates(true);
+    try {
+      const response = await fetch("/api/check-duplicate-file", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          files: files.map(file => ({ name: file.name, size: file.size })),
+        }),
+      });
+
+      if (!response.ok) {
+        console.warn("Duplicate check failed, proceeding with upload");
+        return [];
+      }
+
+      const result = await response.json();
+      return result.duplicates || [];
+    } catch (error) {
+      console.warn("Duplicate check error:", error);
+      return []; // Allow upload if check fails
+    } finally {
+      setIsCheckingDuplicates(false);
+    }
+  };
+
+  const handleMultiUpload = async () => {
+    if (selectedFiles.length === 0) {
+      toast({
+        title: "No files selected",
+        description: "Please select at least one file to upload.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if company user has selected a branch
+    if (companyData?.company && !multiSelectedBranch) {
+      toast({
+        title: "Branch required",
+        description: "Please select a branch for these financial documents.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check for duplicates first
+    const duplicates = await checkForDuplicates(selectedFiles);
+    if (duplicates.length > 0) {
+      toast({
+        title: "Duplicate Files Detected",
+        description: `${duplicates.length} file(s) already uploaded: ${duplicates.join(', ')}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsMultiUploading(true);
+
+    const formData = new FormData();
+    selectedFiles.forEach((file) => {
+      formData.append("files", file);
+    });
+
+    // Get the user ID from Clerk
+    const userId = user?.id;
+
+    // Build URL with user_id parameter for backend
+    const uploadUrl = new URL(`${BASE_URL}/analyze-multiple-files`);
+    if (userId) {
+      uploadUrl.searchParams.append("user_id", userId);
+    }
+    uploadUrl.searchParams.append("store_in_vector_db", "true");
+
+    try {
+      console.log("Uploading multiple files to:", uploadUrl.toString());
+
+      // Step 1: Send files to Flask backend for combined analysis
+      const response = await fetch(uploadUrl.toString(), {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        let errorMessage = `Upload failed: ${response.status} ${response.statusText}`;
+        try {
+          const errorData = await response.json();
+          if (errorData.detail) {
+            errorMessage = errorData.detail;
+          }
+        } catch {
+          // If we can't parse error as JSON, use status text
+        }
+        throw new Error(errorMessage);
+      }
+
+      // Step 2: Parse the response from Flask backend
+      const analysisResults = await response.json();
+
+      // Step 3: Store the combined analysis data in our database
+      try {
+        // Create combined filename
+        const combinedFileName = selectedFiles.map(f => f.name.split('.')[0]).join('_') + '_combined';
+
+        const storeResponse = await fetch("/api/multi-file-analysis", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            fileName: combinedFileName,
+            fileNames: selectedFiles.map(f => f.name),
+            analysisData: analysisResults,
+            companyId: companyData?.company?.id,
+            branchId: multiSelectedBranch || null,
+          }),
+        });
+
+        if (!storeResponse.ok) {
+          console.error("Failed to store analysis data in database, but will continue");
+        } else {
+          const storeResult = await storeResponse.json();
+          setUploadedAnalysis(storeResult.analysis);
+        }
+      } catch (storeError) {
+        console.error("Error storing analysis data:", storeError);
+        // Continue even if storing fails - we'll still redirect to dashboard
+      }
+
+      // Display success message
+      toast({
+        title: "Upload Successful",
+        description: `${selectedFiles.length} files have been uploaded and analyzed together successfully. Redirecting to dashboard...`,
+      });
+
+      // Reset form
+      setSelectedFiles([]);
+      setMultiSelectedBranch('');
+      if (multiFileInputRef.current) {
+        multiFileInputRef.current.value = "";
+      }
+
+      // Reload analyses list
+      loadAnalyses();
+
+      // Redirect to dashboard
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 1500);
+    } catch (error) {
+      console.error("Upload error:", error);
+
+      let errorMessage = "An error occurred during upload.";
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+
+        // Check for common issues with better error messages
+        if (error.message.includes("fetch") || error.message.includes("Failed to fetch")) {
+          errorMessage = `Connection failed to backend server at ${BASE_URL}. The server might be starting up - this usually resolves in a few seconds.`;
+        } else if (error.message.includes("AbortError") || error.message.includes("timeout")) {
+          errorMessage = "Upload timed out. Please try again - multiple files may take longer to process.";
+        } else if (error.message.includes("NetworkError") || error.message.includes("CORS")) {
+          errorMessage = "Network error. Please check your connection and try again.";
+        } else if (error.message.includes("Server error")) {
+          errorMessage = "Server temporarily unavailable. Please try again in a moment.";
+        }
+      }
+
+      toast({
+        title: "Upload Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsMultiUploading(false);
     }
   };
 
@@ -298,90 +559,225 @@ export default function EnhancedFileUpload() {
         </Card>
       )}
 
-      {/* Upload Form */}
+      {/* Upload Form with Tabs */}
       <Card className="border-2 border-dashed border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50">
         <CardHeader className="text-center pb-6">
           <CardTitle className="text-2xl flex items-center justify-center space-x-2">
             <Upload className="h-6 w-6 text-blue-600" />
-            <span>Upload New Document</span>
+            <span>Upload Financial Documents</span>
           </CardTitle>
           <CardDescription className="text-base">
-            Upload your financial documents to get AI-powered analysis and insights
+            Upload single or multiple financial documents for AI-powered analysis
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Branch Selection for Company Users */}
-          {companyData?.company && companyData.company.branches.length > 0 && (
-            <div className="space-y-2">
-              <Label htmlFor="branch" className="text-sm font-medium flex items-center gap-2">
-                <MapPin className="h-4 w-4" />
-                Select Branch *
-              </Label>
-              <Select value={selectedBranch} onValueChange={setSelectedBranch}>
-                <SelectTrigger className="h-11">
-                  <SelectValue placeholder="Choose which branch this document belongs to..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {companyData.company.branches.map((branch) => (
-                    <SelectItem key={branch.id} value={branch.id}>
-                      <div className="flex items-center space-x-2">
-                        <MapPin className="h-4 w-4" />
-                        <span>{branch.name} - {branch.location}</span>
+        <CardContent>
+          <Tabs defaultValue="single" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsTrigger value="single" className="flex items-center gap-2">
+                <File className="h-4 w-4" />
+                Single File
+              </TabsTrigger>
+              <TabsTrigger value="multiple" className="flex items-center gap-2">
+                <Files className="h-4 w-4" />
+                Multiple Files
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Single File Upload */}
+            <TabsContent value="single" className="space-y-6">
+              {/* Branch Selection for Company Users */}
+              {companyData?.company && companyData.company.branches.length > 0 && (
+                <div className="space-y-2">
+                  <Label htmlFor="branch" className="text-sm font-medium flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    Select Branch *
+                  </Label>
+                  <Select value={selectedBranch} onValueChange={setSelectedBranch}>
+                    <SelectTrigger className="h-11">
+                      <SelectValue placeholder="Choose which branch this document belongs to..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {companyData.company.branches.map((branch) => (
+                        <SelectItem key={branch.id} value={branch.id}>
+                          <div className="flex items-center space-x-2">
+                            <MapPin className="h-4 w-4" />
+                            <span>{branch.name} - {branch.location}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selectedBranch && (
+                    <div className="flex items-center space-x-2 text-sm text-green-600">
+                      <CheckCircle className="h-4 w-4" />
+                      <span>Document will be assigned to this branch</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="file" className="text-sm font-medium">
+                  Select File
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="file"
+                    type="file"
+                    accept=".csv,.pdf,.xlsx,.xls"
+                    onChange={handleFileSelect}
+                    ref={fileInputRef}
+                    className="h-11 cursor-pointer"
+                  />
+                  {selectedFile && (
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                    </div>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Supported formats: CSV, PDF, Excel (.xlsx, .xls) (max 50MB)
+                </p>
+              </div>
+
+              <Button
+                onClick={handleUpload}
+                disabled={!selectedFile || isUploading || (!!companyData?.company && !selectedBranch)}
+                className="w-full h-12 text-lg font-medium bg-blue-600 hover:bg-blue-700"
+              >
+                {isUploading ? (
+                  <>
+                    <Loader2 className="mr-3 h-5 w-5 animate-spin" />
+                    Analyzing Document...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="mr-3 h-5 w-5" />
+                    Upload & Analyze Document
+                  </>
+                )}
+              </Button>
+            </TabsContent>
+
+            {/* Multiple Files Upload */}
+            <TabsContent value="multiple" className="space-y-6">
+              {/* Branch Selection for Company Users */}
+              {companyData?.company && companyData.company.branches.length > 0 && (
+                <div className="space-y-2">
+                  <Label htmlFor="multi-branch" className="text-sm font-medium flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    Select Branch *
+                  </Label>
+                  <Select value={multiSelectedBranch} onValueChange={setMultiSelectedBranch}>
+                    <SelectTrigger className="h-11">
+                      <SelectValue placeholder="Choose which branch these documents belong to..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {companyData.company.branches.map((branch) => (
+                        <SelectItem key={branch.id} value={branch.id}>
+                          <div className="flex items-center space-x-2">
+                            <MapPin className="h-4 w-4" />
+                            <span>{branch.name} - {branch.location}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {multiSelectedBranch && (
+                    <div className="flex items-center space-x-2 text-sm text-green-600">
+                      <CheckCircle className="h-4 w-4" />
+                      <span>Documents will be assigned to this branch</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="multi-file" className="text-sm font-medium">
+                  Select Multiple Files
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="multi-file"
+                    type="file"
+                    accept=".csv,.pdf,.xlsx,.xls"
+                    onChange={handleMultiFileSelect}
+                    ref={multiFileInputRef}
+                    className="h-11 cursor-pointer"
+                    multiple
+                  />
+                  {selectedFiles.length > 0 && (
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                    </div>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Supported formats: CSV, PDF, Excel (.xlsx, .xls) | Max 10 files, 50MB each
+                </p>
+              </div>
+
+              {/* Selected Files List */}
+              {selectedFiles.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">
+                    Selected Files ({selectedFiles.length})
+                  </Label>
+                  <div className="max-h-48 overflow-y-auto space-y-2 border rounded-lg p-3 bg-white">
+                    {selectedFiles.map((file, index) => (
+                      <div
+                        key={`${file.name}-${index}`}
+                        className="flex items-center justify-between p-2 bg-gray-50 rounded border"
+                      >
+                        <div className="flex items-center min-w-0 flex-1 pr-2">
+                          <File className="h-4 w-4 text-slate-500 mr-2 flex-shrink-0" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium truncate">
+                              {file.name}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {(file.size / 1024 / 1024).toFixed(2)} MB
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeFile(index)}
+                          className="text-gray-500 hover:text-red-500 h-8 w-8 p-0 flex-shrink-0"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
                       </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {selectedBranch && (
-                <div className="flex items-center space-x-2 text-sm text-green-600">
-                  <CheckCircle className="h-4 w-4" />
-                  <span>Document will be assigned to this branch</span>
+                    ))}
+                  </div>
                 </div>
               )}
-            </div>
-          )}
 
-          <div className="space-y-2">
-            <Label htmlFor="file" className="text-sm font-medium">
-              Select File
-            </Label>
-            <div className="relative">
-              <Input
-                id="file"
-                type="file"
-                accept=".csv,.pdf,.xlsx,.xls"
-                onChange={handleFileSelect}
-                ref={fileInputRef}
-                className="h-11 cursor-pointer"
-              />
-              {selectedFile && (
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                  <CheckCircle className="h-5 w-5 text-green-600" />
-                </div>
-              )}
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Supported formats: CSV, PDF, Excel (.xlsx, .xls) (max 50MB)
-            </p>
-          </div>
-
-          <Button
-            onClick={handleUpload}
-            disabled={!selectedFile || isUploading || (!!companyData?.company && !selectedBranch)}
-            className="w-full h-12 text-lg font-medium bg-blue-600 hover:bg-blue-700"
-          >
-            {isUploading ? (
-              <>
-                <Loader2 className="mr-3 h-5 w-5 animate-spin" />
-                Analyzing Document...
-              </>
-            ) : (
-              <>
-                <Upload className="mr-3 h-5 w-5" />
-                Upload & Analyze Document
-              </>
-            )}
-          </Button>
+              <Button
+                onClick={handleMultiUpload}
+                disabled={selectedFiles.length === 0 || isMultiUploading || isCheckingDuplicates || (!!companyData?.company && !multiSelectedBranch)}
+                className="w-full h-12 text-lg font-medium bg-blue-600 hover:bg-blue-700"
+              >
+                {isCheckingDuplicates ? (
+                  <>
+                    <Loader2 className="mr-3 h-5 w-5 animate-spin" />
+                    Checking for duplicates...
+                  </>
+                ) : isMultiUploading ? (
+                  <>
+                    <Loader2 className="mr-3 h-5 w-5 animate-spin" />
+                    Analyzing {selectedFiles.length} files together...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="mr-3 h-5 w-5" />
+                    Upload & Analyze {selectedFiles.length > 0 ? selectedFiles.length : ""} Documents Together
+                  </>
+                )}
+              </Button>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 
